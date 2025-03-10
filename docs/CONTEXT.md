@@ -175,6 +175,7 @@ This document outlines the core architecture, features, and user flow of the **M
 ```javascript
 {
   _id: ObjectId,                // Auto-generated MongoDB ID
+  uuid: String,                 // Unique UUIDv4 identifier for public-facing contexts
   email: String,                // User's email address (unique)
   password: String,             // Hashed password
   firstName: String,            // User's first name
@@ -277,6 +278,7 @@ For optimal performance, the following indexes should be created:
 ```javascript
 // Users Collection
 db.users.createIndex({ email: 1 }, { unique: true })
+db.users.createIndex({ uuid: 1 }, { unique: true })
 db.users.createIndex({ verificationToken: 1 })
 db.users.createIndex({ resetPasswordToken: 1 })
 
