@@ -1,45 +1,72 @@
-import { useCallback, useEffect, useState } from '@lynx-js/react'
-
+import { useState, useEffect } from '@lynx-js/react'
 import './App.css'
-import arrow from './assets/arrow.png'
-import lynxLogo from './assets/lynx-logo.png'
-import reactLynxLogo from './assets/react-logo.png'
+import { WelcomePage } from './pages/WelcomePage.tsx'
+import { LoginPage } from './pages/LoginPage.tsx'
+import { SignupPage } from './pages/SignupPage.tsx'
+import { DashboardPage } from './pages/DashboardPage.tsx'
+import { HistoryPage } from './pages/HistoryPage.tsx'
+import { AuthProvider, useAuth } from './context/AuthContext.tsx'
 
+// Hauptkomponente der App
 export function App() {
-  const [alterLogo, setAlterLogo] = useState(false)
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  )
+}
 
+// Inhalt der App mit Routing-Logik
+function AppContent() {
+  const { isAuthenticated, loading } = useAuth()
+  const [currentPage, setCurrentPage] = useState('welcome')
+
+  // Seite basierend auf Authentifizierungsstatus setzen
   useEffect(() => {
-    console.info('Hello, ReactLynx')
-  }, [])
+    if (loading) return
+    
+    if (isAuthenticated) {
+      setCurrentPage('dashboard')
+    } else {
+      setCurrentPage('welcome')
+    }
+  }, [isAuthenticated, loading])
 
-  const onTap = useCallback(() => {
-    'background only'
-    setAlterLogo(!alterLogo)
-  }, [alterLogo])
+  // Funktion zum Navigieren zwischen Seiten
+  const navigateTo = (page: string) => {
+    setCurrentPage(page)
+  }
+
+  // Rendering der entsprechenden Seite
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'welcome':
+        return <WelcomePage navigateTo={navigateTo} />
+      case 'login':
+        return <LoginPage navigateTo={navigateTo} />
+      case 'signup':
+        return <SignupPage navigateTo={navigateTo} />
+      case 'dashboard':
+        return <DashboardPage navigateTo={navigateTo} />
+      case 'history':
+        return <HistoryPage navigateTo={navigateTo} />
+      default:
+        return <WelcomePage navigateTo={navigateTo} />
+    }
+  }
+
+  // Wenn die App noch lädt, zeigen wir einen Ladebildschirm
+  if (loading) {
+    return (
+      <view className="LoadingScreen">
+        <text className="LoadingText">Lädt...</text>
+      </view>
+    )
+  }
 
   return (
-    <view>
-      <view className='Background' />
-      <view className='App'>
-        <view className='Banner'>
-          <view className='Logo' bindtap={onTap}>
-            {alterLogo
-              ? <image src={reactLynxLogo} className='Logo--react' />
-              : <image src={lynxLogo} className='Logo--lynx' />}
-          </view>
-          <text className='Title'>React</text>
-          <text className='Subtitle'>on Lynx</text>
-        </view>
-        <view className='Content'>
-          <image src={arrow} className='Arrow' />
-          <text className='Description'>Tap the logo and have fun!</text>
-          <text className='Hint'>
-            Edit<text style={{ fontStyle: 'italic' }}>{' src/App.tsx '}</text>
-            to see updates!
-          </text>
-        </view>
-        <view style={{ flex: 1 }}></view>
-      </view>
+    <view className="AppContainer">
+      {renderPage()}
     </view>
   )
 }

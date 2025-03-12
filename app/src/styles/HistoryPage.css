@@ -1,0 +1,222 @@
+.HistoryPage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #f8f9fa;
+}
+
+.HistoryPage-header {
+  display: flex;
+  align-items: center;
+  height: 70px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 20px;
+}
+
+.HistoryPage-headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.HistoryPage-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.HistoryPage-userInfo {
+  display: flex;
+  align-items: center;
+}
+
+.HistoryPage-userName {
+  font-size: 16px;
+  color: #34495e;
+  margin-right: 20px;
+}
+
+.HistoryPage-menu {
+  display: flex;
+  gap: 15px;
+}
+
+.HistoryPage-menuItem {
+  cursor: pointer;
+}
+
+.HistoryPage-menuItemText {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.HistoryPage-menuItemText:active {
+  color: #3498db;
+}
+
+.HistoryPage-content {
+  flex: 1;
+  padding: 30px 20px;
+  /* overflow-y: auto; */ /* Diese Eigenschaft wird von Lynx nicht unterstützt */
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.HistoryPage-sectionHeader {
+  margin-bottom: 30px;
+}
+
+.HistoryPage-sectionTitle {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.HistoryPage-sectionDescription {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.HistoryPage-documentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.HistoryPage-documentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.HistoryPage-documentInfo {
+  flex: 1;
+}
+
+.HistoryPage-documentName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.HistoryPage-documentDate,
+.HistoryPage-documentSize,
+.HistoryPage-documentStatus {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 4px;
+}
+
+.HistoryPage-documentActions {
+  display: flex;
+  gap: 10px;
+}
+
+.HistoryPage-documentButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  padding: 0 15px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.HistoryPage-documentButton--primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.HistoryPage-documentButton--primary:active {
+  background-color: #2980b9;
+}
+
+.HistoryPage-documentButton--secondary {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.HistoryPage-documentButton--secondary:active {
+  background-color: #bdc3c7;
+}
+
+.HistoryPage-documentButtonText {
+  font-size: 14px;
+}
+
+.HistoryPage-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.HistoryPage-loadingText {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.HistoryPage-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background-color: #fdecea;
+  border-radius: 8px;
+}
+
+.HistoryPage-errorText {
+  color: #e74c3c;
+  font-size: 16px;
+  text-align: center;
+}
+
+.HistoryPage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 50px 0;
+}
+
+.HistoryPage-emptyText {
+  font-size: 16px;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+.HistoryPage-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 6px;
+  background-color: #3498db;
+  cursor: pointer;
+}
+
+.HistoryPage-button:active {
+  background-color: #2980b9;
+}
+
+.HistoryPage-buttonText {
+  font-size: 14px;
+  color: white;
+  font-weight: 600;
+} 
