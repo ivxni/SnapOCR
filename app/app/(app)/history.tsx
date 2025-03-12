@@ -1,31 +1,24 @@
-import React from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
-
-// Define the type for history items
-interface HistoryItem {
-  id: string;
-  title: string;
-  date: string;
-  status: 'completed' | 'failed';
-}
-
-// Mock data for the history list
-const mockHistory: HistoryItem[] = [
-  { id: '1', title: 'Invoice_2023.pdf', date: '2023-12-15', status: 'completed' },
-  { id: '2', title: 'Contract_Agreement.pdf', date: '2023-12-10', status: 'completed' },
-  { id: '3', title: 'Receipt_Amazon.pdf', date: '2023-12-05', status: 'completed' },
-  { id: '4', title: 'Tax_Document.pdf', date: '2023-11-28', status: 'failed' },
-  { id: '5', title: 'Medical_Report.pdf', date: '2023-11-20', status: 'completed' },
-];
+import { useDocuments } from '../hooks/useDocuments';
+import { Document } from '../types/document.types';
 
 export default function History() {
   const router = useRouter();
+  const { documents, fetchDocuments, loading, error } = useDocuments();
 
-  const renderHistoryItem = ({ item }: { item: HistoryItem }) => (
-    <View style={styles.historyItem}>
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const renderHistoryItem = ({ item }: { item: Document }) => (
+    <TouchableOpacity 
+      style={styles.historyItem}
+      onPress={() => console.log('View document details', item._id)}
+    >
       <View style={styles.iconContainer}>
         <MaterialIcons 
           name="description" 
@@ -34,20 +27,49 @@ export default function History() {
         />
       </View>
       <View style={styles.itemContent}>
-        <Text style={styles.itemTitle}>{item.title}</Text>
-        <Text style={styles.itemDate}>{item.date}</Text>
+        <Text style={styles.itemTitle}>{item.originalFileName}</Text>
+        <Text style={styles.itemDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
       </View>
       <View style={styles.statusContainer}>
         <View style={[
           styles.statusIndicator, 
-          { backgroundColor: item.status === 'completed' ? colors.success : colors.error }
+          { backgroundColor: item.status === 'completed' 
+            ? colors.success 
+            : item.status === 'failed' 
+              ? colors.error 
+              : colors.warning 
+          }
         ]} />
         <Text style={styles.statusText}>
-          {item.status === 'completed' ? 'Completed' : 'Failed'}
+          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading documents...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <MaterialIcons name="error-outline" size={80} color={colors.error} />
+        <Text style={styles.errorText}>Error loading documents</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => fetchDocuments()}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -55,13 +77,29 @@ export default function History() {
         <Text style={styles.title}>Document History</Text>
       </View>
       
-      <FlatList
-        data={mockHistory}
-        renderItem={renderHistoryItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {documents && documents.length > 0 ? (
+        <FlatList
+          data={documents}
+          renderItem={renderHistoryItem}
+          keyExtractor={item => item._id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.emptyState}>
+          <MaterialIcons name="description" size={80} color={colors.disabled} />
+          <Text style={styles.emptyStateText}>No documents yet</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Upload your first document to get started
+          </Text>
+          <TouchableOpacity 
+            style={styles.uploadButton}
+            onPress={() => router.push('/(app)/upload')}
+          >
+            <Text style={styles.uploadButtonText}>Upload Document</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -134,5 +172,61 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: colors.error,
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyStateText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  uploadButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  uploadButtonText: {
+    color: colors.white,
+    fontWeight: '600',
+    fontSize: 16,
   },
 }); 

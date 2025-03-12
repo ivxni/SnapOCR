@@ -1,17 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
-
-// Mock user data
-const mockUser = {
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  profilePicture: null,
-};
+import authService from '../services/authService';
 
 // Define valid icon names to avoid TypeScript errors
 type IconName = 'notifications' | 'security' | 'help' | 'color-lens' | 'language' | 'logout' | 'chevron-right';
@@ -38,7 +31,26 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, title, onPress, showBadge = f
 
 export default function Profile() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        // Use the authService directly since getUserProfile is not in the context
+        await authService.getUserProfile();
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!user || !user.firstName) {
+      fetchUserProfile();
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -49,23 +61,47 @@ export default function Profile() {
     }
   };
 
+  if (loading || isLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <MaterialIcons name="error-outline" size={80} color={colors.error} />
+        <Text style={styles.errorText}>Error loading profile</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => authService.getUserProfile()}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {mockUser.profilePicture ? (
-              <Image source={{ uri: mockUser.profilePicture }} style={styles.avatar} />
+            {user.profilePicture ? (
+              <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {mockUser.firstName.charAt(0)}{mockUser.lastName.charAt(0)}
+                  {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
                 </Text>
               </View>
             )}
           </View>
-          <Text style={styles.userName}>{`${mockUser.firstName} ${mockUser.lastName}`}</Text>
-          <Text style={styles.userEmail}>{mockUser.email}</Text>
+          <Text style={styles.userName}>{`${user.firstName || ''} ${user.lastName || ''}`}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
           
           <TouchableOpacity style={styles.editButton}>
             <Text style={styles.editButtonText}>Edit Profile</Text>
@@ -123,6 +159,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: colors.error,
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: colors.primary,
+    fontWeight: '500',
   },
   header: {
     backgroundColor: colors.white,

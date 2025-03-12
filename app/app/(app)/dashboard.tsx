@@ -1,20 +1,60 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import AppLayout from '../components/layout/AppLayout';
-import Button from '../components/common/Button';
 import colors from '../constants/colors';
+import { useDocuments } from '../hooks/useDocuments';
+import { useAuth } from '../hooks/useAuth';
+import { Document } from '../types/document.types';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { user } = useAuth();
+  const { documents, fetchDocuments, loading, error } = useDocuments();
+  const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>Welcome to LynxAI</Text>
-        
+  useEffect(() => {
+    // Fetch documents when the component mounts
+    fetchDocuments();
+  }, []);
+
+  useEffect(() => {
+    // Get the 3 most recent documents
+    if (documents && documents.length > 0) {
+      const sorted = [...documents].sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setRecentDocuments(sorted.slice(0, 3));
+    }
+  }, [documents]);
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading documents...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centerContent}>
+          <MaterialIcons name="error-outline" size={80} color={colors.error} />
+          <Text style={styles.errorText}>Error loading documents</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => fetchDocuments()}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (!documents || documents.length === 0) {
+      return (
         <View style={styles.emptyState}>
           <MaterialIcons name="description" size={80} color={colors.disabled} />
           <Text style={styles.emptyStateText}>No documents yet</Text>
@@ -22,6 +62,65 @@ export default function Dashboard() {
             Upload your first document to get started
           </Text>
         </View>
+      );
+    }
+
+    return (
+      <View style={styles.documentsContainer}>
+        <Text style={styles.sectionTitle}>Recent Documents</Text>
+        {recentDocuments.map((doc) => (
+          <TouchableOpacity 
+            key={doc._id} 
+            style={styles.documentItem}
+            onPress={() => console.log('View document', doc._id)}
+          >
+            <View style={styles.documentIconContainer}>
+              <MaterialIcons name="description" size={24} color={colors.primary} />
+            </View>
+            <View style={styles.documentInfo}>
+              <Text style={styles.documentTitle} numberOfLines={1}>
+                {doc.originalFileName}
+              </Text>
+              <Text style={styles.documentDate}>
+                {new Date(doc.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+            <View style={styles.documentStatus}>
+              <View style={[
+                styles.statusIndicator, 
+                { backgroundColor: doc.status === 'completed' 
+                  ? colors.success 
+                  : doc.status === 'failed' 
+                    ? colors.error 
+                    : colors.warning 
+                }
+              ]} />
+              <Text style={styles.statusText}>
+                {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity 
+          style={styles.viewAllButton}
+          onPress={() => router.push('/(app)/history')}
+        >
+          <Text style={styles.viewAllText}>View All Documents</Text>
+          <MaterialIcons name="arrow-forward" size={16} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Dashboard</Text>
+        <Text style={styles.subtitle}>
+          Welcome{user?.firstName ? `, ${user.firstName}` : ''}
+        </Text>
+        
+        {renderContent()}
       </View>
       
       {/* Bottom Navigation Bar */}
@@ -67,7 +166,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: 'center',
     padding: 24,
     paddingBottom: 80, // Add padding to account for the bottom nav
   },
@@ -82,11 +180,38 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 32,
   },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: colors.error,
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     maxWidth: 300,
+    alignSelf: 'center',
   },
   emptyStateText: {
     fontSize: 20,
@@ -100,6 +225,78 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  documentsContainer: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  documentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  documentIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceVariant,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  documentInfo: {
+    flex: 1,
+  },
+  documentTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  documentDate: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  documentStatus: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    paddingVertical: 12,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.primary,
+    marginRight: 4,
   },
   bottomNavContainer: {
     position: 'absolute',
