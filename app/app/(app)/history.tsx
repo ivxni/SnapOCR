@@ -119,20 +119,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 24,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     justifyContent: 'center',
-    position: 'relative',
+    height: 60,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+    lineHeight: 24,
   },
   listContainer: {
     padding: 16,
@@ -244,8 +243,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    left: 24,
-    top: 20,
+    left: 16,
     zIndex: 10,
+    padding: 8,
+    top: '50%',
+    transform: [{ translateY: -20 }],
   },
 }); 
