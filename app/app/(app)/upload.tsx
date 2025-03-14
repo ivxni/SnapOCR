@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     justifyContent: 'center',
     height: 60,
+    position: 'relative',
   },
   title: {
     fontSize: 18,
@@ -149,9 +150,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     zIndex: 10,
-    padding: 8,
+    height: 40,
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     top: '50%',
-    transform: [{ translateY: -16 }],
+    transform: [{ translateY: -20 }],
   },
   content: {
     flex: 1,
