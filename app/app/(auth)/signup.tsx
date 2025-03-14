@@ -51,7 +51,7 @@ export default function SignUp() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       enabled={Platform.OS === 'ios'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+      keyboardVerticalOffset={0}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -148,29 +148,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    justifyContent: 'center',
   },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 32,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 20,
+    paddingBottom: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: height - 90, // Subtract some height for the status bar and safe area
   },
   backButton: {
     position: 'absolute',
-    top: 60,
+    top: 50,
     left: 20,
     zIndex: 10,
     padding: 8,
   },
   logoContainer: {
-    marginBottom: 32,
+    marginTop: 0,
+    marginBottom: 20,
     alignItems: 'center',
   },
   logoBackground: {
-    width: 90,
-    height: 90,
-    borderRadius: 22,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -181,22 +185,22 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   logoText: {
-    fontSize: 54,
+    fontSize: 48,
     fontWeight: 'bold',
     color: colors.white,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   formContainer: {
     width: '100%',
@@ -210,7 +214,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    marginBottom: 20,
+    marginBottom: 12,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -225,9 +229,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    marginTop: 16,
-    marginBottom: 16,
-    height: 56,
+    marginTop: 12,
+    marginBottom: 12,
+    height: 50,
     borderRadius: 12,
   },
   termsText: {
@@ -243,8 +247,9 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 40,
+    marginTop: 24,
     gap: 8,
+    marginBottom: 10,
   },
   footerText: {
     color: colors.textSecondary,

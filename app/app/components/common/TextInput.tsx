@@ -79,21 +79,22 @@ const TextInput = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
     width: '100%',
   },
   input: {
     backgroundColor: colors.white,
-    minHeight: 56,
+    minHeight: 50,
+    height: 50,
   },
   outline: {
     borderRadius: 12,
     borderWidth: 1.5,
   },
   contentStyle: {
-    paddingVertical: 8,
+    paddingVertical: 6,
     fontSize: 16,
-    height: 40,
+    height: 36,
     textAlignVertical: 'center',
   },
   labelText: {

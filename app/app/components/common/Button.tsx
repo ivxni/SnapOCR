@@ -81,10 +81,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 8,
     elevation: 0,
-    height: 52,
+    height: 50,
   },
   contentStyle: {
-    height: 52,
+    height: 50,
     paddingVertical: 0,
     flexDirection: 'row',
     alignItems: 'center',
