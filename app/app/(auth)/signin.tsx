@@ -1,19 +1,29 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/common/Button';
 import TextInput from '../components/common/TextInput';
 import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 
+const { width, height } = Dimensions.get('window');
+
 export default function SignIn() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(app)/dashboard');
+    }
+  }, [isAuthenticated]);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -35,105 +45,154 @@ export default function SignIn() {
   };
 
   return (
-    <AppLayout>
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
-          </View>
-          
-          <View style={styles.form}>
-            <TextInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              floatingLabel={false}
-            />
-            
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              floatingLabel={false}
-            />
-            
-            {error && (
-              <Text style={styles.errorText}>{error}</Text>
-            )}
-            
-            <TouchableOpacity 
-              onPress={() => console.log('Forgot password')}
-              style={styles.forgotPassword}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-            </TouchableOpacity>
-            
-            <Button 
-              onPress={handleSignIn} 
-              loading={loading}
-              style={styles.button}
-            >
-              Sign In
-            </Button>
-          </View>
-          
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-              <Text style={styles.footerLink}>Create Account</Text>
-            </TouchableOpacity>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      enabled={Platform.OS === 'ios'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+    >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+      </TouchableOpacity>
+      
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.logoContainer}>
+          <View style={styles.logoBackground}>
+            <Text style={styles.logoText}>L</Text>
           </View>
         </View>
-      </View>
-    </AppLayout>
+        
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Sign in to your account</Text>
+        
+        <View style={styles.formContainer}>
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            floatingLabel={false}
+            style={styles.input}
+          />
+          
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            floatingLabel={false}
+            style={styles.input}
+          />
+          
+          {error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
+          
+          <TouchableOpacity 
+            onPress={() => console.log('Forgot password')}
+            style={styles.forgotPassword}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+          
+          <Button 
+            onPress={handleSignIn} 
+            loading={loading}
+            style={styles.button}
+          >
+            Sign In
+          </Button>
+        </View>
+        
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Don't have an account?</Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+            <Text style={styles.footerLink}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
     backgroundColor: colors.background,
   },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 32,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 32,
+    paddingTop: 80,
+    paddingBottom: 40,
+    alignItems: 'center',
   },
-  header: {
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  logoContainer: {
     marginBottom: 32,
+    alignItems: 'center',
+  },
+  logoBackground: {
+    width: 90,
+    height: 90,
+    borderRadius: 22,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  logoText: {
+    fontSize: 54,
+    fontWeight: 'bold',
+    color: colors.white,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 40,
   },
-  form: {
+  formContainer: {
     width: '100%',
+    maxWidth: Math.min(500, width * 0.9),
+  },
+  input: {
+    marginBottom: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   errorText: {
     color: colors.error,
     marginTop: 8,
     marginBottom: 8,
     fontSize: 14,
+    textAlign: 'center',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -147,20 +206,22 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+    height: 56,
+    borderRadius: 12,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 40,
     gap: 8,
   },
   footerText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 16,
   },
   footerLink: {
     color: colors.primary,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 16,
   },
 }); 

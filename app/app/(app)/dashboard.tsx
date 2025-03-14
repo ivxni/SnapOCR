@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
@@ -113,7 +114,7 @@ export default function Dashboard() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.subtitle}>
@@ -124,7 +125,7 @@ export default function Dashboard() {
       </View>
       
       {/* Bottom Navigation Bar */}
-      <SafeAreaView style={styles.bottomNavContainer}>
+      <SafeAreaView style={styles.bottomNavContainer} edges={['bottom']}>
         <View style={styles.bottomNav}>
           {/* History Button */}
           <TouchableOpacity 
@@ -155,7 +156,7 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </View>
+    </SafeAreaView>
   );
 }
 

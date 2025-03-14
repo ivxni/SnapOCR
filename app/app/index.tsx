@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import AppLayout from './components/layout/AppLayout';
 import Button from './components/common/Button';
 import colors from './constants/colors';
+import { useAuth } from './hooks/useAuth';
 
 export default function Home() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(app)/dashboard');
+    }
+  }, [isAuthenticated]);
 
   return (
     <AppLayout>
@@ -32,7 +41,7 @@ export default function Home() {
               onPress={() => router.push('/(auth)/signin')}
               style={styles.button}
             >
-              Get Started
+              Sign In
             </Button>
             
             <Button 

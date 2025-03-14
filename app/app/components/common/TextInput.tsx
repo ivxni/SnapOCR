@@ -1,7 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, StyleProp, ViewStyle, Text } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle, Text, Platform } from 'react-native';
 import { TextInput as PaperInput, HelperText, TextInputProps as PaperTextInputProps } from 'react-native-paper';
 import colors from '../../constants/colors';
+import { TextInput as PaperTextInput } from 'react-native-paper';
+import { TextInputProps as RNTextInputProps } from 'react-native';
 
 interface CustomTextInputProps {
   label: string;
@@ -12,24 +14,27 @@ interface CustomTextInputProps {
   style?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   floatingLabel?: boolean;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'number-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
 
 type TextInputProps = CustomTextInputProps & Omit<PaperTextInputProps, 'label' | 'value' | 'onChangeText' | 'error'>;
 
-const TextInput: React.FC<TextInputProps> = ({
-  label,
-  value,
-  onChangeText,
-  error,
-  secureTextEntry = false,
-  style,
-  containerStyle,
-  floatingLabel = true,
-  ...props
-}) => {
+const TextInput = ({ 
+  label, 
+  value, 
+  onChangeText, 
+  error, 
+  secureTextEntry, 
+  style, 
+  floatingLabel = false,
+  keyboardType,
+  autoCapitalize,
+  ...props 
+}: CustomTextInputProps) => {
   return (
-    <View style={[styles.container, containerStyle]}>
-      {!floatingLabel && (
+    <View style={styles.container}>
+      {!floatingLabel && label && (
         <Text style={styles.labelText}>{label}</Text>
       )}
       <PaperInput
@@ -43,10 +48,31 @@ const TextInput: React.FC<TextInputProps> = ({
         outlineColor={colors.border}
         activeOutlineColor={colors.primary}
         outlineStyle={styles.outline}
-        contentStyle={styles.contentStyle}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        dense={false}
+        underlineStyle={{ display: 'none' }}
+        contentStyle={[
+          styles.contentStyle,
+          { height: 40, textAlignVertical: 'center' }
+        ]}
+        theme={{
+          colors: {
+            background: colors.white,
+            text: colors.text,
+            primary: colors.primary,
+            onSurfaceVariant: colors.textSecondary,
+          },
+          fonts: {
+            bodyLarge: {
+              fontSize: 16,
+              lineHeight: 24,
+            }
+          }
+        }}
         {...props}
       />
-      {error ? <HelperText type="error" style={styles.errorText} visible={!!error}>{error}</HelperText> : null}
+      {error && <HelperText type="error" visible={!!error}>{error}</HelperText>}
     </View>
   );
 };
@@ -58,16 +84,17 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.white,
-    fontSize: 16,
-    height: 56,
+    minHeight: 56,
   },
   outline: {
     borderRadius: 12,
     borderWidth: 1.5,
   },
   contentStyle: {
-    paddingHorizontal: 4,
-    fontWeight: '400',
+    paddingVertical: 8,
+    fontSize: 16,
+    height: 40,
+    textAlignVertical: 'center',
   },
   labelText: {
     fontSize: 14,

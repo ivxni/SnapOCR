@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
@@ -63,16 +64,16 @@ export default function Profile() {
 
   if (loading || isLoading) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
+      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading profile...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!user) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
+      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <MaterialIcons name="error-outline" size={80} color={colors.error} />
         <Text style={styles.errorText}>Error loading profile</Text>
         <TouchableOpacity 
@@ -81,77 +82,88 @@ export default function Profile() {
         >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            {user.profilePicture ? (
-              <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>
-                  {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
-                </Text>
-              </View>
-            )}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile</Text>
           </View>
-          <Text style={styles.userName}>{`${user.firstName || ''} ${user.lastName || ''}`}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+          <View style={styles.profileSection}>
+            <View style={styles.avatarContainer}>
+              {user.profilePicture ? (
+                <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarText}>
+                    {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.userName}>{`${user.firstName || ''} ${user.lastName || ''}`}</Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
+            
+            <TouchableOpacity style={styles.editButton}>
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <MenuItem 
-          icon="notifications" 
-          title="Notifications" 
-          onPress={() => console.log('Notifications pressed')}
-          showBadge={true}
-        />
-        <MenuItem 
-          icon="security" 
-          title="Security" 
-          onPress={() => console.log('Security pressed')}
-        />
-        <MenuItem 
-          icon="help" 
-          title="Help & Support" 
-          onPress={() => console.log('Help pressed')}
-        />
-      </View>
-      
-      <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <MenuItem 
-          icon="color-lens" 
-          title="Appearance" 
-          onPress={() => console.log('Appearance pressed')}
-        />
-        <MenuItem 
-          icon="language" 
-          title="Language" 
-          onPress={() => console.log('Language pressed')}
-        />
-      </View>
-      
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <MaterialIcons name="logout" size={20} color={colors.error} />
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
-      
-      <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>Version 1.0.0</Text>
-      </View>
-    </ScrollView>
+        
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <MenuItem 
+            icon="notifications" 
+            title="Notifications" 
+            onPress={() => console.log('Notifications pressed')}
+            showBadge={true}
+          />
+          <MenuItem 
+            icon="security" 
+            title="Security" 
+            onPress={() => console.log('Security pressed')}
+          />
+          <MenuItem 
+            icon="help" 
+            title="Help & Support" 
+            onPress={() => console.log('Help pressed')}
+          />
+        </View>
+        
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <MenuItem 
+            icon="color-lens" 
+            title="Appearance" 
+            onPress={() => console.log('Appearance pressed')}
+          />
+          <MenuItem 
+            icon="language" 
+            title="Language" 
+            onPress={() => console.log('Language pressed')}
+          />
+        </View>
+        
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <MaterialIcons name="logout" size={20} color={colors.error} />
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>Version 1.0.0</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -159,6 +171,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -190,6 +205,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     paddingBottom: 24,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  backButton: {
+    padding: 8,
+    position: 'absolute',
+    left: 16,
+    top: 20,
+    zIndex: 10,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
   },
   profileSection: {
     alignItems: 'center',
