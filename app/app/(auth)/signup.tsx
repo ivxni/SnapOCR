@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Dimensions, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/common/Button';
 import TextInput from '../components/common/TextInput';
@@ -30,6 +31,7 @@ export default function SignUp() {
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password) {
       setError('Please fill in all fields');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -38,9 +40,11 @@ export default function SignUp() {
 
     try {
       await register({ firstName, lastName, email, password });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)/dashboard');
     } catch (err) {
       setError('Failed to create account');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
     }

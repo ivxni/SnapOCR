@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/common/Button';
 import TextInput from '../components/common/TextInput';
@@ -28,6 +29,7 @@ export default function SignIn() {
   const handleSignIn = async () => {
     if (!email || !password) {
       setError('Please enter both email and password');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -36,9 +38,11 @@ export default function SignIn() {
 
     try {
       await login(email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)/dashboard');
     } catch (err) {
       setError('Invalid email or password');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
     }
