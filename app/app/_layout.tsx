@@ -4,6 +4,7 @@ import { PaperProvider } from 'react-native-paper';
 import { lightTheme } from './constants/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { DocumentProvider } from './contexts/DocumentContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { useAuth } from './hooks/useAuth';
 
 // Auth protection component
@@ -32,23 +33,25 @@ function AuthProtection() {
 export default function RootLayout() {
   return (
     <PaperProvider theme={lightTheme}>
-      <AuthProvider>
-        <DocumentProvider>
-          <AuthProtection />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen 
-              name="(app)" 
-              options={{ 
-                headerShown: false,
-                // Prevent going back to the get started screen
-                gestureEnabled: false
-              }} 
-            />
-          </Stack>
-        </DocumentProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <DocumentProvider>
+            <AuthProtection />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen 
+                name="(app)" 
+                options={{ 
+                  headerShown: false,
+                  // Prevent going back to the get started screen
+                  gestureEnabled: false
+                }} 
+              />
+            </Stack>
+          </DocumentProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </PaperProvider>
   );
 } 

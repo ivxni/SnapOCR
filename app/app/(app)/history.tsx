@@ -6,10 +6,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
 import { Document } from '../types/document.types';
+import { useTranslation } from '../utils/i18n';
 
 export default function History() {
   const router = useRouter();
   const { documents, fetchDocuments, loading, error } = useDocuments();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchDocuments();
@@ -42,7 +44,12 @@ export default function History() {
           }
         ]} />
         <Text style={styles.statusText}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          {item.status === 'completed' 
+            ? t('history.status.completed')
+            : item.status === 'failed'
+              ? t('history.status.failed')
+              : t('history.status.processing')
+          }
         </Text>
       </View>
     </TouchableOpacity>
@@ -52,7 +59,7 @@ export default function History() {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading documents...</Text>
+        <Text style={styles.loadingText}>{t('history.loadingDocuments')}</Text>
       </SafeAreaView>
     );
   }
@@ -61,12 +68,12 @@ export default function History() {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <MaterialIcons name="error-outline" size={80} color={colors.error} />
-        <Text style={styles.errorText}>Error loading documents</Text>
+        <Text style={styles.errorText}>{t('history.errorLoading')}</Text>
         <TouchableOpacity 
           style={styles.retryButton}
           onPress={() => fetchDocuments()}
         >
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -81,7 +88,7 @@ export default function History() {
         >
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Document History</Text>
+        <Text style={styles.title}>{t('history.title')}</Text>
       </View>
       
       {documents && documents.length > 0 ? (
@@ -95,15 +102,15 @@ export default function History() {
       ) : (
         <View style={styles.emptyState}>
           <MaterialIcons name="description" size={80} color={colors.disabled} />
-          <Text style={styles.emptyStateText}>No documents yet</Text>
+          <Text style={styles.emptyStateText}>{t('history.noDocuments')}</Text>
           <Text style={styles.emptyStateSubtext}>
-            Upload your first document to get started
+            {t('history.uploadFirst')}
           </Text>
           <TouchableOpacity 
             style={styles.uploadButton}
             onPress={() => router.push('/(app)/upload')}
           >
-            <Text style={styles.uploadButtonText}>Upload Document</Text>
+            <Text style={styles.uploadButtonText}>{t('upload.title')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -121,8 +128,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     justifyContent: 'center',
     height: 60,
     position: 'relative',

@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Switch, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTranslation } from '../utils/i18n';
 import authService from '../services/authService';
 
 // Define valid icon names to avoid TypeScript errors
-type IconName = 'notifications' | 'security' | 'help' | 'color-lens' | 'language' | 'logout' | 'chevron-right';
+type IconName = 'notifications' | 'security' | 'help' | 'color-lens' | 'language' | 'logout' | 'chevron-right' | 'account-circle' | 'lock' | 'privacy-tip' | 'description' | 'brightness-4' | 'arrow-back';
 
 interface MenuItemProps {
   icon: IconName;
@@ -18,12 +20,12 @@ interface MenuItemProps {
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon, title, onPress, showBadge = false }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <View style={styles.menuIconContainer}>
+  <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+    <View style={styles.settingLabelContainer}>
       <MaterialIcons name={icon} size={24} color={colors.primary} />
+      <Text style={styles.settingLabel}>{title}</Text>
     </View>
-    <Text style={styles.menuTitle}>{title}</Text>
-    <View style={styles.menuRight}>
+    <View style={styles.settingLabelContainer}>
       {showBadge && <View style={styles.badge} />}
       <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
     </View>
@@ -33,7 +35,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, title, onPress, showBadge = f
 export default function Profile() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -53,20 +58,36 @@ export default function Profile() {
     }
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      t('profile.logoutTitle'),
+      t('profile.logoutConfirm'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.logout'),
+          onPress: () => {
+            logout();
+            router.replace('/');
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
+  const navigateToLanguageSettings = () => {
+    router.push('/(app)/language');
   };
 
   if (loading || isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading profile...</Text>
+        <Text style={styles.loadingText}>{t('profile.loadingProfile')}</Text>
       </SafeAreaView>
     );
   }
@@ -75,12 +96,12 @@ export default function Profile() {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <MaterialIcons name="error-outline" size={80} color={colors.error} />
-        <Text style={styles.errorText}>Error loading profile</Text>
+        <Text style={styles.errorText}>{t('profile.errorProfile')}</Text>
         <TouchableOpacity 
           style={styles.retryButton}
           onPress={() => authService.getUserProfile()}
         >
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -97,7 +118,7 @@ export default function Profile() {
             >
               <MaterialIcons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Profile</Text>
+            <Text style={styles.headerTitle}>{t('profile.title')}</Text>
           </View>
           <View style={styles.profileSection}>
             <View style={styles.avatarContainer}>
@@ -115,52 +136,96 @@ export default function Profile() {
             <Text style={styles.userEmail}>{user.email}</Text>
             
             <TouchableOpacity style={styles.editButton}>
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Text style={styles.editButtonText}>{t('profile.editProfile')}</Text>
             </TouchableOpacity>
           </View>
         </View>
         
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <MenuItem 
-            icon="notifications" 
-            title="Notifications" 
-            onPress={() => console.log('Notifications pressed')}
-            showBadge={true}
-          />
-          <MenuItem 
-            icon="security" 
-            title="Security" 
-            onPress={() => console.log('Security pressed')}
-          />
-          <MenuItem 
-            icon="help" 
-            title="Help & Support" 
-            onPress={() => console.log('Help pressed')}
-          />
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+          
+          {/* Notifications Setting */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabelContainer}>
+              <MaterialIcons name="notifications" size={24} color={colors.text} />
+              <Text style={styles.settingLabel}>{t('profile.notifications')}</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{ false: colors.disabled, true: colors.primaryLight }}
+              thumbColor={notificationsEnabled ? colors.primary : colors.disabled}
+            />
+          </View>
+          
+          {/* Dark Mode Setting */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingLabelContainer}>
+              <MaterialIcons name="brightness-4" size={24} color={colors.text} />
+              <Text style={styles.settingLabel}>{t('profile.darkMode')}</Text>
+            </View>
+            <Switch
+              value={darkModeEnabled}
+              onValueChange={setDarkModeEnabled}
+              trackColor={{ false: colors.disabled, true: colors.primaryLight }}
+              thumbColor={darkModeEnabled ? colors.primary : colors.disabled}
+            />
+          </View>
+
+          {/* Language Setting */}
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={navigateToLanguageSettings}
+          >
+            <View style={styles.settingLabelContainer}>
+              <MaterialIcons name="language" size={24} color={colors.text} />
+              <Text style={styles.settingLabel}>{t('profile.language')}</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
         
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          <MenuItem 
-            icon="color-lens" 
-            title="Appearance" 
-            onPress={() => console.log('Appearance pressed')}
-          />
-          <MenuItem 
-            icon="language" 
-            title="Language" 
-            onPress={() => console.log('Language pressed')}
-          />
+        <View style={styles.accountSection}>
+          <Text style={styles.sectionTitle}>{t('profile.account')}</Text>
+          
+          {/* Change Password */}
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLabelContainer}>
+              <MaterialIcons name="lock" size={24} color={colors.text} />
+              <Text style={styles.accountItemLabel}>{t('profile.changePassword')}</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          
+          {/* Privacy Policy */}
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLabelContainer}>
+              <MaterialIcons name="privacy-tip" size={24} color={colors.text} />
+              <Text style={styles.accountItemLabel}>{t('profile.privacyPolicy')}</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          
+          {/* Terms of Service */}
+          <TouchableOpacity style={styles.accountItem}>
+            <View style={styles.accountItemLabelContainer}>
+              <MaterialIcons name="description" size={24} color={colors.text} />
+              <Text style={styles.accountItemLabel}>{t('profile.termsOfService')}</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <MaterialIcons name="logout" size={20} color={colors.error} />
-          <Text style={styles.logoutText}>Log Out</Text>
+
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <MaterialIcons name="logout" size={24} color={colors.white} />
+          <Text style={styles.logoutButtonText}>{t('common.logout')}</Text>
         </TouchableOpacity>
         
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>{t('common.version')} 1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -202,8 +267,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     paddingBottom: 24,
   },
   headerTop: {
@@ -280,7 +343,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.primary,
   },
-  menuSection: {
+  settingsSection: {
     backgroundColor: colors.white,
     marginTop: 16,
     paddingVertical: 8,
@@ -300,7 +363,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 8,
   },
-  menuItem: {
+  settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
@@ -308,23 +371,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceVariant,
+  settingLabelContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    flex: 1,
   },
-  menuTitle: {
+  settingLabel: {
     flex: 1,
     fontSize: 16,
     color: colors.text,
-  },
-  menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginLeft: 12,
   },
   badge: {
     width: 8,
@@ -333,6 +389,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
     marginRight: 8,
   },
+  accountSection: {
+    backgroundColor: colors.white,
+    marginTop: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  accountItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  accountItemLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  accountItemLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    marginLeft: 12,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -340,12 +427,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: colors.error,
     borderRadius: 12,
   },
-  logoutText: {
+  logoutButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.error,
+    color: colors.white,
     marginLeft: 8,
   },
   versionContainer: {

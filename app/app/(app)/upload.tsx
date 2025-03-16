@@ -1,66 +1,174 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
+import { useTranslation } from '../utils/i18n';
+import { UploadFile } from '../types/document.types';
 
 export default function Upload() {
   const router = useRouter();
   const { uploadDocument } = useDocuments();
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const { t } = useTranslation();
+  const [image, setImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleSelectDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: true,
-      });
-      
-      if (result.canceled) {
-        return;
-      }
-      
-      setSelectedFile(result.assets[0]);
-    } catch (error) {
-      console.error('Error selecting document:', error);
-      Alert.alert('Error', 'Failed to select document. Please try again.');
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    // Request camera permissions
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        t('upload.permissionRequired'),
+        t('upload.cameraPermission')
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      Alert.alert('No File Selected', 'Please select a file to upload.');
-      return;
-    }
+    if (!image) return;
 
     try {
-      setIsUploading(true);
-      // Convert DocumentPickerAsset to UploadFile
-      const uploadFile = {
-        uri: selectedFile.uri,
-        name: selectedFile.name,
-        type: selectedFile.mimeType
+      setUploading(true);
+      
+      // Get file info
+      const fileInfo = await FileSystem.getInfoAsync(image);
+      
+      // Create upload file object
+      const uploadFile: UploadFile = {
+        uri: Platform.OS === 'ios' ? image.replace('file://', '') : image,
+        name: image.split('/').pop() || 'image.jpg',
+        type: 'image/jpeg', // Adjust based on your image type
       };
+
+      // Upload the document
       await uploadDocument(uploadFile);
+      
+      // Show success message
       Alert.alert(
-        'Upload Successful',
-        'Your document has been uploaded successfully.',
-        [{ text: 'OK', onPress: () => router.push('/(app)/dashboard') }]
+        t('upload.success'),
+        t('upload.successMessage'),
+        [
+          {
+            text: t('common.ok'),
+            onPress: () => {
+              // Navigate to history page
+              router.replace('/(app)/history');
+            },
+          },
+        ]
       );
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert('Upload Failed', 'There was an error uploading your document. Please try again.');
+      Alert.alert(
+        t('upload.error'),
+        t('upload.errorMessage')
+      );
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
+  const renderContent = () => {
+    if (uploading) {
+      return (
+        <View style={styles.uploadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.uploadingText}>{t('upload.processing')}</Text>
+        </View>
+      );
+    }
+
+    if (image) {
+      return (
+        <View style={styles.previewContainer}>
+          <Image source={{ uri: image }} style={styles.previewImage} />
+          <View style={styles.previewActions}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.cancelButton]}
+              onPress={() => setImage(null)}
+            >
+              <MaterialIcons name="close" size={24} color={colors.error} />
+              <Text style={[styles.actionButtonText, styles.cancelButtonText]}>
+                {t('common.cancel')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.uploadButton]}
+              onPress={handleUpload}
+            >
+              <MaterialIcons name="check" size={24} color={colors.success} />
+              <Text style={[styles.actionButtonText, styles.uploadButtonText]}>
+                {t('upload.confirm')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.optionsContainer}>
+        <TouchableOpacity 
+          style={styles.optionButton}
+          onPress={pickImage}
+        >
+          <View style={styles.optionIconContainer}>
+            <MaterialIcons name="photo-library" size={40} color={colors.primary} />
+          </View>
+          <Text style={styles.optionText}>{t('upload.selectImage')}</Text>
+          <Text style={styles.optionDescription}>
+            {t('upload.selectImageDescription')}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.optionDivider} />
+
+        <TouchableOpacity 
+          style={styles.optionButton}
+          onPress={takePhoto}
+        >
+          <View style={styles.optionIconContainer}>
+            <MaterialIcons name="camera-alt" size={40} color={colors.primary} />
+          </View>
+          <Text style={styles.optionText}>{t('upload.takePhoto')}</Text>
+          <Text style={styles.optionDescription}>
+            {t('upload.takePhotoDescription')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -68,57 +176,10 @@ export default function Upload() {
         >
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Upload Document</Text>
+        <Text style={styles.headerTitle}>{t('upload.title')}</Text>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.uploadArea}>
-          <TouchableOpacity 
-            style={styles.uploadBox}
-            onPress={handleSelectDocument}
-            disabled={isUploading}
-          >
-            <MaterialIcons 
-              name={selectedFile ? "description" : "cloud-upload"} 
-              size={64} 
-              color={colors.primary} 
-            />
-            <Text style={styles.uploadText}>
-              {selectedFile ? selectedFile.name : 'Tap to select a document'}
-            </Text>
-            {selectedFile && selectedFile.size !== undefined && (
-              <Text style={styles.fileInfo}>
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {selectedFile && (
-          <TouchableOpacity 
-            style={styles.uploadButton}
-            onPress={handleUpload}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <ActivityIndicator color={colors.white} size="small" />
-            ) : (
-              <>
-                <MaterialIcons name="file-upload" size={20} color={colors.white} />
-                <Text style={styles.uploadButtonText}>Upload Document</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity 
-          style={styles.cancelButton}
-          onPress={() => router.back()}
-          disabled={isUploading}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+      {renderContent()}
     </SafeAreaView>
   );
 }
@@ -133,18 +194,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     justifyContent: 'center',
     height: 60,
     position: 'relative',
   },
-  title: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-    lineHeight: 24,
   },
   backButton: {
     position: 'absolute',
@@ -157,68 +215,95 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{ translateY: -20 }],
   },
-  content: {
+  uploadingContainer: {
     flex: 1,
-    padding: 24,
-    alignItems: 'center',
-  },
-  uploadArea: {
-    width: '100%',
-    alignItems: 'center',
-    marginVertical: 32,
-  },
-  uploadBox: {
-    width: '100%',
-    height: 200,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surfaceVariant,
-    padding: 16,
   },
-  uploadText: {
+  uploadingText: {
     fontSize: 16,
     color: colors.text,
     marginTop: 16,
     textAlign: 'center',
   },
-  fileInfo: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 8,
+  previewContainer: {
+    flex: 1,
+    padding: 16,
   },
-  uploadButton: {
+  previewImage: {
+    flex: 1,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  previewActions: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    width: '100%',
-    maxWidth: 300,
+    flex: 1,
+    marginHorizontal: 8,
   },
-  uploadButtonText: {
-    color: colors.white,
-    fontWeight: '600',
+  actionButtonText: {
     fontSize: 16,
+    fontWeight: '500',
     marginLeft: 8,
   },
   cancelButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
+    backgroundColor: colors.surfaceVariant,
   },
   cancelButtonText: {
-    color: colors.primary,
-    fontWeight: '500',
-    fontSize: 16,
+    color: colors.error,
+  },
+  uploadButton: {
+    backgroundColor: colors.surfaceVariant,
+  },
+  uploadButtonText: {
+    color: colors.success,
+  },
+  optionsContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  optionButton: {
+    alignItems: 'center',
+    padding: 24,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  optionIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  optionText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  optionDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  optionDivider: {
+    height: 24,
   },
 }); 

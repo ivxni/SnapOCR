@@ -7,11 +7,13 @@ import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
 import { useAuth } from '../hooks/useAuth';
 import { Document } from '../types/document.types';
+import { useTranslation } from '../utils/i18n';
 
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const { documents, fetchDocuments, loading, error } = useDocuments();
+  const { t, format } = useTranslation();
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function Dashboard() {
       return (
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading documents...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       );
     }
@@ -43,12 +45,12 @@ export default function Dashboard() {
       return (
         <View style={styles.centerContent}>
           <MaterialIcons name="error-outline" size={80} color={colors.error} />
-          <Text style={styles.errorText}>Error loading documents</Text>
+          <Text style={styles.errorText}>{t('common.error')}</Text>
           <TouchableOpacity 
             style={styles.retryButton}
             onPress={() => fetchDocuments()}
           >
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -58,9 +60,9 @@ export default function Dashboard() {
       return (
         <View style={styles.emptyState}>
           <MaterialIcons name="description" size={80} color={colors.disabled} />
-          <Text style={styles.emptyStateText}>No documents yet</Text>
+          <Text style={styles.emptyStateText}>{t('dashboard.noDocuments')}</Text>
           <Text style={styles.emptyStateSubtext}>
-            Upload your first document to get started
+            {t('dashboard.uploadFirst')}
           </Text>
         </View>
       );
@@ -68,7 +70,7 @@ export default function Dashboard() {
 
     return (
       <View style={styles.documentsContainer}>
-        <Text style={styles.sectionTitle}>Recent Documents</Text>
+        <Text style={styles.sectionTitle}>{t('dashboard.recentDocuments')}</Text>
         {recentDocuments.map((doc) => (
           <TouchableOpacity 
             key={doc._id} 
@@ -97,7 +99,12 @@ export default function Dashboard() {
                 }
               ]} />
               <Text style={styles.statusText}>
-                {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                {doc.status === 'completed' 
+                  ? t('history.status.completed')
+                  : doc.status === 'failed'
+                    ? t('history.status.failed')
+                    : t('history.status.processing')
+                }
               </Text>
             </View>
           </TouchableOpacity>
@@ -106,7 +113,7 @@ export default function Dashboard() {
           style={styles.viewAllButton}
           onPress={() => router.push('/(app)/history')}
         >
-          <Text style={styles.viewAllText}>View All Documents</Text>
+          <Text style={styles.viewAllText}>{t('dashboard.viewAll')}</Text>
           <MaterialIcons name="arrow-forward" size={16} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -116,9 +123,12 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Dashboard</Text>
+        <Text style={styles.title}>{t('dashboard.title')}</Text>
         <Text style={styles.subtitle}>
-          Welcome{user?.firstName ? `, ${user.firstName}` : ''}
+          {user?.firstName 
+            ? format(t('dashboard.welcome'), { name: `, ${user.firstName}` })
+            : t('dashboard.welcome')
+          }
         </Text>
         
         {renderContent()}
@@ -133,7 +143,7 @@ export default function Dashboard() {
             onPress={() => router.push('/(app)/history')}
           >
             <MaterialIcons name="history" size={28} color={colors.textSecondary} />
-            <Text style={styles.navButtonText}>History</Text>
+            <Text style={styles.navButtonText}>{t('dashboard.history')}</Text>
           </TouchableOpacity>
           
           {/* Upload Button */}
@@ -152,7 +162,7 @@ export default function Dashboard() {
             onPress={() => router.push('/(app)/profile')}
           >
             <MaterialIcons name="person" size={28} color={colors.textSecondary} />
-            <Text style={styles.navButtonText}>Profile</Text>
+            <Text style={styles.navButtonText}>{t('dashboard.profile')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
