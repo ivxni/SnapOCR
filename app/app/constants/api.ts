@@ -16,7 +16,7 @@ export const ENDPOINTS: ApiEndpoints = {
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
   PROFILE: '/auth/profile',
-  CHANGE_PASSWORD: '/auth/change-password',
+  CHANGE_PASSWORD: '/auth/profile',
   
   // Document endpoints
   DOCUMENTS: '/documents',

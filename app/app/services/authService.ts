@@ -87,7 +87,10 @@ export const updateUserProfile = async (userData: ProfileUpdateData): Promise<Us
 // Change password
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
   try {
-    await api.put(ENDPOINTS.CHANGE_PASSWORD, { currentPassword, newPassword });
+    await api.put(ENDPOINTS.PROFILE, { 
+      currentPassword, 
+      password: newPassword 
+    });
   } catch (error) {
     throw error;
   }

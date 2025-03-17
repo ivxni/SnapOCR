@@ -51,7 +51,18 @@ export default function ChangePassword() {
         [{ text: t('common.ok'), onPress: () => router.replace('/(app)/profile') }]
       );
     } catch (err: any) {
-      setError(err.message || t('profile.passwordChangeFailed'));
+      console.error('Password change error:', err);
+      // Zeige detailliertere Fehlermeldung an
+      if (err.response) {
+        // Der Server hat mit einem Fehlerstatuscode geantwortet
+        setError(err.response.data?.message || t('profile.passwordChangeFailed'));
+      } else if (err.request) {
+        // Die Anfrage wurde gestellt, aber keine Antwort erhalten
+        setError(t('common.error'));
+      } else {
+        // Etwas anderes ist beim Einrichten der Anfrage schief gelaufen
+        setError(err.message || t('profile.passwordChangeFailed'));
+      }
     } finally {
       setLoading(false);
     }
