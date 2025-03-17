@@ -48,6 +48,20 @@ export default function AppLayout() {
             headerShown: false
           }} 
         />
+        <Stack.Screen 
+          name="editprofile" 
+          options={{ 
+            title: 'Edit Profile',
+            headerShown: false
+          }} 
+        />
+        <Stack.Screen 
+          name="changepassword" 
+          options={{ 
+            title: 'Change Password',
+            headerShown: false
+          }} 
+        />
       </Stack>
     </ProtectedRoute>
   );

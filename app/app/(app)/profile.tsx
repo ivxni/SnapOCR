@@ -94,6 +94,14 @@ export default function Profile() {
     router.push('/(app)/darkmode');
   };
 
+  const navigateToEditProfile = () => {
+    router.push('/(app)/editprofile');
+  };
+
+  const navigateToChangePassword = () => {
+    router.push('/(app)/changepassword');
+  };
+
   const handleThemeModeChange = (mode: ThemeMode) => {
     setThemeMode(mode);
   };
@@ -187,7 +195,10 @@ export default function Profile() {
               </Text>
             </View>
             
-            <TouchableOpacity style={[styles.editButton, { backgroundColor: themeColors.surfaceVariant }]}>
+            <TouchableOpacity 
+              style={[styles.editButton, { backgroundColor: themeColors.surfaceVariant }]}
+              onPress={navigateToEditProfile}
+            >
               <MaterialIcons name="edit" size={20} color={themeColors.primary} />
             </TouchableOpacity>
           </View>
@@ -253,7 +264,10 @@ export default function Profile() {
           </Text>
           
           {/* Change Password */}
-          <TouchableOpacity style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+          <TouchableOpacity 
+            style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+            onPress={navigateToChangePassword}
+          >
             <View style={styles.settingLabelContainer}>
               <MaterialIcons name="lock" size={24} color={themeColors.text} />
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>

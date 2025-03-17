@@ -4,6 +4,7 @@ export interface ApiEndpoints {
   REGISTER: string;
   LOGIN: string;
   PROFILE: string;
+  CHANGE_PASSWORD: string;
   DOCUMENTS: string;
   UPLOAD_DOCUMENT: string;
   DOCUMENT_BY_ID: (id: string) => string;
@@ -15,6 +16,7 @@ export const ENDPOINTS: ApiEndpoints = {
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
   PROFILE: '/auth/profile',
+  CHANGE_PASSWORD: '/auth/change-password',
   
   // Document endpoints
   DOCUMENTS: '/documents',

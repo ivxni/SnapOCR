@@ -85,6 +85,19 @@ export type TranslationKey =
   | 'profile.systemDefault'
   | 'profile.lightMode'
   | 'profile.themeChangeNote'
+  | 'profile.firstName'
+  | 'profile.lastName'
+  | 'profile.email'
+  | 'profile.allFieldsRequired'
+  | 'profile.profileUpdated'
+  | 'profile.updateFailed'
+  | 'profile.currentPassword'
+  | 'profile.newPassword'
+  | 'profile.confirmPassword'
+  | 'profile.passwordsDoNotMatch'
+  | 'profile.passwordTooShort'
+  | 'profile.passwordChanged'
+  | 'profile.passwordChangeFailed'
   
   // Language
   | 'language.title'
@@ -181,6 +194,19 @@ const en: TranslationDictionary = {
   'profile.systemDefault': 'System Default',
   'profile.lightMode': 'Light Mode',
   'profile.themeChangeNote': 'Changes will be applied immediately to the app interface.',
+  'profile.firstName': 'First Name',
+  'profile.lastName': 'Last Name',
+  'profile.email': 'Email',
+  'profile.allFieldsRequired': 'Please fill in all fields',
+  'profile.profileUpdated': 'Profile updated successfully',
+  'profile.updateFailed': 'Failed to update profile',
+  'profile.currentPassword': 'Current Password',
+  'profile.newPassword': 'New Password',
+  'profile.confirmPassword': 'Confirm Password',
+  'profile.passwordsDoNotMatch': 'Passwords do not match',
+  'profile.passwordTooShort': 'Password must be at least 6 characters',
+  'profile.passwordChanged': 'Password changed successfully',
+  'profile.passwordChangeFailed': 'Failed to change password',
   
   // Language
   'language.title': 'Language',
@@ -273,6 +299,19 @@ const es: TranslationDictionary = {
   'profile.systemDefault': 'Sistema Predeterminado',
   'profile.lightMode': 'Modo Claro',
   'profile.themeChangeNote': 'Los cambios se aplicarán inmediatamente a la interfaz de la aplicación.',
+  'profile.firstName': 'Nombre',
+  'profile.lastName': 'Apellido',
+  'profile.email': 'Correo electrónico',
+  'profile.allFieldsRequired': 'Por favor complete todos los campos',
+  'profile.profileUpdated': 'Perfil actualizado con éxito',
+  'profile.updateFailed': 'Error al actualizar el perfil',
+  'profile.currentPassword': 'Contraseña actual',
+  'profile.newPassword': 'Nueva contraseña',
+  'profile.confirmPassword': 'Confirmar contraseña',
+  'profile.passwordsDoNotMatch': 'Las contraseñas no coinciden',
+  'profile.passwordTooShort': 'La contraseña debe tener al menos 6 caracteres',
+  'profile.passwordChanged': 'Contraseña cambiada con éxito',
+  'profile.passwordChangeFailed': 'Error al cambiar la contraseña',
   
   // Language
   'language.title': 'Idioma',
@@ -365,6 +404,19 @@ const de: TranslationDictionary = {
   'profile.systemDefault': 'System Standard',
   'profile.lightMode': 'Hellmodus',
   'profile.themeChangeNote': 'Die Änderungen werden sofort auf die App-Oberfläche angewendet.',
+  'profile.firstName': 'Vorname',
+  'profile.lastName': 'Nachname',
+  'profile.email': 'E-Mail',
+  'profile.allFieldsRequired': 'Bitte füllen Sie alle Felder aus',
+  'profile.profileUpdated': 'Profil erfolgreich aktualisiert',
+  'profile.updateFailed': 'Fehler beim Aktualisieren des Profils',
+  'profile.currentPassword': 'Aktuelles Passwort',
+  'profile.newPassword': 'Neues Passwort',
+  'profile.confirmPassword': 'Passwort bestätigen',
+  'profile.passwordsDoNotMatch': 'Passwörter stimmen nicht überein',
+  'profile.passwordTooShort': 'Passwort muss mindestens 6 Zeichen lang sein',
+  'profile.passwordChanged': 'Passwort erfolgreich geändert',
+  'profile.passwordChangeFailed': 'Fehler beim Ändern des Passworts',
   
   // Language
   'language.title': 'Sprache',
@@ -455,6 +507,19 @@ const ru: TranslationDictionary = {
   'profile.systemDefault': 'Системная',
   'profile.lightMode': 'Светлая',
   'profile.themeChangeNote': 'Изменения будут применены сразу на интерфейсе приложения.',
+  'profile.firstName': 'Имя',
+  'profile.lastName': 'Фамилия',
+  'profile.email': 'Эл. почта',
+  'profile.allFieldsRequired': 'Пожалуйста, заполните все поля',
+  'profile.profileUpdated': 'Профиль успешно обновлен',
+  'profile.updateFailed': 'Ошибка при обновлении профиля',
+  'profile.currentPassword': 'Текущий пароль',
+  'profile.newPassword': 'Новый пароль',
+  'profile.confirmPassword': 'Подтвердите пароль',
+  'profile.passwordsDoNotMatch': 'Пароли не совпадают',
+  'profile.passwordTooShort': 'Пароль должен содержать не менее 6 символов',
+  'profile.passwordChanged': 'Пароль успешно изменен',
+  'profile.passwordChangeFailed': 'Ошибка при изменении пароля',
   
   // Language
   'language.title': 'Язык',
@@ -545,6 +610,19 @@ const tr: TranslationDictionary = {
   'profile.systemDefault': 'Sistem Varsayılanı',
   'profile.lightMode': 'Açık Mod',
   'profile.themeChangeNote': 'Değişiklikler uygulamak için uygulama yeniden başlatılacaktır.',
+  'profile.firstName': 'Ad',
+  'profile.lastName': 'Soyad',
+  'profile.email': 'E-posta',
+  'profile.allFieldsRequired': 'Lütfen tüm alanları doldurun',
+  'profile.profileUpdated': 'Profil başarıyla güncellendi',
+  'profile.updateFailed': 'Profil güncellenirken hata oluştu',
+  'profile.currentPassword': 'Mevcut Şifre',
+  'profile.newPassword': 'Yeni Şifre',
+  'profile.confirmPassword': 'Şifreyi Onayla',
+  'profile.passwordsDoNotMatch': 'Şifreler eşleşmiyor',
+  'profile.passwordTooShort': 'Şifre en az 6 karakter olmalıdır',
+  'profile.passwordChanged': 'Şifre başarıyla değiştirildi',
+  'profile.passwordChangeFailed': 'Şifre değiştirilirken hata oluştu',
   
   // Language
   'language.title': 'Dil',
@@ -635,11 +713,129 @@ const ja: TranslationDictionary = {
   'profile.systemDefault': 'システムのデフォルト',
   'profile.lightMode': 'ライトモード',
   'profile.themeChangeNote': '変更はアプリを再起動することで適用されます。',
+  'profile.firstName': '名',
+  'profile.lastName': '姓',
+  'profile.email': 'メールアドレス',
+  'profile.allFieldsRequired': 'すべての項目を入力してください',
+  'profile.profileUpdated': 'プロフィールが正常に更新されました',
+  'profile.updateFailed': 'プロフィールの更新に失敗しました',
+  'profile.currentPassword': '現在のパスワード',
+  'profile.newPassword': '新しいパスワード',
+  'profile.confirmPassword': 'パスワードの確認',
+  'profile.passwordsDoNotMatch': 'パスワードが一致しません',
+  'profile.passwordTooShort': 'パスワードは6文字以上である必要があります',
+  'profile.passwordChanged': 'パスワードが正常に変更されました',
+  'profile.passwordChangeFailed': 'パスワードの変更に失敗しました',
   
   // Language
   'language.title': '言語',
   'language.description': 'アプリのインターフェース用に希望の言語を選択してください。変更を適用するためにアプリが再起動します。',
   'language.info': '言語選択に関係なく、一部のコンテンツは英語で表示される場合があります。'
+};
+
+// French translations
+const fr: TranslationDictionary = {
+  // Common
+  'common.ok': 'OK',
+  'common.cancel': 'Annuler',
+  'common.save': 'Enregistrer',
+  'common.delete': 'Supprimer',
+  'common.edit': 'Modifier',
+  'common.loading': 'Chargement...',
+  'common.retry': 'Réessayer',
+  'common.error': 'Erreur',
+  'common.success': 'Succès',
+  'common.version': 'Version',
+  'common.logout': 'Déconnexion',
+  
+  // Auth
+  'auth.signIn': 'Connexion',
+  'auth.signUp': 'Inscription',
+  'auth.email': 'E-mail',
+  'auth.password': 'Mot de passe',
+  'auth.forgotPassword': 'Mot de passe oublié ?',
+  'auth.resetPassword': 'Réinitialiser le mot de passe',
+  
+  // Dashboard
+  'dashboard.title': 'Tableau de bord',
+  'dashboard.welcome': 'Bienvenue',
+  'dashboard.upload': 'Télécharger',
+  'dashboard.history': 'Historique',
+  'dashboard.profile': 'Profil',
+  'dashboard.recentDocuments': 'Documents récents',
+  'dashboard.viewAll': 'Voir tous les documents',
+  'dashboard.noDocuments': 'Pas encore de documents',
+  'dashboard.uploadFirst': 'Téléchargez votre premier document pour commencer',
+  
+  // Upload
+  'upload.title': 'Télécharger un document',
+  'upload.selectImage': 'Sélectionner une image',
+  'upload.takePhoto': 'Prendre une photo',
+  'upload.processing': 'Traitement en cours...',
+  'upload.success': 'Document téléchargé avec succès',
+  'upload.error': 'Erreur lors du téléchargement du document',
+  'upload.permissionRequired': 'Permission requise',
+  'upload.cameraPermission': 'L\'autorisation de la caméra est nécessaire pour prendre des photos',
+  'upload.successMessage': 'Votre document a été téléchargé et est en cours de traitement',
+  'upload.errorMessage': 'Une erreur s\'est produite lors du téléchargement de votre document. Veuillez réessayer.',
+  'upload.confirm': 'Confirmer',
+  'upload.selectImageDescription': 'Choisissez une image de votre galerie',
+  'upload.takePhotoDescription': 'Prenez une nouvelle photo avec votre caméra',
+  
+  // History
+  'history.title': 'Historique des documents',
+  'history.noDocuments': 'Pas encore de documents',
+  'history.uploadFirst': 'Téléchargez votre premier document pour commencer',
+  'history.loadingDocuments': 'Chargement des documents...',
+  'history.errorLoading': 'Erreur lors du chargement des documents',
+  'history.status.completed': 'Terminé',
+  'history.status.processing': 'En cours',
+  'history.status.failed': 'Échoué',
+  
+  // Profile
+  'profile.title': 'Profil',
+  'profile.editProfile': 'Modifier le profil',
+  'profile.notifications': 'Notifications',
+  'profile.security': 'Sécurité',
+  'profile.helpSupport': 'Aide et support',
+  'profile.appearance': 'Apparence',
+  'profile.language': 'Langue',
+  'profile.logout': 'Déconnexion',
+  'profile.account': 'Compte',
+  'profile.preferences': 'Préférences',
+  'profile.loadingProfile': 'Chargement du profil...',
+  'profile.errorProfile': 'Erreur lors du chargement du profil',
+  'profile.settings': 'Paramètres',
+  'profile.darkMode': 'Mode sombre',
+  'profile.changePassword': 'Changer le mot de passe',
+  'profile.privacyPolicy': 'Politique de confidentialité',
+  'profile.termsOfService': 'Conditions d\'utilisation',
+  'profile.logoutTitle': 'Déconnexion',
+  'profile.logoutConfirm': 'Êtes-vous sûr de vouloir vous déconnecter ?',
+  'profile.selectTheme': 'Sélectionner un thème',
+  'profile.systemDefault': 'Défaut du système',
+  'profile.lightMode': 'Mode clair',
+  'profile.themeChangeNote': 'Les changements seront appliqués immédiatement à l\'interface de l\'application.',
+  'profile.firstName': 'Prénom',
+  'profile.lastName': 'Nom',
+  'profile.email': 'E-mail',
+  'profile.allFieldsRequired': 'Veuillez remplir tous les champs',
+  'profile.profileUpdated': 'Profil mis à jour avec succès',
+  'profile.updateFailed': 'Échec de la mise à jour du profil',
+  'profile.currentPassword': 'Mot de passe actuel',
+  'profile.newPassword': 'Nouveau mot de passe',
+  'profile.confirmPassword': 'Confirmer le mot de passe',
+  'profile.passwordsDoNotMatch': 'Les mots de passe ne correspondent pas',
+  'profile.passwordTooShort': 'Le mot de passe doit comporter au moins 6 caractères',
+  'profile.passwordChanged': 'Mot de passe changé avec succès',
+  'profile.passwordChangeFailed': 'Échec du changement de mot de passe',
+  
+  // Language
+  'language.title': 'Langue',
+  'language.description': 'Sélectionnez votre langue préférée pour l\'interface de l\'application. L\'application redémarrera pour appliquer les changements.',
+  'language.info': 'Certains contenus peuvent toujours apparaître en anglais quelle que soit votre sélection de langue.',
+  'language.selectLanguage': 'Sélectionnez votre langue préférée',
+  'language.changeNote': 'Les changements seront appliqués immédiatement à l\'interface de l\'application.'
 };
 
 // Combine all translations
@@ -649,7 +845,8 @@ const translations: Record<Language, TranslationDictionary> = {
   es,
   ru,
   tr,
-  ja
+  ja,
+  fr
 };
 
 // Function to get a translation
