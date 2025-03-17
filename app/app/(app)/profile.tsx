@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage, LANGUAGES } from '../contexts/LanguageContext';
 import { useTranslation } from '../utils/i18n';
 import { useDarkMode, ThemeMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
@@ -45,6 +45,7 @@ export default function Profile() {
   const { themeMode, setThemeMode } = useDarkMode();
   const themeColors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
+  const { language } = useLanguage();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -234,7 +235,12 @@ export default function Profile() {
                 {t('profile.language')}
               </Text>
             </View>
-            <MaterialIcons name="chevron-right" size={24} color={themeColors.textSecondary} />
+            <View style={styles.themeValueContainer}>
+              <Text style={[styles.themeValue, { color: themeColors.textSecondary }]}>
+                {LANGUAGES.find((lang: { code: string; name: string; nativeName: string }) => lang.code === language)?.name || 'English'}
+              </Text>
+              <MaterialIcons name="chevron-right" size={24} color={themeColors.textSecondary} />
+            </View>
           </TouchableOpacity>
         </View>
         

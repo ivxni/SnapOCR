@@ -85,8 +85,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      await authService.logout();
+      // First set user to null to prevent any API calls that depend on authentication
       setUser(null);
+      // Then clear the token
+      await authService.logout();
     } catch (error: any) {
       console.error('Logout error:', error);
     } finally {

@@ -1,4 +1,4 @@
-import api from './api';
+import api, { setAuthToken, clearAuthToken } from './api';
 import { ENDPOINTS } from '../constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, RegisterData, ProfileUpdateData } from '../types/auth.types';
@@ -9,7 +9,7 @@ export const register = async (userData: RegisterData): Promise<User> => {
     const response = await api.post(ENDPOINTS.REGISTER, userData);
     
     if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
+      await setAuthToken(response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data));
     }
     
@@ -25,7 +25,7 @@ export const login = async (email: string, password: string): Promise<User> => {
     const response = await api.post(ENDPOINTS.LOGIN, { email, password });
     
     if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
+      await setAuthToken(response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data));
     }
     
@@ -38,8 +38,7 @@ export const login = async (email: string, password: string): Promise<User> => {
 // Logout user
 export const logout = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
+    await clearAuthToken();
   } catch (error) {
     throw error;
   }
