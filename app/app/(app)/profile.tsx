@@ -165,7 +165,7 @@ export default function Profile() {
           <View style={styles.headerTop}>
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => router.push('/(app)/dashboard')}
             >
               <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
             </TouchableOpacity>
