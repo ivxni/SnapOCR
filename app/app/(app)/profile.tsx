@@ -45,7 +45,6 @@ export default function Profile() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -164,22 +163,6 @@ export default function Profile() {
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
             {t('profile.settings')}
           </Text>
-          
-          {/* Notifications Setting */}
-          <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
-            <View style={styles.settingLabelContainer}>
-              <MaterialIcons name="notifications" size={24} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {t('profile.notifications')}
-              </Text>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: themeColors.disabled, true: themeColors.primaryLight }}
-              thumbColor={notificationsEnabled ? themeColors.primary : themeColors.disabled}
-            />
-          </View>
           
           {/* Dark Mode Setting */}
           <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
