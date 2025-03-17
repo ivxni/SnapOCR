@@ -10,7 +10,6 @@ import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
-import { useTranslation } from '../utils/i18n';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,7 +18,6 @@ export default function SignIn() {
   const { login, isAuthenticated } = useAuth();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
-  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +33,7 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      setError(t('profile.allFieldsRequired'));
+      setError('Please fill in all fields');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -81,12 +79,12 @@ export default function SignIn() {
           </View>
         </View>
         
-        <Text style={[styles.title, { color: themeColors.text }]}>{t('auth.signIn')}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>Sign In</Text>
         <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Welcome back to LynxAI</Text>
         
         <View style={styles.formContainer}>
           <TextInput
-            label={t('profile.email')}
+            label="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -96,7 +94,7 @@ export default function SignIn() {
           />
           
           <TextInput
-            label={t('auth.password')}
+            label="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -120,7 +118,7 @@ export default function SignIn() {
             }}
           >
             <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>
-              {t('auth.forgotPassword')}
+              Forgot Password?
             </Text>
           </TouchableOpacity>
           
@@ -133,14 +131,14 @@ export default function SignIn() {
             loading={loading}
             style={styles.button}
           >
-            {t('auth.signIn')}
+            Sign In
           </Button>
         </View>
         
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-            <Text style={[styles.footerLink, { color: themeColors.primary }]}>{t('auth.signUp')}</Text>
+            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

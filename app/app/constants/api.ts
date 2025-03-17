@@ -1,4 +1,4 @@
-export const API_URL: string = 'https://7f33-2003-c9-774b-ec5a-3464-d973-9f94-4cdb.ngrok-free.app/api';
+export const API_URL: string = 'https://78ab-2003-c9-772e-83f0-7182-dc1-3861-3004.ngrok-free.app/api';
 
 export interface ApiEndpoints {
   REGISTER: string;

@@ -16,15 +16,7 @@ export type TranslationKey =
   | 'common.success'
   | 'common.version'
   | 'common.logout'
-  
-  // Auth
-  | 'auth.signIn'
-  | 'auth.signUp'
-  | 'auth.email'
-  | 'auth.password'
-  | 'auth.forgotPassword'
-  | 'auth.resetPassword'
-  | 'auth.createAccount'
+  | 'common.and'
   
   // Dashboard
   | 'dashboard.title'
@@ -131,15 +123,7 @@ const en: TranslationDictionary = {
   'common.success': 'Success',
   'common.version': 'Version',
   'common.logout': 'Log Out',
-  
-  // Auth
-  'auth.signIn': 'Sign In',
-  'auth.signUp': 'Sign Up',
-  'auth.email': 'Email',
-  'auth.password': 'Password',
-  'auth.forgotPassword': 'Forgot Password?',
-  'auth.resetPassword': 'Reset Password',
-  'auth.createAccount': 'Create Account',
+  'common.and': 'and',
   
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -242,15 +226,7 @@ const es: TranslationDictionary = {
   'common.success': 'Éxito',
   'common.version': 'Versión',
   'common.logout': 'Cerrar Sesión',
-  
-  // Auth
-  'auth.signIn': 'Iniciar Sesión',
-  'auth.signUp': 'Registrarse',
-  'auth.email': 'Correo electrónico',
-  'auth.password': 'Contraseña',
-  'auth.forgotPassword': '¿Olvidó su contraseña?',
-  'auth.resetPassword': 'Restablecer Contraseña',
-  'auth.createAccount': 'Crear Cuenta',
+  'common.and': 'y',
   
   // Dashboard
   'dashboard.title': 'Panel Principal',
@@ -353,15 +329,7 @@ const de: TranslationDictionary = {
   'common.success': 'Erfolg',
   'common.version': 'Version',
   'common.logout': 'Abmelden',
-  
-  // Auth
-  'auth.signIn': 'Anmelden',
-  'auth.signUp': 'Registrieren',
-  'auth.email': 'E-Mail',
-  'auth.password': 'Passwort',
-  'auth.forgotPassword': 'Passwort vergessen?',
-  'auth.resetPassword': 'Passwort zurücksetzen',
-  'auth.createAccount': 'Konto erstellen',
+  'common.and': 'und',
   
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -462,15 +430,7 @@ const ru: TranslationDictionary = {
   'common.success': 'Успех',
   'common.version': 'Версия',
   'common.logout': 'Выйти',
-  
-  // Auth
-  'auth.signIn': 'Войти',
-  'auth.signUp': 'Зарегистрироваться',
-  'auth.email': 'Эл. почта',
-  'auth.password': 'Пароль',
-  'auth.forgotPassword': 'Забыли пароль?',
-  'auth.resetPassword': 'Сбросить пароль',
-  'auth.createAccount': 'Создать аккаунт',
+  'common.and': 'и',
   
   // Dashboard
   'dashboard.title': 'Панель управления',
@@ -571,14 +531,7 @@ const tr: TranslationDictionary = {
   'common.success': 'Başarılı',
   'common.version': 'Sürüm',
   'common.logout': 'Çıkış Yap',
-  
-  // Auth
-  'auth.signIn': 'Giriş Yap',
-  'auth.signUp': 'Kaydol',
-  'auth.email': 'E-posta',
-  'auth.password': 'Şifre',
-  'auth.forgotPassword': 'Şifremi Unuttum?',
-  'auth.resetPassword': 'Şifreyi Sıfırla',
+  'common.and': 've',
   
   // Dashboard
   'dashboard.title': 'Gösterge Paneli',
@@ -679,14 +632,7 @@ const ja: TranslationDictionary = {
   'common.success': '成功',
   'common.version': 'バージョン',
   'common.logout': 'ログアウト',
-  
-  // Auth
-  'auth.signIn': 'サインイン',
-  'auth.signUp': '登録',
-  'auth.email': 'メール',
-  'auth.password': 'パスワード',
-  'auth.forgotPassword': 'パスワードをお忘れですか？',
-  'auth.resetPassword': 'パスワードをリセット',
+  'common.and': 'と',
   
   // Dashboard
   'dashboard.title': 'ダッシュボード',
@@ -787,14 +733,7 @@ const fr: TranslationDictionary = {
   'common.success': 'Succès',
   'common.version': 'Version',
   'common.logout': 'Déconnexion',
-  
-  // Auth
-  'auth.signIn': 'Connexion',
-  'auth.signUp': 'Inscription',
-  'auth.email': 'E-mail',
-  'auth.password': 'Mot de passe',
-  'auth.forgotPassword': 'Mot de passe oublié ?',
-  'auth.resetPassword': 'Réinitialiser le mot de passe',
+  'common.and': 'et',
   
   // Dashboard
   'dashboard.title': 'Tableau de bord',

@@ -10,7 +10,6 @@ import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
-import { useTranslation } from '../utils/i18n';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,7 +25,6 @@ export default function SignUp() {
   const { register, isAuthenticated } = useAuth();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
-  const { t } = useTranslation();
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -74,13 +72,13 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password) {
-      setError(t('profile.allFieldsRequired'));
+      setError('Please fill in all fields');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
     
     if (!isPasswordValid) {
-      setError(t('profile.passwordRequirements'));
+      setError('Password does not meet requirements');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -126,14 +124,14 @@ export default function SignUp() {
           </View>
         </View>
         
-        <Text style={[styles.title, { color: themeColors.text }]}>{t('auth.createAccount')}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>Create Account</Text>
         <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Join LynxAI to get started</Text>
         
         <View style={styles.formContainer}>
           <View style={styles.nameRow}>
             <View style={styles.nameField}>
               <TextInput
-                label={t('profile.firstName')}
+                label="First Name"
                 value={firstName}
                 onChangeText={setFirstName}
                 floatingLabel={false}
@@ -143,7 +141,7 @@ export default function SignUp() {
             
             <View style={styles.nameField}>
               <TextInput
-                label={t('profile.lastName')}
+                label="Last Name"
                 value={lastName}
                 onChangeText={setLastName}
                 floatingLabel={false}
@@ -153,7 +151,7 @@ export default function SignUp() {
           </View>
           
           <TextInput
-            label={t('profile.email')}
+            label="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -164,7 +162,7 @@ export default function SignUp() {
           
           <View style={styles.passwordContainer}>
             <TextInput
-              label={t('auth.password')}
+              label="Password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -193,7 +191,7 @@ export default function SignUp() {
                   styles.validationText, 
                   { color: passwordValidation.minLength === null ? themeColors.textSecondary : (passwordValidation.minLength ? themeColors.success : themeColors.error) }
                 ]}>
-                  {t('profile.minLength')}
+                  At least 6 characters
                 </Text>
               </View>
               
@@ -207,7 +205,7 @@ export default function SignUp() {
                   styles.validationText, 
                   { color: passwordValidation.hasLetter === null ? themeColors.textSecondary : (passwordValidation.hasLetter ? themeColors.success : themeColors.error) }
                 ]}>
-                  {t('profile.hasLetter')}
+                  Contains at least one letter
                 </Text>
               </View>
               
@@ -221,7 +219,7 @@ export default function SignUp() {
                   styles.validationText, 
                   { color: passwordValidation.hasNumber === null ? themeColors.textSecondary : (passwordValidation.hasNumber ? themeColors.success : themeColors.error) }
                 ]}>
-                  {t('profile.hasNumber')}
+                  Contains at least one number
                 </Text>
               </View>
             </View>
@@ -236,20 +234,20 @@ export default function SignUp() {
             loading={loading}
             style={styles.button}
           >
-            {t('auth.signUp')}
+            Sign Up
           </Button>
           
           <Text style={[styles.termsText, { color: themeColors.textSecondary }]}>
             By creating an account, you agree to our{' '}
-            <Text style={[styles.termsLink, { color: themeColors.primary }]}>{t('profile.termsOfService')}</Text> and{' '}
-            <Text style={[styles.termsLink, { color: themeColors.primary }]}>{t('profile.privacyPolicy')}</Text>
+            <Text style={[styles.termsLink, { color: themeColors.primary }]}>Terms of Service</Text> and{' '}
+            <Text style={[styles.termsLink, { color: themeColors.primary }]}>Privacy Policy</Text>
           </Text>
         </View>
         
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Already have an account?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signin')}>
-            <Text style={[styles.footerLink, { color: themeColors.primary }]}>{t('auth.signIn')}</Text>
+            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
