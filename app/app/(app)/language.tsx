@@ -31,7 +31,7 @@ export default function LanguageScreen() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton} 
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(app)/profile')}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />

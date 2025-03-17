@@ -163,12 +163,6 @@ export default function Profile() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
-            </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: themeColors.text }]}>{t('profile.title')}</Text>
           </View>
           
@@ -358,17 +352,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: 60,
     position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 10,
-    height: 40,
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: '50%',
-    transform: [{ translateY: -20 }],
   },
   headerTitle: {
     fontSize: 18,

@@ -48,7 +48,7 @@ export default function ChangePassword() {
       Alert.alert(
         t('common.success'),
         t('profile.passwordChanged'),
-        [{ text: t('common.ok'), onPress: () => router.back() }]
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/profile') }]
       );
     } catch (err: any) {
       setError(err.message || t('profile.passwordChangeFailed'));
@@ -67,7 +67,7 @@ export default function ChangePassword() {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.replace('/(app)/profile')}
           >
             <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>

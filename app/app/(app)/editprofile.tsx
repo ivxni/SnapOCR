@@ -37,7 +37,7 @@ export default function EditProfile() {
       Alert.alert(
         t('common.success'),
         t('profile.profileUpdated'),
-        [{ text: t('common.ok'), onPress: () => router.back() }]
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/profile') }]
       );
     } catch (err: any) {
       setError(err.message || t('profile.updateFailed'));
@@ -56,7 +56,7 @@ export default function EditProfile() {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.replace('/(app)/profile')}
           >
             <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>
