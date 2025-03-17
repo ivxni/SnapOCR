@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define available languages
-export type Language = 'en' | 'de' | 'ru' | 'tr' | 'ja';
+export type Language = 'en' | 'de' | 'ru' | 'tr' | 'ja' | 'es';
 
 export interface LanguageOption {
   code: Language;
@@ -12,6 +12,7 @@ export interface LanguageOption {
 
 export const LANGUAGES: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский' },
   { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },

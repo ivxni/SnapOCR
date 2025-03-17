@@ -23,6 +23,8 @@ interface ColorPalette {
   darkBorder: string;
 }
 
+export type { ColorPalette };
+
 export const colors: ColorPalette = {
   // Modern purple as primary color
   primary: '#7B68EE',        // Medium purple

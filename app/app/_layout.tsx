@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 import { lightTheme } from './constants/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { DocumentProvider } from './contexts/DocumentContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { DarkModeProvider, useDarkMode } from './contexts/DarkModeContext';
 import { useAuth } from './hooks/useAuth';
+import { StatusBar, Platform } from 'react-native';
 
 // Auth protection component
 function AuthProtection() {
@@ -30,28 +32,50 @@ function AuthProtection() {
   return null;
 }
 
+// Theme provider that uses dark mode context
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { isDarkMode } = useDarkMode();
+  
+  // Update status bar based on theme
+  useEffect(() => {
+    StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('transparent');
+      StatusBar.setTranslucent(true);
+    }
+  }, [isDarkMode]);
+
+  return (
+    <PaperProvider theme={isDarkMode ? MD3DarkTheme : MD3LightTheme}>
+      {children}
+    </PaperProvider>
+  );
+}
+
 export default function RootLayout() {
   return (
-    <PaperProvider theme={lightTheme}>
-      <LanguageProvider>
-        <AuthProvider>
-          <DocumentProvider>
-            <AuthProtection />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen 
-                name="(app)" 
-                options={{ 
-                  headerShown: false,
-                  // Prevent going back to the get started screen
-                  gestureEnabled: false
-                }} 
-              />
-            </Stack>
-          </DocumentProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </PaperProvider>
+    <LanguageProvider>
+      <DarkModeProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <DocumentProvider>
+              <AuthProtection />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen 
+                  name="(app)" 
+                  options={{ 
+                    headerShown: false,
+                    // Prevent going back to the get started screen
+                    gestureEnabled: false
+                  }} 
+                />
+              </Stack>
+            </DocumentProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </DarkModeProvider>
+    </LanguageProvider>
   );
 } 

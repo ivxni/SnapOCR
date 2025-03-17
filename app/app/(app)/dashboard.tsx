@@ -8,12 +8,14 @@ import { useDocuments } from '../hooks/useDocuments';
 import { useAuth } from '../hooks/useAuth';
 import { Document } from '../types/document.types';
 import { useTranslation } from '../utils/i18n';
+import useThemeColors from '../utils/useThemeColors';
 
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const { documents, fetchDocuments, loading, error } = useDocuments();
   const { t, format } = useTranslation();
+  const themeColors = useThemeColors();
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -35,8 +37,10 @@ export default function Dashboard() {
     if (loading) {
       return (
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          <ActivityIndicator size="large" color={themeColors.primary} />
+          <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+            {t('common.loading')}
+          </Text>
         </View>
       );
     }
@@ -44,13 +48,17 @@ export default function Dashboard() {
     if (error) {
       return (
         <View style={styles.centerContent}>
-          <MaterialIcons name="error-outline" size={80} color={colors.error} />
-          <Text style={styles.errorText}>{t('common.error')}</Text>
+          <MaterialIcons name="error-outline" size={80} color={themeColors.error} />
+          <Text style={[styles.errorText, { color: themeColors.error }]}>
+            {t('common.error')}
+          </Text>
           <TouchableOpacity 
-            style={styles.retryButton}
+            style={[styles.retryButton, { backgroundColor: themeColors.surfaceVariant }]}
             onPress={() => fetchDocuments()}
           >
-            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
+            <Text style={[styles.retryButtonText, { color: themeColors.primary }]}>
+              {t('common.retry')}
+            </Text>
           </TouchableOpacity>
         </View>
       );
@@ -59,9 +67,11 @@ export default function Dashboard() {
     if (!documents || documents.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <MaterialIcons name="description" size={80} color={colors.disabled} />
-          <Text style={styles.emptyStateText}>{t('dashboard.noDocuments')}</Text>
-          <Text style={styles.emptyStateSubtext}>
+          <MaterialIcons name="description" size={80} color={themeColors.disabled} />
+          <Text style={[styles.emptyStateText, { color: themeColors.text }]}>
+            {t('dashboard.noDocuments')}
+          </Text>
+          <Text style={[styles.emptyStateSubtext, { color: themeColors.textSecondary }]}>
             {t('dashboard.uploadFirst')}
           </Text>
         </View>
@@ -70,21 +80,26 @@ export default function Dashboard() {
 
     return (
       <View style={styles.documentsContainer}>
-        <Text style={styles.sectionTitle}>{t('dashboard.recentDocuments')}</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+          {t('dashboard.recentDocuments')}
+        </Text>
         {recentDocuments.map((doc) => (
           <TouchableOpacity 
             key={doc._id} 
-            style={styles.documentItem}
+            style={[styles.documentItem, { 
+              backgroundColor: themeColors.surface,
+              shadowColor: themeColors.primary
+            }]}
             onPress={() => console.log('View document', doc._id)}
           >
-            <View style={styles.documentIconContainer}>
-              <MaterialIcons name="description" size={24} color={colors.primary} />
+            <View style={[styles.documentIconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+              <MaterialIcons name="description" size={24} color={themeColors.primary} />
             </View>
             <View style={styles.documentInfo}>
-              <Text style={styles.documentTitle} numberOfLines={1}>
+              <Text style={[styles.documentTitle, { color: themeColors.text }]} numberOfLines={1}>
                 {doc.originalFileName}
               </Text>
-              <Text style={styles.documentDate}>
+              <Text style={[styles.documentDate, { color: themeColors.textSecondary }]}>
                 {new Date(doc.createdAt).toLocaleDateString()}
               </Text>
             </View>
@@ -92,13 +107,13 @@ export default function Dashboard() {
               <View style={[
                 styles.statusIndicator, 
                 { backgroundColor: doc.status === 'completed' 
-                  ? colors.success 
+                  ? themeColors.success 
                   : doc.status === 'failed' 
-                    ? colors.error 
-                    : colors.warning 
+                    ? themeColors.error 
+                    : themeColors.warning 
                 }
               ]} />
-              <Text style={styles.statusText}>
+              <Text style={[styles.statusText, { color: themeColors.textSecondary }]}>
                 {doc.status === 'completed' 
                   ? t('history.status.completed')
                   : doc.status === 'failed'
@@ -113,46 +128,54 @@ export default function Dashboard() {
           style={styles.viewAllButton}
           onPress={() => router.push('/(app)/history')}
         >
-          <Text style={styles.viewAllText}>{t('dashboard.viewAll')}</Text>
-          <MaterialIcons name="arrow-forward" size={16} color={colors.primary} />
+          <Text style={[styles.viewAllText, { color: themeColors.primary }]}>
+            {t('dashboard.viewAll')}
+          </Text>
+          <MaterialIcons name="arrow-forward" size={16} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>{t('dashboard.title')}</Text>
-        <Text style={styles.subtitle}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          {t('dashboard.title')}
+        </Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
           {user?.firstName 
             ? format(t('dashboard.welcome'), { name: `, ${user.firstName}` })
             : t('dashboard.welcome')
           }
         </Text>
-        
+      </View>
+      
+      <View style={styles.content}>
         {renderContent()}
       </View>
       
       {/* Bottom Navigation Bar */}
-      <SafeAreaView style={styles.bottomNavContainer} edges={['bottom']}>
+      <SafeAreaView style={[styles.bottomNavContainer, { backgroundColor: themeColors.surface }]} edges={['bottom']}>
         <View style={styles.bottomNav}>
           {/* History Button */}
           <TouchableOpacity 
             style={styles.navButton} 
             onPress={() => router.push('/(app)/history')}
           >
-            <MaterialIcons name="history" size={28} color={colors.textSecondary} />
-            <Text style={styles.navButtonText}>{t('dashboard.history')}</Text>
+            <MaterialIcons name="history" size={28} color={themeColors.textSecondary} />
+            <Text style={[styles.navButtonText, { color: themeColors.textSecondary }]}>
+              {t('dashboard.history')}
+            </Text>
           </TouchableOpacity>
           
           {/* Upload Button */}
           <View style={styles.uploadButtonContainer}>
             <TouchableOpacity 
-              style={styles.uploadButton}
+              style={[styles.uploadButton, { backgroundColor: themeColors.primary }]}
               onPress={() => router.push('/(app)/upload')}
             >
-              <MaterialIcons name="file-upload" size={28} color={colors.white} />
+              <MaterialIcons name="file-upload" size={28} color={themeColors.white} />
             </TouchableOpacity>
           </View>
           
@@ -161,8 +184,10 @@ export default function Dashboard() {
             style={styles.navButton} 
             onPress={() => router.push('/(app)/profile')}
           >
-            <MaterialIcons name="person" size={28} color={colors.textSecondary} />
-            <Text style={styles.navButtonText}>{t('dashboard.profile')}</Text>
+            <MaterialIcons name="person" size={28} color={themeColors.textSecondary} />
+            <Text style={[styles.navButtonText, { color: themeColors.textSecondary }]}>
+              {t('dashboard.profile')}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -173,21 +198,22 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   content: {
     flex: 1,
-    padding: 24,
+    paddingHorizontal: 24,
     paddingBottom: 80, // Add padding to account for the bottom nav
   },
   title: {
     fontSize: 32,
-    color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: colors.textSecondary,
     marginBottom: 32,
   },
   centerContent: {
@@ -198,22 +224,18 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.textSecondary,
   },
   errorText: {
     marginTop: 16,
     fontSize: 18,
-    color: colors.error,
     marginBottom: 16,
   },
   retryButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: colors.surfaceVariant,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: colors.primary,
     fontWeight: '500',
   },
   emptyState: {
@@ -226,13 +248,11 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtext: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -242,17 +262,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: 16,
   },
   documentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -262,7 +279,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: colors.surfaceVariant,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -273,17 +289,14 @@ const styles = StyleSheet.create({
   documentTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text,
     marginBottom: 4,
   },
   documentDate: {
     fontSize: 14,
-    color: colors.textSecondary,
   },
   documentStatus: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
   },
   statusIndicator: {
     width: 8,
@@ -293,41 +306,36 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: colors.textSecondary,
   },
   viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    paddingVertical: 12,
+    marginTop: 16,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
-    color: colors.primary,
-    marginRight: 4,
+    marginRight: 8,
   },
   bottomNavContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: -3 },
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowRadius: 8,
+    elevation: 8,
   },
   bottomNav: {
     flexDirection: 'row',
-    height: 70,
-    alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 16,
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   navButton: {
     alignItems: 'center',
@@ -337,28 +345,25 @@ const styles = StyleSheet.create({
   },
   navButtonText: {
     fontSize: 12,
-    color: colors.textSecondary,
     marginTop: 4,
   },
   uploadButtonContainer: {
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 70,
-    height: 70,
-    position: 'relative',
-    bottom: 15,
+    marginTop: -30,
   },
   uploadButton: {
-    backgroundColor: colors.primary,
     width: 60,
     height: 60,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });

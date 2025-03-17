@@ -178,6 +178,92 @@ const en: TranslationDictionary = {
   'language.info': 'Some content may still appear in English regardless of your language selection.'
 };
 
+// Spanish translations
+const es: TranslationDictionary = {
+  // Common
+  'common.ok': 'OK',
+  'common.cancel': 'Cancelar',
+  'common.save': 'Guardar',
+  'common.delete': 'Eliminar',
+  'common.edit': 'Editar',
+  'common.loading': 'Cargando...',
+  'common.retry': 'Reintentar',
+  'common.error': 'Error',
+  'common.success': 'Éxito',
+  'common.version': 'Versión',
+  'common.logout': 'Cerrar Sesión',
+  
+  // Auth
+  'auth.signIn': 'Iniciar Sesión',
+  'auth.signUp': 'Registrarse',
+  'auth.email': 'Correo electrónico',
+  'auth.password': 'Contraseña',
+  'auth.forgotPassword': '¿Olvidó su contraseña?',
+  'auth.resetPassword': 'Restablecer Contraseña',
+  
+  // Dashboard
+  'dashboard.title': 'Panel Principal',
+  'dashboard.welcome': 'Bienvenido',
+  'dashboard.upload': 'Subir',
+  'dashboard.history': 'Historial',
+  'dashboard.profile': 'Perfil',
+  'dashboard.recentDocuments': 'Documentos Recientes',
+  'dashboard.viewAll': 'Ver Todos los Documentos',
+  'dashboard.noDocuments': 'Aún no hay documentos',
+  'dashboard.uploadFirst': 'Sube tu primer documento para comenzar',
+  
+  // Upload
+  'upload.title': 'Subir Documento',
+  'upload.selectImage': 'Seleccionar Imagen',
+  'upload.takePhoto': 'Tomar Foto',
+  'upload.processing': 'Procesando...',
+  'upload.success': 'Documento subido con éxito',
+  'upload.error': 'Error al subir el documento',
+  'upload.permissionRequired': 'Permiso Requerido',
+  'upload.cameraPermission': 'Se requiere permiso de cámara para tomar fotos',
+  'upload.successMessage': 'Tu documento ha sido subido y está siendo procesado',
+  'upload.errorMessage': 'Hubo un error al subir tu documento. Por favor, inténtalo de nuevo.',
+  'upload.confirm': 'Confirmar',
+  'upload.selectImageDescription': 'Elige una imagen de tu galería',
+  'upload.takePhotoDescription': 'Toma una nueva foto con tu cámara',
+  
+  // History
+  'history.title': 'Historial de Documentos',
+  'history.noDocuments': 'Aún no hay documentos',
+  'history.uploadFirst': 'Sube tu primer documento para comenzar',
+  'history.loadingDocuments': 'Cargando documentos...',
+  'history.errorLoading': 'Error al cargar documentos',
+  'history.status.completed': 'Completado',
+  'history.status.processing': 'Procesando',
+  'history.status.failed': 'Fallido',
+  
+  // Profile
+  'profile.title': 'Perfil',
+  'profile.editProfile': 'Editar Perfil',
+  'profile.notifications': 'Notificaciones',
+  'profile.security': 'Seguridad',
+  'profile.helpSupport': 'Ayuda y Soporte',
+  'profile.appearance': 'Apariencia',
+  'profile.language': 'Idioma',
+  'profile.logout': 'Cerrar Sesión',
+  'profile.account': 'Cuenta',
+  'profile.preferences': 'Preferencias',
+  'profile.loadingProfile': 'Cargando perfil...',
+  'profile.errorProfile': 'Error al cargar el perfil',
+  'profile.settings': 'Configuración',
+  'profile.darkMode': 'Modo Oscuro',
+  'profile.changePassword': 'Cambiar Contraseña',
+  'profile.privacyPolicy': 'Política de Privacidad',
+  'profile.termsOfService': 'Términos de Servicio',
+  'profile.logoutTitle': 'Cerrar Sesión',
+  'profile.logoutConfirm': '¿Estás seguro de que quieres cerrar sesión?',
+  
+  // Language
+  'language.title': 'Idioma',
+  'language.description': 'Selecciona tu idioma preferido para la interfaz de la aplicación. La aplicación se reiniciará para aplicar los cambios.',
+  'language.info': 'Algunos contenidos pueden seguir apareciendo en inglés independientemente de tu selección de idioma.'
+};
+
 // German translations
 const de: TranslationDictionary = {
   // Common
@@ -260,7 +346,7 @@ const de: TranslationDictionary = {
   
   // Language
   'language.title': 'Sprache',
-  'language.description': 'Wählen Sie Ihre bevorzugte Sprache für die App-Oberfläche. Die App wird neu gestartet, um Änderungen anzuwenden.',
+  'language.description': 'Wählen Sie Ihre bevorzugte Sprache für die App-Oberfläche. Die App wird neu gestartet, um Änderungen zu übernehmen.',
   'language.info': 'Einige Inhalte können unabhängig von Ihrer Sprachauswahl weiterhin auf Englisch angezeigt werden.'
 };
 
@@ -363,6 +449,7 @@ const tr: TranslationDictionary = {
   'common.error': 'Hata',
   'common.success': 'Başarılı',
   'common.version': 'Sürüm',
+  'common.logout': 'Çıkış Yap',
   
   // Auth
   'auth.signIn': 'Giriş Yap',
@@ -421,6 +508,13 @@ const tr: TranslationDictionary = {
   'profile.preferences': 'Tercihler',
   'profile.loadingProfile': 'Profil yükleniyor...',
   'profile.errorProfile': 'Profil yüklenirken hata oluştu',
+  'profile.settings': 'Ayarlar',
+  'profile.darkMode': 'Karanlık Mod',
+  'profile.changePassword': 'Şifre Değiştir',
+  'profile.privacyPolicy': 'Gizlilik Politikası',
+  'profile.termsOfService': 'Kullanım Şartları',
+  'profile.logoutTitle': 'Çıkış Yap',
+  'profile.logoutConfirm': 'Çıkış yapmak istediğinizden emin misiniz?',
   
   // Language
   'language.title': 'Dil',
@@ -441,6 +535,7 @@ const ja: TranslationDictionary = {
   'common.error': 'エラー',
   'common.success': '成功',
   'common.version': 'バージョン',
+  'common.logout': 'ログアウト',
   
   // Auth
   'auth.signIn': 'サインイン',
@@ -499,6 +594,13 @@ const ja: TranslationDictionary = {
   'profile.preferences': '設定',
   'profile.loadingProfile': 'プロフィールを読み込み中...',
   'profile.errorProfile': 'プロフィールの読み込み中にエラーが発生しました',
+  'profile.settings': '設定',
+  'profile.darkMode': 'ダークモード',
+  'profile.changePassword': 'パスワード変更',
+  'profile.privacyPolicy': 'プライバシーポリシー',
+  'profile.termsOfService': '利用規約',
+  'profile.logoutTitle': 'ログアウト',
+  'profile.logoutConfirm': 'ログアウトしてもよろしいですか？',
   
   // Language
   'language.title': '言語',
@@ -506,67 +608,55 @@ const ja: TranslationDictionary = {
   'language.info': '言語選択に関係なく、一部のコンテンツは英語で表示される場合があります。'
 };
 
-// Map of all translations
+// Combine all translations
 const translations: Record<Language, TranslationDictionary> = {
   en,
   de,
+  es,
   ru,
   tr,
   ja
 };
 
-/**
- * Translates a key to the specified language
- * @param key The translation key
- * @param language The target language code
- * @returns The translated string
- */
+// Function to get a translation
 export const translate = (key: TranslationKey, language: Language = 'en'): string => {
-  // Get the translation dictionary for the specified language, fallback to English
+  // Get the translation dictionary for the specified language
   const dictionary = translations[language] || translations.en;
   
-  // Return the translation for the key, fallback to English or the key itself
+  // Return the translation or fall back to English if not found
   return dictionary[key] || translations.en[key] || key;
 };
 
-/**
- * React hook for using translations with the current app language
- * @returns An object with translation functions
- */
+// React hook for translations
 export const useTranslation = () => {
   const { language } = useLanguage();
   
-  return useMemo(() => ({
-    /**
-     * Translates a key to the current language
-     * @param key The translation key
-     * @returns The translated string
-     */
-    t: (key: TranslationKey): string => translate(key, language),
-    
-    /**
-     * The current language code
-     */
-    language,
-    
-    /**
-     * Format a string with variables
-     * @param text The text to format
-     * @param params The parameters to replace
-     * @returns The formatted string
-     */
-    format: (text: string, params: Record<string, string | number>): string => {
-      return Object.entries(params).reduce(
-        (result, [key, value]) => result.replace(new RegExp(`{{${key}}}`, 'g'), String(value)),
-        text
-      );
-    }
-  }), [language]);
+  // Memoize the translate function to avoid unnecessary re-renders
+  const t = useMemo(() => 
+    (key: TranslationKey) => translate(key, language),
+    [language]
+  );
+  
+  // Format function for interpolating values into translations
+  const format = (text: string, values: Record<string, string | number>) => {
+    return Object.entries(values).reduce(
+      (result, [key, value]) => result.replace(`{${key}}`, String(value)),
+      text
+    );
+  };
+  
+  return { t, format, language };
 };
 
-// Legacy hook for backward compatibility
+// Hook for getting translations in a specific language
 export const useTranslate = (language: Language = 'en') => {
-  return (key: TranslationKey): string => translate(key, language);
+  // Memoize the translate function to avoid unnecessary re-renders
+  const t = useMemo(() => 
+    (key: TranslationKey) => translate(key, language),
+    [language]
+  );
+  
+  return t;
 };
 
 // Create a default export object

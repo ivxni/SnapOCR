@@ -9,11 +9,13 @@ import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTranslation } from '../utils/i18n';
 import { UploadFile } from '../types/document.types';
+import useThemeColors from '../utils/useThemeColors';
 
 export default function Upload() {
   const router = useRouter();
   const { uploadDocument } = useDocuments();
   const { t } = useTranslation();
+  const themeColors = useThemeColors();
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -100,8 +102,10 @@ export default function Upload() {
     if (uploading) {
       return (
         <View style={styles.uploadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.uploadingText}>{t('upload.processing')}</Text>
+          <ActivityIndicator size="large" color={themeColors.primary} />
+          <Text style={[styles.uploadingText, { color: themeColors.text }]}>
+            {t('upload.processing')}
+          </Text>
         </View>
       );
     }
@@ -112,20 +116,20 @@ export default function Upload() {
           <Image source={{ uri: image }} style={styles.previewImage} />
           <View style={styles.previewActions}>
             <TouchableOpacity 
-              style={[styles.actionButton, styles.cancelButton]}
+              style={[styles.actionButton, styles.cancelButton, { backgroundColor: themeColors.surfaceVariant }]}
               onPress={() => setImage(null)}
             >
-              <MaterialIcons name="close" size={24} color={colors.error} />
-              <Text style={[styles.actionButtonText, styles.cancelButtonText]}>
+              <MaterialIcons name="close" size={24} color={themeColors.error} />
+              <Text style={[styles.actionButtonText, styles.cancelButtonText, { color: themeColors.error }]}>
                 {t('common.cancel')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.actionButton, styles.uploadButton]}
+              style={[styles.actionButton, styles.uploadButton, { backgroundColor: themeColors.surfaceVariant }]}
               onPress={handleUpload}
             >
-              <MaterialIcons name="check" size={24} color={colors.success} />
-              <Text style={[styles.actionButtonText, styles.uploadButtonText]}>
+              <MaterialIcons name="check" size={24} color={themeColors.success} />
+              <Text style={[styles.actionButtonText, styles.uploadButtonText, { color: themeColors.success }]}>
                 {t('upload.confirm')}
               </Text>
             </TouchableOpacity>
@@ -137,14 +141,19 @@ export default function Upload() {
     return (
       <View style={styles.optionsContainer}>
         <TouchableOpacity 
-          style={styles.optionButton}
+          style={[styles.optionButton, { 
+            backgroundColor: themeColors.surface,
+            shadowColor: themeColors.primary
+          }]}
           onPress={pickImage}
         >
-          <View style={styles.optionIconContainer}>
-            <MaterialIcons name="photo-library" size={40} color={colors.primary} />
+          <View style={[styles.optionIconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+            <MaterialIcons name="photo-library" size={40} color={themeColors.primary} />
           </View>
-          <Text style={styles.optionText}>{t('upload.selectImage')}</Text>
-          <Text style={styles.optionDescription}>
+          <Text style={[styles.optionText, { color: themeColors.text }]}>
+            {t('upload.selectImage')}
+          </Text>
+          <Text style={[styles.optionDescription, { color: themeColors.textSecondary }]}>
             {t('upload.selectImageDescription')}
           </Text>
         </TouchableOpacity>
@@ -152,14 +161,19 @@ export default function Upload() {
         <View style={styles.optionDivider} />
 
         <TouchableOpacity 
-          style={styles.optionButton}
+          style={[styles.optionButton, { 
+            backgroundColor: themeColors.surface,
+            shadowColor: themeColors.primary
+          }]}
           onPress={takePhoto}
         >
-          <View style={styles.optionIconContainer}>
-            <MaterialIcons name="camera-alt" size={40} color={colors.primary} />
+          <View style={[styles.optionIconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+            <MaterialIcons name="camera-alt" size={40} color={themeColors.primary} />
           </View>
-          <Text style={styles.optionText}>{t('upload.takePhoto')}</Text>
-          <Text style={styles.optionDescription}>
+          <Text style={[styles.optionText, { color: themeColors.text }]}>
+            {t('upload.takePhoto')}
+          </Text>
+          <Text style={[styles.optionDescription, { color: themeColors.textSecondary }]}>
             {t('upload.takePhotoDescription')}
           </Text>
         </TouchableOpacity>
@@ -168,15 +182,17 @@ export default function Upload() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('upload.title')}</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>
+          {t('upload.title')}
+        </Text>
       </View>
 
       {renderContent()}
@@ -187,13 +203,11 @@ export default function Upload() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: colors.white,
     justifyContent: 'center',
     height: 60,
     position: 'relative',
@@ -201,7 +215,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
     textAlign: 'center',
   },
   backButton: {
@@ -222,7 +235,6 @@ const styles = StyleSheet.create({
   },
   uploadingText: {
     fontSize: 16,
-    color: colors.text,
     marginTop: 16,
     textAlign: 'center',
   },
@@ -255,18 +267,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 8,
   },
-  cancelButton: {
-    backgroundColor: colors.surfaceVariant,
-  },
-  cancelButtonText: {
-    color: colors.error,
-  },
-  uploadButton: {
-    backgroundColor: colors.surfaceVariant,
-  },
-  uploadButtonText: {
-    color: colors.success,
-  },
+  cancelButton: {},
+  cancelButtonText: {},
+  uploadButton: {},
+  uploadButtonText: {},
   optionsContainer: {
     flex: 1,
     padding: 24,
@@ -276,8 +280,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     borderRadius: 12,
-    backgroundColor: colors.white,
-    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -287,7 +289,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.surfaceVariant,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -295,12 +296,10 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: 8,
   },
   optionDescription: {
     fontSize: 14,
-    color: colors.textSecondary,
     textAlign: 'center',
   },
   optionDivider: {

@@ -7,11 +7,13 @@ import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
 import { Document } from '../types/document.types';
 import { useTranslation } from '../utils/i18n';
+import useThemeColors from '../utils/useThemeColors';
 
 export default function History() {
   const router = useRouter();
   const { documents, fetchDocuments, loading, error } = useDocuments();
   const { t } = useTranslation();
+  const themeColors = useThemeColors();
 
   useEffect(() => {
     fetchDocuments();
@@ -19,31 +21,36 @@ export default function History() {
 
   const renderHistoryItem = ({ item }: { item: Document }) => (
     <TouchableOpacity 
-      style={styles.historyItem}
+      style={[styles.historyItem, { 
+        backgroundColor: themeColors.surface,
+        shadowColor: themeColors.primary
+      }]}
       onPress={() => console.log('View document details', item._id)}
     >
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
         <MaterialIcons 
           name="description" 
           size={24} 
-          color={colors.primary} 
+          color={themeColors.primary} 
         />
       </View>
       <View style={styles.itemContent}>
-        <Text style={styles.itemTitle}>{item.originalFileName}</Text>
-        <Text style={styles.itemDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+        <Text style={[styles.itemTitle, { color: themeColors.text }]}>{item.originalFileName}</Text>
+        <Text style={[styles.itemDate, { color: themeColors.textSecondary }]}>
+          {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
       </View>
       <View style={styles.statusContainer}>
         <View style={[
           styles.statusIndicator, 
           { backgroundColor: item.status === 'completed' 
-            ? colors.success 
+            ? themeColors.success 
             : item.status === 'failed' 
-              ? colors.error 
-              : colors.warning 
+              ? themeColors.error 
+              : themeColors.warning 
           }
         ]} />
-        <Text style={styles.statusText}>
+        <Text style={[styles.statusText, { color: themeColors.textSecondary }]}>
           {item.status === 'completed' 
             ? t('history.status.completed')
             : item.status === 'failed'
@@ -57,38 +64,46 @@ export default function History() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>{t('history.loadingDocuments')}</Text>
+      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+          {t('history.loadingDocuments')}
+        </Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <MaterialIcons name="error-outline" size={80} color={colors.error} />
-        <Text style={styles.errorText}>{t('history.errorLoading')}</Text>
+      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]}>
+        <MaterialIcons name="error-outline" size={80} color={themeColors.error} />
+        <Text style={[styles.errorText, { color: themeColors.error }]}>
+          {t('history.errorLoading')}
+        </Text>
         <TouchableOpacity 
-          style={styles.retryButton}
+          style={[styles.retryButton, { backgroundColor: themeColors.surfaceVariant }]}
           onPress={() => fetchDocuments()}
         >
-          <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
+          <Text style={[styles.retryButtonText, { color: themeColors.primary }]}>
+            {t('common.retry')}
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>{t('history.title')}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          {t('history.title')}
+        </Text>
       </View>
       
       {documents && documents.length > 0 ? (
@@ -101,16 +116,20 @@ export default function History() {
         />
       ) : (
         <View style={styles.emptyState}>
-          <MaterialIcons name="description" size={80} color={colors.disabled} />
-          <Text style={styles.emptyStateText}>{t('history.noDocuments')}</Text>
-          <Text style={styles.emptyStateSubtext}>
+          <MaterialIcons name="description" size={80} color={themeColors.disabled} />
+          <Text style={[styles.emptyStateText, { color: themeColors.text }]}>
+            {t('history.noDocuments')}
+          </Text>
+          <Text style={[styles.emptyStateSubtext, { color: themeColors.textSecondary }]}>
             {t('history.uploadFirst')}
           </Text>
           <TouchableOpacity 
-            style={styles.uploadButton}
+            style={[styles.uploadButton, { backgroundColor: themeColors.primary }]}
             onPress={() => router.push('/(app)/upload')}
           >
-            <Text style={styles.uploadButtonText}>{t('upload.title')}</Text>
+            <Text style={[styles.uploadButtonText, { color: themeColors.white }]}>
+              {t('upload.title')}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -121,13 +140,11 @@ export default function History() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: colors.white,
     justifyContent: 'center',
     height: 60,
     position: 'relative',
@@ -135,7 +152,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -145,11 +161,9 @@ const styles = StyleSheet.create({
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -159,7 +173,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: colors.surfaceVariant,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -170,12 +183,10 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.text,
     marginBottom: 4,
   },
   itemDate: {
     fontSize: 14,
-    color: colors.textSecondary,
   },
   statusContainer: {
     alignItems: 'center',
@@ -189,7 +200,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: colors.textSecondary,
   },
   centerContent: {
     justifyContent: 'center',
@@ -198,22 +208,18 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.textSecondary,
   },
   errorText: {
     marginTop: 16,
     fontSize: 18,
-    color: colors.error,
     marginBottom: 16,
   },
   retryButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: colors.surfaceVariant,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: colors.primary,
     fontWeight: '500',
   },
   emptyState: {
@@ -225,25 +231,21 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtext: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
   },
   uploadButton: {
-    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
   uploadButtonText: {
-    color: colors.white,
     fontWeight: '600',
     fontSize: 16,
   },
