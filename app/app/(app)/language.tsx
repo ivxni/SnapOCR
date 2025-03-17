@@ -28,7 +28,11 @@ export default function LanguageScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top']}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       
-      <View style={styles.header}>
+      <View style={[
+        styles.header, 
+        { borderBottomColor: isDarkMode ? 'rgba(0,0,0,0.05)' : 'transparent',
+          borderBottomWidth: isDarkMode ? 1 : 0 }
+      ]}>
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => router.replace('/(app)/profile')}
@@ -90,8 +94,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     height: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   backButton: {
     padding: 8,

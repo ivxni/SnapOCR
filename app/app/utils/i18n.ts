@@ -726,7 +726,7 @@ const ja: TranslationDictionary = {
   
   // Profile
   'profile.title': 'プロフィール',
-  'profile.editProfile': 'プロフィール編集',
+  'profile.editProfile': 'プロフィールを編集',
   'profile.notifications': '通知',
   'profile.security': 'セキュリティ',
   'profile.helpSupport': 'ヘルプとサポート',
@@ -736,7 +736,7 @@ const ja: TranslationDictionary = {
   'profile.account': 'アカウント',
   'profile.preferences': '設定',
   'profile.loadingProfile': 'プロフィールを読み込み中...',
-  'profile.errorProfile': 'プロフィールの読み込み中にエラーが発生しました',
+  'profile.errorProfile': 'プロフィールの読み込みエラー',
   'profile.settings': '設定',
   'profile.darkMode': 'ダークモード',
   'profile.changePassword': 'パスワード変更',

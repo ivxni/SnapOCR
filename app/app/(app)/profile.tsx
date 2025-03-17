@@ -163,7 +163,14 @@ export default function Profile() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+            </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: themeColors.text }]}>{t('profile.title')}</Text>
+            <View style={styles.placeholder} />
           </View>
           
           <View style={styles.profileHeader}>
@@ -214,7 +221,7 @@ export default function Profile() {
             <View style={styles.settingLabelContainer}>
               <MaterialIcons name="brightness-4" size={24} color={themeColors.text} />
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {t('profile.darkMode')}
+                {t('profile.appearance')}
               </Text>
             </View>
             <View style={styles.themeValueContainer}>
@@ -231,7 +238,7 @@ export default function Profile() {
 
           {/* Language Setting */}
           <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+            style={[styles.settingItem, { borderBottomColor: themeColors.border, borderBottomWidth: 0 }]}
             onPress={navigateToLanguageSettings}
           >
             <View style={styles.settingLabelContainer}>
@@ -283,7 +290,7 @@ export default function Profile() {
           </TouchableOpacity>
           
           {/* Terms of Service */}
-          <TouchableOpacity style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+          <TouchableOpacity style={[styles.settingItem, { borderBottomColor: themeColors.border, borderBottomWidth: 0 }]}>
             <View style={styles.settingLabelContainer}>
               <MaterialIcons name="description" size={24} color={themeColors.text} />
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
@@ -349,7 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     height: 60,
     position: 'relative',
   },
@@ -466,5 +473,11 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
+  },
+  backButton: {
+    padding: 8,
+  },
+  placeholder: {
+    width: 40,
   },
 }); 

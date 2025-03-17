@@ -4,7 +4,7 @@ const generateToken = require('../utils/generateToken');
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   const { email, password, firstName, lastName } = req.body;
 
   // Check if user already exists
@@ -12,7 +12,8 @@ const registerUser = async (req, res) => {
 
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    const error = new Error('User already exists');
+    return next(error);
   }
 
   // Create new user
@@ -33,14 +34,15 @@ const registerUser = async (req, res) => {
     });
   } else {
     res.status(400);
-    throw new Error('Invalid user data');
+    const error = new Error('Invalid user data');
+    next(error);
   }
 };
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
   // Find user by email
@@ -57,14 +59,15 @@ const loginUser = async (req, res) => {
     });
   } else {
     res.status(401);
-    throw new Error('Invalid email or password');
+    const error = new Error('Invalid email or password');
+    next(error);
   }
 };
 
 // @desc    Get user profile
 // @route   GET /api/auth/profile
 // @access  Private
-const getUserProfile = async (req, res) => {
+const getUserProfile = async (req, res, next) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
@@ -78,14 +81,15 @@ const getUserProfile = async (req, res) => {
     });
   } else {
     res.status(404);
-    throw new Error('User not found');
+    const error = new Error('User not found');
+    next(error);
   }
 };
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-const updateUserProfile = async (req, res) => {
+const updateUserProfile = async (req, res, next) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
@@ -118,7 +122,8 @@ const updateUserProfile = async (req, res) => {
     });
   } else {
     res.status(404);
-    throw new Error('User not found');
+    const error = new Error('User not found');
+    next(error);
   }
 };
 
