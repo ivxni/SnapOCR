@@ -4,6 +4,8 @@ import { TextInput as PaperInput, HelperText, TextInputProps as PaperTextInputPr
 import colors from '../../constants/colors';
 import { TextInput as PaperTextInput } from 'react-native-paper';
 import { TextInputProps as RNTextInputProps } from 'react-native';
+import { useDarkMode } from '../../contexts/DarkModeContext';
+import useThemeColors from '../../utils/useThemeColors';
 
 interface CustomTextInputProps {
   label: string;
@@ -32,21 +34,24 @@ const TextInput = ({
   autoCapitalize,
   ...props 
 }: CustomTextInputProps) => {
+  const { isDarkMode } = useDarkMode();
+  const themeColors = useThemeColors();
+  
   return (
     <View style={styles.container}>
       {!floatingLabel && label && (
-        <Text style={styles.labelText}>{label}</Text>
+        <Text style={[styles.labelText, { color: themeColors.textSecondary }]}>{label}</Text>
       )}
       <PaperInput
         label={floatingLabel ? label : ''}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
-        style={[styles.input, style]}
+        style={[styles.input, { backgroundColor: themeColors.surface }, style]}
         error={!!error}
         mode="outlined"
-        outlineColor={colors.border}
-        activeOutlineColor={colors.primary}
+        outlineColor={themeColors.border}
+        activeOutlineColor={themeColors.primary}
         outlineStyle={styles.outline}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
@@ -58,10 +63,11 @@ const TextInput = ({
         ]}
         theme={{
           colors: {
-            background: colors.white,
-            text: colors.text,
-            primary: colors.primary,
-            onSurfaceVariant: colors.textSecondary,
+            background: themeColors.surface,
+            text: themeColors.text,
+            primary: themeColors.primary,
+            onSurfaceVariant: themeColors.textSecondary,
+            error: themeColors.error,
           },
           fonts: {
             bodyLarge: {
@@ -72,7 +78,7 @@ const TextInput = ({
         }}
         {...props}
       />
-      {error && <HelperText type="error" visible={!!error}>{error}</HelperText>}
+      {error && <HelperText type="error" visible={!!error} style={{ color: themeColors.error }}>{error}</HelperText>}
     </View>
   );
 };
@@ -83,7 +89,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    backgroundColor: colors.white,
     minHeight: 50,
     height: 50,
   },
@@ -100,12 +105,10 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textSecondary,
     marginBottom: 8,
     marginLeft: 4,
   },
   errorText: {
-    color: colors.error,
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,

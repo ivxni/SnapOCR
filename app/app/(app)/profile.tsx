@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Switch, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslation } from '../utils/i18n';
-import { useDarkMode } from '../contexts/DarkModeContext';
+import { useDarkMode, ThemeMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
 import authService from '../services/authService';
 
@@ -42,7 +42,7 @@ export default function Profile() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
   const { t } = useTranslation();
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { themeMode, setThemeMode } = useDarkMode();
   const themeColors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -87,6 +87,42 @@ export default function Profile() {
 
   const navigateToLanguageSettings = () => {
     router.push('/(app)/language');
+  };
+
+  const navigateToDarkModeSettings = () => {
+    router.push('/(app)/darkmode');
+  };
+
+  const handleThemeModeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
+  };
+
+  const showThemeOptions = () => {
+    Alert.alert(
+      t('profile.darkMode'),
+      t('profile.selectTheme'),
+      [
+        {
+          text: t('profile.systemDefault'),
+          onPress: () => handleThemeModeChange('system'),
+          style: themeMode === 'system' ? 'default' : 'default',
+        },
+        {
+          text: t('profile.lightMode'),
+          onPress: () => handleThemeModeChange('light'),
+          style: themeMode === 'light' ? 'default' : 'default',
+        },
+        {
+          text: t('profile.darkMode'),
+          onPress: () => handleThemeModeChange('dark'),
+          style: themeMode === 'dark' ? 'default' : 'default',
+        },
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+      ]
+    );
   };
 
   if (loading || isLoading) {
@@ -164,21 +200,28 @@ export default function Profile() {
             {t('profile.settings')}
           </Text>
           
-          {/* Dark Mode Setting */}
-          <View style={[styles.settingItem, { borderBottomColor: themeColors.border }]}>
+          {/* Theme Mode Setting */}
+          <TouchableOpacity 
+            style={[styles.settingItem, { borderBottomColor: themeColors.border }]}
+            onPress={navigateToDarkModeSettings}
+          >
             <View style={styles.settingLabelContainer}>
               <MaterialIcons name="brightness-4" size={24} color={themeColors.text} />
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
                 {t('profile.darkMode')}
               </Text>
             </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              trackColor={{ false: themeColors.disabled, true: themeColors.primaryLight }}
-              thumbColor={isDarkMode ? themeColors.primary : themeColors.disabled}
-            />
-          </View>
+            <View style={styles.themeValueContainer}>
+              <Text style={[styles.themeValue, { color: themeColors.textSecondary }]}>
+                {themeMode === 'system' 
+                  ? t('profile.systemDefault') 
+                  : themeMode === 'light' 
+                    ? t('profile.lightMode') 
+                    : t('profile.darkMode')}
+              </Text>
+              <MaterialIcons name="chevron-right" size={24} color={themeColors.textSecondary} />
+            </View>
+          </TouchableOpacity>
 
           {/* Language Setting */}
           <TouchableOpacity 
@@ -384,6 +427,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     marginLeft: 12,
+  },
+  themeValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  themeValue: {
+    fontSize: 14,
+    marginRight: 4,
   },
   badge: {
     width: 8,

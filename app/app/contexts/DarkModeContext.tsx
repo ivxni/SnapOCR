@@ -1,10 +1,14 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, useColorScheme } from 'react-native';
+
+// Define theme mode options
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 type DarkModeContextType = {
+  themeMode: ThemeMode;
   isDarkMode: boolean;
-  toggleDarkMode: () => void;
+  setThemeMode: (mode: ThemeMode) => void;
 };
 
 const DarkModeContext = createContext<DarkModeContextType | undefined>(undefined);
@@ -22,42 +26,48 @@ interface DarkModeProviderProps {
 }
 
 export const DarkModeProvider: React.FC<DarkModeProviderProps> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [isLoading, setIsLoading] = useState(true);
+  const systemColorScheme = useColorScheme();
+  
+  // Compute isDarkMode based on themeMode and system preference
+  const isDarkMode = themeMode === 'system' 
+    ? systemColorScheme === 'dark'
+    : themeMode === 'dark';
 
-  // Load saved dark mode preference
+  // Load saved theme mode preference
   useEffect(() => {
-    const loadDarkModePreference = async () => {
+    const loadThemePreference = async () => {
       try {
-        const savedPreference = await AsyncStorage.getItem('darkMode');
-        if (savedPreference !== null) {
-          setIsDarkMode(savedPreference === 'true');
+        const savedPreference = await AsyncStorage.getItem('themeMode');
+        if (savedPreference !== null && (savedPreference === 'system' || savedPreference === 'light' || savedPreference === 'dark')) {
+          setThemeModeState(savedPreference as ThemeMode);
         }
       } catch (error) {
-        console.error('Error loading dark mode preference:', error);
+        console.error('Error loading theme preference:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadDarkModePreference();
+    loadThemePreference();
   }, []);
 
-  // Save dark mode preference when it changes
+  // Save theme mode preference when it changes
   useEffect(() => {
     if (!isLoading) {
-      AsyncStorage.setItem('darkMode', isDarkMode.toString()).catch(error => {
-        console.error('Error saving dark mode preference:', error);
+      AsyncStorage.setItem('themeMode', themeMode).catch(error => {
+        console.error('Error saving theme preference:', error);
       });
     }
-  }, [isDarkMode, isLoading]);
+  }, [themeMode, isLoading]);
 
   // Handle app state changes to ensure theme is applied correctly
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         // Force a re-render when app becomes active
-        setIsDarkMode(prev => prev);
+        setThemeModeState(prev => prev);
       }
     };
 
@@ -67,12 +77,12 @@ export const DarkModeProvider: React.FC<DarkModeProviderProps> = ({ children }) 
     };
   }, []);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
+  const setThemeMode = (mode: ThemeMode) => {
+    setThemeModeState(mode);
   };
 
   return (
-    <DarkModeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
+    <DarkModeContext.Provider value={{ themeMode, isDarkMode, setThemeMode }}>
       {children}
     </DarkModeContext.Provider>
   );

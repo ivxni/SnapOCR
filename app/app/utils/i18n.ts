@@ -81,11 +81,17 @@ export type TranslationKey =
   | 'profile.termsOfService'
   | 'profile.logoutTitle'
   | 'profile.logoutConfirm'
+  | 'profile.selectTheme'
+  | 'profile.systemDefault'
+  | 'profile.lightMode'
+  | 'profile.themeChangeNote'
   
   // Language
   | 'language.title'
   | 'language.description'
-  | 'language.info';
+  | 'language.info'
+  | 'language.selectLanguage'
+  | 'language.changeNote';
 
 // Define translation dictionaries
 type TranslationDictionary = {
@@ -171,11 +177,17 @@ const en: TranslationDictionary = {
   'profile.termsOfService': 'Terms of Service',
   'profile.logoutTitle': 'Log Out',
   'profile.logoutConfirm': 'Are you sure you want to log out?',
+  'profile.selectTheme': 'Select Theme',
+  'profile.systemDefault': 'System Default',
+  'profile.lightMode': 'Light Mode',
+  'profile.themeChangeNote': 'Changes will be applied immediately to the app interface.',
   
   // Language
   'language.title': 'Language',
   'language.description': 'Select your preferred language for the app interface. The app will restart to apply changes.',
-  'language.info': 'Some content may still appear in English regardless of your language selection.'
+  'language.info': 'Some content may still appear in English regardless of your language selection.',
+  'language.selectLanguage': 'Select your preferred language',
+  'language.changeNote': 'Changes will be applied immediately to the app interface.'
 };
 
 // Spanish translations
@@ -257,11 +269,17 @@ const es: TranslationDictionary = {
   'profile.termsOfService': 'Términos de Servicio',
   'profile.logoutTitle': 'Cerrar Sesión',
   'profile.logoutConfirm': '¿Estás seguro de que quieres cerrar sesión?',
+  'profile.selectTheme': 'Seleccionar Tema',
+  'profile.systemDefault': 'Sistema Predeterminado',
+  'profile.lightMode': 'Modo Claro',
+  'profile.themeChangeNote': 'Los cambios se aplicarán inmediatamente a la interfaz de la aplicación.',
   
   // Language
   'language.title': 'Idioma',
   'language.description': 'Selecciona tu idioma preferido para la interfaz de la aplicación. La aplicación se reiniciará para aplicar los cambios.',
-  'language.info': 'Algunos contenidos pueden seguir apareciendo en inglés independientemente de tu selección de idioma.'
+  'language.info': 'Algunos contenidos pueden seguir apareciendo en inglés independientemente de tu selección de idioma.',
+  'language.selectLanguage': 'Selecciona tu idioma preferido',
+  'language.changeNote': 'Los cambios se aplicarán inmediatamente a la interfaz de la aplicación.'
 };
 
 // German translations
@@ -343,6 +361,10 @@ const de: TranslationDictionary = {
   'profile.termsOfService': 'Nutzungsbedingungen',
   'profile.logoutTitle': 'Abmelden',
   'profile.logoutConfirm': 'Sind Sie sicher, dass Sie sich abmelden möchten?',
+  'profile.selectTheme': 'Thema auswählen',
+  'profile.systemDefault': 'System Standard',
+  'profile.lightMode': 'Hellmodus',
+  'profile.themeChangeNote': 'Die Änderungen werden sofort auf die App-Oberfläche angewendet.',
   
   // Language
   'language.title': 'Sprache',
@@ -429,6 +451,10 @@ const ru: TranslationDictionary = {
   'profile.termsOfService': 'Условия использования',
   'profile.logoutTitle': 'Выход',
   'profile.logoutConfirm': 'Вы уверены, что хотите выйти?',
+  'profile.selectTheme': 'Выберите тему',
+  'profile.systemDefault': 'Системная',
+  'profile.lightMode': 'Светлая',
+  'profile.themeChangeNote': 'Изменения будут применены сразу на интерфейсе приложения.',
   
   // Language
   'language.title': 'Язык',
@@ -515,6 +541,10 @@ const tr: TranslationDictionary = {
   'profile.termsOfService': 'Kullanım Şartları',
   'profile.logoutTitle': 'Çıkış Yap',
   'profile.logoutConfirm': 'Çıkış yapmak istediğinizden emin misiniz?',
+  'profile.selectTheme': 'Tema Seç',
+  'profile.systemDefault': 'Sistem Varsayılanı',
+  'profile.lightMode': 'Açık Mod',
+  'profile.themeChangeNote': 'Değişiklikler uygulamak için uygulama yeniden başlatılacaktır.',
   
   // Language
   'language.title': 'Dil',
@@ -601,6 +631,10 @@ const ja: TranslationDictionary = {
   'profile.termsOfService': '利用規約',
   'profile.logoutTitle': 'ログアウト',
   'profile.logoutConfirm': 'ログアウトしてもよろしいですか？',
+  'profile.selectTheme': 'テーマを選択',
+  'profile.systemDefault': 'システムのデフォルト',
+  'profile.lightMode': 'ライトモード',
+  'profile.themeChangeNote': '変更はアプリを再起動することで適用されます。',
   
   // Language
   'language.title': '言語',

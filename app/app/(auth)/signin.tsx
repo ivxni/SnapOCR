@@ -8,12 +8,16 @@ import Button from '../components/common/Button';
 import TextInput from '../components/common/TextInput';
 import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
+import { useDarkMode } from '../contexts/DarkModeContext';
+import useThemeColors from '../utils/useThemeColors';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SignIn() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
+  const { isDarkMode } = useDarkMode();
+  const themeColors = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,13 +54,13 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView 
-      style={styles.container} 
+      style={[styles.container, { backgroundColor: themeColors.background }]} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       enabled={Platform.OS === 'ios'}
       keyboardVerticalOffset={0}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+        <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
       </TouchableOpacity>
       
       <ScrollView 
@@ -66,13 +70,16 @@ export default function SignIn() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoContainer}>
-          <View style={styles.logoBackground}>
-            <Text style={styles.logoText}>L</Text>
+          <View style={[styles.logoBackground, { 
+            backgroundColor: themeColors.primary,
+            shadowColor: themeColors.primary
+          }]}>
+            <Text style={[styles.logoText, { color: themeColors.white }]}>L</Text>
           </View>
         </View>
         
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your account</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Sign in to your account</Text>
         
         <View style={styles.formContainer}>
           <TextInput
@@ -82,7 +89,7 @@ export default function SignIn() {
             keyboardType="email-address"
             autoCapitalize="none"
             floatingLabel={false}
-            style={styles.input}
+            style={[styles.input, { shadowColor: themeColors.primary }]}
           />
           
           <TextInput
@@ -91,18 +98,18 @@ export default function SignIn() {
             onChangeText={setPassword}
             secureTextEntry
             floatingLabel={false}
-            style={styles.input}
+            style={[styles.input, { shadowColor: themeColors.primary }]}
           />
           
           {error && (
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
           )}
           
           <TouchableOpacity 
             onPress={() => console.log('Forgot password')}
             style={styles.forgotPassword}
           >
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>Forgot password?</Text>
           </TouchableOpacity>
           
           <Button 
@@ -115,9 +122,9 @@ export default function SignIn() {
         </View>
         
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account?</Text>
+          <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-            <Text style={styles.footerLink}>Create Account</Text>
+            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -128,7 +135,6 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
   },
   scrollContainer: {
@@ -156,10 +162,8 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -168,18 +172,15 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: colors.white,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -189,14 +190,12 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 12,
-    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
   errorText: {
-    color: colors.error,
     marginTop: 8,
     marginBottom: 8,
     fontSize: 14,
@@ -208,7 +207,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   forgotPasswordText: {
-    color: colors.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -225,11 +223,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   footerText: {
-    color: colors.textSecondary,
     fontSize: 16,
   },
   footerLink: {
-    color: colors.primary,
     fontWeight: '600',
     fontSize: 16,
   },

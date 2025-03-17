@@ -1,108 +1,80 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import colors from '../constants/colors';
-import { useLanguage, Language, LanguageOption } from '../contexts/LanguageContext';
 import { useTranslation } from '../utils/i18n';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
-
-interface LanguageItemProps {
-  language: LanguageOption;
-  isSelected: boolean;
-  onSelect: () => void;
-  themeColors: any;
-}
-
-const LanguageItem: React.FC<LanguageItemProps> = ({ language, isSelected, onSelect, themeColors }) => (
-  <TouchableOpacity 
-    style={[
-      styles.languageItem, 
-      { borderBottomColor: themeColors.border },
-      isSelected && [styles.selectedLanguageItem, { backgroundColor: themeColors.surfaceVariant }]
-    ]} 
-    onPress={onSelect}
-    activeOpacity={0.7}
-  >
-    <View style={styles.languageInfo}>
-      <Text style={[styles.languageName, { color: themeColors.text }]}>{language.name}</Text>
-      <Text style={[styles.nativeName, { color: themeColors.textSecondary }]}>{language.nativeName}</Text>
-    </View>
-    {isSelected ? (
-      <MaterialIcons name="check-circle" size={24} color={themeColors.primary} />
-    ) : (
-      <View style={[styles.unselectedCircle, { borderColor: themeColors.border }]} />
-    )}
-  </TouchableOpacity>
-);
+import { useLanguage, Language, LANGUAGES } from '../contexts/LanguageContext';
 
 export default function LanguageScreen() {
   const router = useRouter();
-  const { language: currentLanguage, setLanguage, languages } = useLanguage();
   const { t } = useTranslation();
+  const { language: currentLanguage, setLanguage } = useLanguage();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(currentLanguage);
 
-  const handleLanguageSelect = useCallback(async (languageCode: Language) => {
-    if (languageCode !== currentLanguage) {
-      await setLanguage(languageCode);
-    }
-  }, [currentLanguage, setLanguage]);
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  const handleLanguageSelect = (langCode: Language) => {
+    setSelectedLanguage(langCode);
+    setLanguage(langCode);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top']}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+      
       <View style={styles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleBack}
-          activeOpacity={0.7}
+          style={styles.backButton} 
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: themeColors.text }]}>{t('language.title')}</Text>
+        <View style={styles.placeholder} />
       </View>
       
       <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollViewContent}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.descriptionContainer, { 
-          backgroundColor: themeColors.surface,
-          shadowColor: themeColors.primary
-        }]}>
-          <Text style={[styles.descriptionText, { color: themeColors.textSecondary }]}>
-            {t('language.description')}
-          </Text>
-        </View>
+        <Text style={[styles.sectionTitle, { color: themeColors.textSecondary }]}>
+          {t('language.selectLanguage')}
+        </Text>
         
-        <View style={[styles.languageList, { 
-          backgroundColor: themeColors.surface,
-          shadowColor: themeColors.primary
-        }]}>
-          {languages.map((lang) => (
-            <LanguageItem
+        <View style={styles.languageList}>
+          {LANGUAGES.map((lang) => (
+            <TouchableOpacity
               key={lang.code}
-              language={lang}
-              isSelected={currentLanguage === lang.code}
-              onSelect={() => handleLanguageSelect(lang.code)}
-              themeColors={themeColors}
-            />
+              style={[
+                styles.languageItem,
+                selectedLanguage === lang.code && [styles.selectedLanguage, { borderColor: themeColors.primary }],
+                { backgroundColor: themeColors.surface }
+              ]}
+              onPress={() => handleLanguageSelect(lang.code)}
+            >
+              <View style={styles.languageInfo}>
+                <Text style={[styles.languageName, { color: themeColors.text }]}>{lang.name}</Text>
+                <Text style={[styles.languageNative, { color: themeColors.textSecondary }]}>{lang.nativeName}</Text>
+              </View>
+              
+              {selectedLanguage === lang.code && (
+                <MaterialIcons name="check-circle" size={24} color={themeColors.primary} />
+              )}
+            </TouchableOpacity>
           ))}
         </View>
         
-        <View style={[styles.infoSection, { backgroundColor: themeColors.surfaceVariant }]}>
-          <MaterialIcons name="info-outline" size={22} color={themeColors.textSecondary} />
-          <Text style={[styles.infoText, { color: themeColors.textSecondary }]}>
-            {t('language.info')}
-          </Text>
-        </View>
+        <Text style={[styles.note, { color: themeColors.textSecondary }]}>
+          {t('language.changeNote')}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -115,66 +87,51 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     height: 60,
-    position: 'relative',
-    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  backButton: {
+    padding: 8,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 24,
   },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 10,
-    height: 40,
+  placeholder: {
     width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: '50%',
-    transform: [{ translateY: -20 }],
   },
   scrollView: {
     flex: 1,
   },
-  scrollViewContent: {
-    padding: 16,
-    paddingBottom: 32,
+  scrollContent: {
+    padding: 20,
   },
-  descriptionContainer: {
-    borderRadius: 12,
-    padding: 16,
+  sectionTitle: {
+    fontSize: 16,
     marginBottom: 16,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  descriptionText: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   languageList: {
-    borderRadius: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    marginBottom: 16,
-    overflow: 'hidden',
+    gap: 12,
   },
   languageItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  selectedLanguageItem: {
+  selectedLanguage: {
+    borderWidth: 2,
   },
   languageInfo: {
     flex: 1,
@@ -184,26 +141,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 4,
   },
-  nativeName: {
+  languageNative: {
     fontSize: 14,
   },
-  unselectedCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-  },
-  infoSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  infoText: {
-    flex: 1,
+  note: {
     fontSize: 14,
-    marginLeft: 12,
-    lineHeight: 20,
+    marginTop: 24,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 }); 
