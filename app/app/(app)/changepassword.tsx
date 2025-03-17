@@ -96,7 +96,7 @@ export default function ChangePassword() {
       Alert.alert(
         t('common.success'),
         t('profile.passwordChanged'),
-        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/profile') }]
+        [{ text: t('common.ok'), onPress: () => router.back() }]
       );
     } catch (err: any) {
       console.error('Password change error:', err);
@@ -130,7 +130,7 @@ export default function ChangePassword() {
         ]}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.replace('/(app)/profile')}
+            onPress={() => router.back()}
           >
             <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
           </TouchableOpacity>
