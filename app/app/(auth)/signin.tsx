@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
+import { useTranslation } from '../utils/i18n';
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,8 +19,10 @@ export default function SignIn() {
   const { login, isAuthenticated } = useAuth();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +35,7 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      setError('Please enter both email and password');
+      setError(t('profile.allFieldsRequired'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -78,12 +81,12 @@ export default function SignIn() {
           </View>
         </View>
         
-        <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Sign in to your account</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>{t('auth.signIn')}</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Welcome back to LynxAI</Text>
         
         <View style={styles.formContainer}>
           <TextInput
-            label="Email"
+            label={t('profile.email')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -93,38 +96,51 @@ export default function SignIn() {
           />
           
           <TextInput
-            label="Password"
+            label={t('auth.password')}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             floatingLabel={false}
             style={[styles.input, { shadowColor: themeColors.primary }]}
+            rightIcon={
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <MaterialIcons 
+                  name={showPassword ? "visibility-off" : "visibility"} 
+                  size={24} 
+                  color={themeColors.textSecondary} 
+                />
+              </TouchableOpacity>
+            }
           />
+          
+          <TouchableOpacity 
+            style={styles.forgotPassword}
+            onPress={() => {
+              // Handle forgot password
+            }}
+          >
+            <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>
+              {t('auth.forgotPassword')}
+            </Text>
+          </TouchableOpacity>
           
           {error && (
             <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
           )}
-          
-          <TouchableOpacity 
-            onPress={() => console.log('Forgot password')}
-            style={styles.forgotPassword}
-          >
-            <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>Forgot password?</Text>
-          </TouchableOpacity>
           
           <Button 
             onPress={handleSignIn} 
             loading={loading}
             style={styles.button}
           >
-            Sign In
+            {t('auth.signIn')}
           </Button>
         </View>
         
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Create Account</Text>
+            <Text style={[styles.footerLink, { color: themeColors.primary }]}>{t('auth.signUp')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

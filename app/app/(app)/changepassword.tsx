@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,14 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
 import authService from '../services/authService';
 
+// Typ für die Passwortvalidierung
+type ValidationState = {
+  minLength: boolean | null;
+  hasLetter: boolean | null;
+  hasNumber: boolean | null;
+  passwordsMatch: boolean | null;
+};
+
 export default function ChangePassword() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -20,8 +28,43 @@ export default function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Passwortvalidierung mit initialem neutralen Zustand
+  const [passwordValidation, setPasswordValidation] = useState<ValidationState>({
+    minLength: null,
+    hasLetter: null,
+    hasNumber: null,
+    passwordsMatch: null
+  });
+  
+  // Passwort in Echtzeit validieren
+  useEffect(() => {
+    if (newPassword.length === 0) {
+      // Wenn noch kein Passwort eingegeben wurde, alle Validierungen auf null setzen
+      setPasswordValidation({
+        minLength: null,
+        hasLetter: null,
+        hasNumber: null,
+        passwordsMatch: null
+      });
+    } else {
+      // Sonst normale Validierung durchführen
+      setPasswordValidation({
+        minLength: newPassword.length >= 6,
+        hasLetter: /[a-zA-Z]/.test(newPassword),
+        hasNumber: /\d/.test(newPassword),
+        passwordsMatch: newPassword === confirmPassword && newPassword !== ''
+      });
+    }
+  }, [newPassword, confirmPassword]);
+  
+  // Prüfen, ob das Passwort gültig ist
+  const isPasswordValid = newPassword.length > 0 && Object.values(passwordValidation).every(value => value === true);
 
   const handleChangePassword = async () => {
     // Validate inputs
@@ -37,6 +80,11 @@ export default function ChangePassword() {
 
     if (newPassword.length < 6) {
       setError(t('profile.passwordTooShort'));
+      return;
+    }
+    
+    if (!isPasswordValid) {
+      setError(t('profile.passwordRequirements'));
       return;
     }
 
@@ -98,25 +146,114 @@ export default function ChangePassword() {
               label={t('profile.currentPassword')}
               value={currentPassword}
               onChangeText={setCurrentPassword}
-              secureTextEntry
+              secureTextEntry={!showCurrentPassword}
               style={[styles.input, { shadowColor: themeColors.primary }]}
+              rightIcon={
+                <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                  <MaterialIcons 
+                    name={showCurrentPassword ? "visibility-off" : "visibility"} 
+                    size={24} 
+                    color={themeColors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              }
             />
             
-            <TextInput
-              label={t('profile.newPassword')}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-              style={[styles.input, { shadowColor: themeColors.primary }]}
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                label={t('profile.newPassword')}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={!showNewPassword}
+                style={[styles.input, { shadowColor: themeColors.primary, marginBottom: 4 }]}
+                rightIcon={
+                  <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+                    <MaterialIcons 
+                      name={showNewPassword ? "visibility-off" : "visibility"} 
+                      size={24} 
+                      color={themeColors.textSecondary} 
+                    />
+                  </TouchableOpacity>
+                }
+              />
+              
+              {/* Passwortvalidierungshinweise */}
+              <View style={styles.passwordValidation}>
+                <View style={styles.validationRow}>
+                  <MaterialIcons 
+                    name={passwordValidation.minLength === null ? "radio-button-unchecked" : (passwordValidation.minLength ? "check-circle" : "cancel")} 
+                    size={16} 
+                    color={passwordValidation.minLength === null ? themeColors.textSecondary : (passwordValidation.minLength ? themeColors.success : themeColors.error)} 
+                  />
+                  <Text style={[
+                    styles.validationText, 
+                    { color: passwordValidation.minLength === null ? themeColors.textSecondary : (passwordValidation.minLength ? themeColors.success : themeColors.error) }
+                  ]}>
+                    {t('profile.minLength')}
+                  </Text>
+                </View>
+                
+                <View style={styles.validationRow}>
+                  <MaterialIcons 
+                    name={passwordValidation.hasLetter === null ? "radio-button-unchecked" : (passwordValidation.hasLetter ? "check-circle" : "cancel")} 
+                    size={16} 
+                    color={passwordValidation.hasLetter === null ? themeColors.textSecondary : (passwordValidation.hasLetter ? themeColors.success : themeColors.error)} 
+                  />
+                  <Text style={[
+                    styles.validationText, 
+                    { color: passwordValidation.hasLetter === null ? themeColors.textSecondary : (passwordValidation.hasLetter ? themeColors.success : themeColors.error) }
+                  ]}>
+                    {t('profile.hasLetter')}
+                  </Text>
+                </View>
+                
+                <View style={styles.validationRow}>
+                  <MaterialIcons 
+                    name={passwordValidation.hasNumber === null ? "radio-button-unchecked" : (passwordValidation.hasNumber ? "check-circle" : "cancel")} 
+                    size={16} 
+                    color={passwordValidation.hasNumber === null ? themeColors.textSecondary : (passwordValidation.hasNumber ? themeColors.success : themeColors.error)} 
+                  />
+                  <Text style={[
+                    styles.validationText, 
+                    { color: passwordValidation.hasNumber === null ? themeColors.textSecondary : (passwordValidation.hasNumber ? themeColors.success : themeColors.error) }
+                  ]}>
+                    {t('profile.hasNumber')}
+                  </Text>
+                </View>
+              </View>
+            </View>
             
             <TextInput
               label={t('profile.confirmPassword')}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              secureTextEntry
+              secureTextEntry={!showConfirmPassword}
               style={[styles.input, { shadowColor: themeColors.primary }]}
+              rightIcon={
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <MaterialIcons 
+                    name={showConfirmPassword ? "visibility-off" : "visibility"} 
+                    size={24} 
+                    color={themeColors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              }
             />
+            
+            {/* Passwörter stimmen überein */}
+            <View style={styles.validationRow}>
+              <MaterialIcons 
+                name={passwordValidation.passwordsMatch === null ? "radio-button-unchecked" : (passwordValidation.passwordsMatch ? "check-circle" : "cancel")} 
+                size={16} 
+                color={passwordValidation.passwordsMatch === null ? themeColors.textSecondary : (passwordValidation.passwordsMatch ? themeColors.success : themeColors.error)} 
+              />
+              <Text style={[
+                styles.validationText, 
+                { color: passwordValidation.passwordsMatch === null ? themeColors.textSecondary : (passwordValidation.passwordsMatch ? themeColors.success : themeColors.error) }
+              ]}>
+                {t('profile.passwordsMatch')}
+              </Text>
+            </View>
             
             {error && (
               <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
@@ -177,6 +314,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  passwordContainer: {
+    marginBottom: 8,
+  },
+  passwordValidation: {
+    marginTop: 4,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  validationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  validationText: {
+    fontSize: 12,
+    marginLeft: 6,
   },
   errorText: {
     marginBottom: 16,

@@ -24,6 +24,7 @@ export type TranslationKey =
   | 'auth.password'
   | 'auth.forgotPassword'
   | 'auth.resetPassword'
+  | 'auth.createAccount'
   
   // Dashboard
   | 'dashboard.title'
@@ -98,6 +99,11 @@ export type TranslationKey =
   | 'profile.passwordTooShort'
   | 'profile.passwordChanged'
   | 'profile.passwordChangeFailed'
+  | 'profile.passwordRequirements'
+  | 'profile.minLength'
+  | 'profile.hasLetter'
+  | 'profile.hasNumber'
+  | 'profile.passwordsMatch'
   
   // Language
   | 'language.title'
@@ -133,6 +139,7 @@ const en: TranslationDictionary = {
   'auth.password': 'Password',
   'auth.forgotPassword': 'Forgot Password?',
   'auth.resetPassword': 'Reset Password',
+  'auth.createAccount': 'Create Account',
   
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -207,6 +214,11 @@ const en: TranslationDictionary = {
   'profile.passwordTooShort': 'Password must be at least 6 characters',
   'profile.passwordChanged': 'Password changed successfully',
   'profile.passwordChangeFailed': 'Failed to change password',
+  'profile.passwordRequirements': 'Password does not meet requirements',
+  'profile.minLength': 'At least 6 characters',
+  'profile.hasLetter': 'Contains at least one letter',
+  'profile.hasNumber': 'Contains at least one number',
+  'profile.passwordsMatch': 'Passwords match',
   
   // Language
   'language.title': 'Language',
@@ -238,6 +250,7 @@ const es: TranslationDictionary = {
   'auth.password': 'Contraseña',
   'auth.forgotPassword': '¿Olvidó su contraseña?',
   'auth.resetPassword': 'Restablecer Contraseña',
+  'auth.createAccount': 'Crear Cuenta',
   
   // Dashboard
   'dashboard.title': 'Panel Principal',
@@ -312,6 +325,11 @@ const es: TranslationDictionary = {
   'profile.passwordTooShort': 'La contraseña debe tener al menos 6 caracteres',
   'profile.passwordChanged': 'Contraseña cambiada con éxito',
   'profile.passwordChangeFailed': 'Error al cambiar la contraseña',
+  'profile.passwordRequirements': 'Contraseña no cumple con los requisitos',
+  'profile.minLength': 'Al menos 6 caracteres',
+  'profile.hasLetter': 'Contiene al menos una letra',
+  'profile.hasNumber': 'Contiene al menos un número',
+  'profile.passwordsMatch': 'Contraseñas coinciden',
   
   // Language
   'language.title': 'Idioma',
@@ -343,6 +361,7 @@ const de: TranslationDictionary = {
   'auth.password': 'Passwort',
   'auth.forgotPassword': 'Passwort vergessen?',
   'auth.resetPassword': 'Passwort zurücksetzen',
+  'auth.createAccount': 'Konto erstellen',
   
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -401,9 +420,9 @@ const de: TranslationDictionary = {
   'profile.logoutTitle': 'Abmelden',
   'profile.logoutConfirm': 'Sind Sie sicher, dass Sie sich abmelden möchten?',
   'profile.selectTheme': 'Thema auswählen',
-  'profile.systemDefault': 'System Standard',
+  'profile.systemDefault': 'Systemstandard',
   'profile.lightMode': 'Hellmodus',
-  'profile.themeChangeNote': 'Die Änderungen werden sofort auf die App-Oberfläche angewendet.',
+  'profile.themeChangeNote': 'Änderungen werden sofort auf die App-Oberfläche angewendet.',
   'profile.firstName': 'Vorname',
   'profile.lastName': 'Nachname',
   'profile.email': 'E-Mail',
@@ -417,6 +436,11 @@ const de: TranslationDictionary = {
   'profile.passwordTooShort': 'Passwort muss mindestens 6 Zeichen lang sein',
   'profile.passwordChanged': 'Passwort erfolgreich geändert',
   'profile.passwordChangeFailed': 'Fehler beim Ändern des Passworts',
+  'profile.passwordRequirements': 'Passwort erfüllt nicht die Anforderungen',
+  'profile.minLength': 'Mindestens 6 Zeichen',
+  'profile.hasLetter': 'Enthält mindestens einen Buchstaben',
+  'profile.hasNumber': 'Enthält mindestens eine Zahl',
+  'profile.passwordsMatch': 'Passwörter stimmen überein',
   
   // Language
   'language.title': 'Sprache',
@@ -446,6 +470,7 @@ const ru: TranslationDictionary = {
   'auth.password': 'Пароль',
   'auth.forgotPassword': 'Забыли пароль?',
   'auth.resetPassword': 'Сбросить пароль',
+  'auth.createAccount': 'Создать аккаунт',
   
   // Dashboard
   'dashboard.title': 'Панель управления',
@@ -520,6 +545,11 @@ const ru: TranslationDictionary = {
   'profile.passwordTooShort': 'Пароль должен содержать не менее 6 символов',
   'profile.passwordChanged': 'Пароль успешно изменен',
   'profile.passwordChangeFailed': 'Ошибка при изменении пароля',
+  'profile.passwordRequirements': 'Пароль не соответствует требованиям',
+  'profile.minLength': 'Не менее 6 символов',
+  'profile.hasLetter': 'Содержит хотя бы одну букву',
+  'profile.hasNumber': 'Содержит хотя бы одну цифру',
+  'profile.passwordsMatch': 'Пароли совпадают',
   
   // Language
   'language.title': 'Язык',
@@ -623,6 +653,11 @@ const tr: TranslationDictionary = {
   'profile.passwordTooShort': 'Şifre en az 6 karakter olmalıdır',
   'profile.passwordChanged': 'Şifre başarıyla değiştirildi',
   'profile.passwordChangeFailed': 'Şifre değiştirilirken hata oluştu',
+  'profile.passwordRequirements': 'Şifre gereksinimleri karşılamıyor',
+  'profile.minLength': 'En az 6 karakter',
+  'profile.hasLetter': 'En az bir harf içeriyor',
+  'profile.hasNumber': 'En az bir sayı içeriyor',
+  'profile.passwordsMatch': 'Şifreler eşleşiyor',
   
   // Language
   'language.title': 'Dil',
@@ -726,6 +761,11 @@ const ja: TranslationDictionary = {
   'profile.passwordTooShort': 'パスワードは6文字以上である必要があります',
   'profile.passwordChanged': 'パスワードが正常に変更されました',
   'profile.passwordChangeFailed': 'パスワードの変更に失敗しました',
+  'profile.passwordRequirements': 'パスワードが要件を満たしていません',
+  'profile.minLength': '少なくとも6文字',
+  'profile.hasLetter': '少なくとも1つの文字を含む',
+  'profile.hasNumber': '少なくとも1つの数字を含む',
+  'profile.passwordsMatch': 'パスワードが一致します',
   
   // Language
   'language.title': '言語',
@@ -829,6 +869,11 @@ const fr: TranslationDictionary = {
   'profile.passwordTooShort': 'Le mot de passe doit comporter au moins 6 caractères',
   'profile.passwordChanged': 'Mot de passe changé avec succès',
   'profile.passwordChangeFailed': 'Échec du changement de mot de passe',
+  'profile.passwordRequirements': 'Mot de passe ne répond pas aux exigences',
+  'profile.minLength': 'Au moins 6 caractères',
+  'profile.hasLetter': 'Contient au moins une lettre',
+  'profile.hasNumber': 'Contient au moins un chiffre',
+  'profile.passwordsMatch': 'Les mots de passe correspondent',
   
   // Language
   'language.title': 'Langue',

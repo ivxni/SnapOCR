@@ -18,6 +18,7 @@ interface CustomTextInputProps {
   floatingLabel?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'number-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  rightIcon?: React.ReactNode;
 }
 
 type TextInputProps = CustomTextInputProps & Omit<PaperTextInputProps, 'label' | 'value' | 'onChangeText' | 'error'>;
@@ -32,6 +33,7 @@ const TextInput = ({
   floatingLabel = false,
   keyboardType,
   autoCapitalize,
+  rightIcon,
   ...props 
 }: CustomTextInputProps) => {
   const { isDarkMode } = useDarkMode();
@@ -61,6 +63,7 @@ const TextInput = ({
           styles.contentStyle,
           { height: 40, textAlignVertical: 'center' }
         ]}
+        right={rightIcon ? <PaperInput.Icon icon={() => rightIcon} /> : undefined}
         theme={{
           colors: {
             background: themeColors.surface,
