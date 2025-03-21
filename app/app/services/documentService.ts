@@ -1,6 +1,7 @@
 import api from './api';
 import { ENDPOINTS } from '../constants/api';
 import { Document, ProcessingJob, UploadFile } from '../types/document.types';
+import * as FileSystem from 'expo-file-system';
 
 // Get all documents
 export const getDocuments = async (): Promise<Document[]> => {
@@ -74,6 +75,43 @@ export const getProcessingJobStatus = async (id: string): Promise<ProcessingJob>
   }
 };
 
+// Get PDF file URL for viewing
+export const getPdfFileUrl = async (id: string): Promise<string> => {
+  try {
+    const document = await getDocumentById(id);
+    if (!document.pdfFileUrl) {
+      throw new Error('PDF file not found');
+    }
+    
+    // Combine the API_URL with the document's pdfFileUrl to get the full URL
+    // Make sure to correctly encode any special characters in the URL
+    const pdfUrl = `${api.defaults.baseURL}${document.pdfFileUrl}`;
+    
+    console.log('PDF URL:', pdfUrl);
+    
+    return pdfUrl;
+  } catch (error) {
+    console.error('Error getting PDF URL:', error);
+    throw error;
+  }
+};
+
+// Download PDF file to local cache for viewing
+export const downloadPdfFile = async (id: string): Promise<string> => {
+  try {
+    // Get direct URL to the PDF file from the server
+    const fileUrl = await getPdfFileUrl(id);
+    
+    console.log("Using direct PDF URL:", fileUrl);
+    
+    // Return the direct URL for viewing in WebView
+    return fileUrl;
+  } catch (error) {
+    console.error('Error getting PDF URL:', error);
+    throw error;
+  }
+};
+
 export default {
   getDocuments,
   getDocumentById,
@@ -81,4 +119,6 @@ export default {
   updateDocumentStatus,
   deleteDocument,
   getProcessingJobStatus,
+  getPdfFileUrl,
+  downloadPdfFile,
 }; 

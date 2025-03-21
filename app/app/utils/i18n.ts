@@ -54,6 +54,15 @@ export type TranslationKey =
   | 'history.status.processing'
   | 'history.status.failed'
   
+  // Document View
+  | 'docView.title'
+  | 'docView.loading'
+  | 'docView.error'
+  | 'docView.noPdf'
+  | 'docView.invalidDocument'
+  | 'docView.failedToLoad'
+  | 'docView.pdfRenderError'
+  
   // Profile
   | 'profile.title'
   | 'profile.editProfile'
@@ -161,6 +170,15 @@ const en: TranslationDictionary = {
   'history.status.processing': 'Processing',
   'history.status.failed': 'Failed',
   
+  // Document View
+  'docView.title': 'Document Viewer',
+  'docView.loading': 'Loading document...',
+  'docView.error': 'Error loading document',
+  'docView.noPdf': 'No PDF document available',
+  'docView.invalidDocument': 'Invalid document ID',
+  'docView.failedToLoad': 'Failed to load document',
+  'docView.pdfRenderError': 'Error rendering PDF document',
+  
   // Profile
   'profile.title': 'Profile',
   'profile.editProfile': 'Edit Profile',
@@ -263,6 +281,15 @@ const es: TranslationDictionary = {
   'history.status.completed': 'Completado',
   'history.status.processing': 'Procesando',
   'history.status.failed': 'Fallido',
+  
+  // Document View
+  'docView.title': 'Visor de Documento',
+  'docView.loading': 'Cargando documento...',
+  'docView.error': 'Error al cargar el documento',
+  'docView.noPdf': 'No hay documento PDF disponible',
+  'docView.invalidDocument': 'ID de documento inválido',
+  'docView.failedToLoad': 'Error al cargar el documento',
+  'docView.pdfRenderError': 'Error al renderizar el documento PDF',
   
   // Profile
   'profile.title': 'Perfil',
@@ -367,6 +394,15 @@ const de: TranslationDictionary = {
   'history.status.processing': 'Verarbeitung',
   'history.status.failed': 'Fehlgeschlagen',
   
+  // Document View
+  'docView.title': 'Dokumentenansicht',
+  'docView.loading': 'Dokument wird geladen...',
+  'docView.error': 'Fehler beim Laden des Dokuments',
+  'docView.noPdf': 'Kein PDF-Dokument verfügbar',
+  'docView.invalidDocument': 'Ungültige Dokument-ID',
+  'docView.failedToLoad': 'Fehler beim Laden des Dokuments',
+  'docView.pdfRenderError': 'Fehler beim Rendern des PDF-Dokuments',
+  
   // Profile
   'profile.title': 'Profil',
   'profile.editProfile': 'Profil bearbeiten',
@@ -467,6 +503,15 @@ const ru: TranslationDictionary = {
   'history.status.completed': 'Завершено',
   'history.status.processing': 'Обработка',
   'history.status.failed': 'Ошибка',
+  
+  // Document View
+  'docView.title': 'Просмотр документа',
+  'docView.loading': 'Загрузка документа...',
+  'docView.error': 'Ошибка при загрузке документа',
+  'docView.noPdf': 'Недоступен PDF-документ',
+  'docView.invalidDocument': 'Неверный ID документа',
+  'docView.failedToLoad': 'Не удалось загрузить документ',
+  'docView.pdfRenderError': 'Ошибка рендеринга PDF-документа',
   
   // Profile
   'profile.title': 'Профиль',
@@ -569,6 +614,15 @@ const tr: TranslationDictionary = {
   'history.status.processing': 'İşleniyor',
   'history.status.failed': 'Başarısız',
   
+  // Document View
+  'docView.title': 'Belge Görüntüleyici',
+  'docView.loading': 'Belge yükleniyor...',
+  'docView.error': 'Belge yüklenirken hata oluştu',
+  'docView.noPdf': 'PDF belgesi mevcut değil',
+  'docView.invalidDocument': 'Geçersiz belge ID',
+  'docView.failedToLoad': 'Belge yüklenirken hata oluştu',
+  'docView.pdfRenderError': 'PDF belgesi işlenirken hata oluştu',
+  
   // Profile
   'profile.title': 'Profil',
   'profile.editProfile': 'Profili Düzenle',
@@ -670,6 +724,15 @@ const ja: TranslationDictionary = {
   'history.status.processing': '処理中',
   'history.status.failed': '失敗',
   
+  // Document View
+  'docView.title': 'ドキュメントビューア',
+  'docView.loading': 'ドキュメントを読み込み中...',
+  'docView.error': 'ドキュメントの読み込み中にエラーが発生しました',
+  'docView.noPdf': 'PDFドキュメントが利用できません',
+  'docView.invalidDocument': '無効なドキュメントID',
+  'docView.failedToLoad': 'ドキュメントの読み込みに失敗しました',
+  'docView.pdfRenderError': 'PDFドキュメントのレンダリングに失敗しました',
+  
   // Profile
   'profile.title': 'プロフィール',
   'profile.editProfile': 'プロフィールを編集',
@@ -770,6 +833,15 @@ const fr: TranslationDictionary = {
   'history.status.completed': 'Terminé',
   'history.status.processing': 'En cours',
   'history.status.failed': 'Échoué',
+  
+  // Document View
+  'docView.title': 'Visionneur de document',
+  'docView.loading': 'Chargement du document...',
+  'docView.error': 'Erreur lors du chargement du document',
+  'docView.noPdf': 'Pas de document PDF disponible',
+  'docView.invalidDocument': 'ID de document invalide',
+  'docView.failedToLoad': 'Échec du chargement du document',
+  'docView.pdfRenderError': 'Erreur de rendu du document PDF',
   
   // Profile
   'profile.title': 'Profil',

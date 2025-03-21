@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,17 +13,73 @@ import useThemeColors from '../utils/useThemeColors';
 
 export default function Upload() {
   const router = useRouter();
-  const { uploadDocument } = useDocuments();
+  const { uploadDocument, getProcessingJobStatus } = useDocuments();
   const { t } = useTranslation();
   const themeColors = useThemeColors();
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadedDocId, setUploadedDocId] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timer | null>(null);
+  const [progress, setProgress] = useState<number>(0);
+
+  // Set up polling for document status
+  useEffect(() => {
+    if (uploadedDocId && uploading) {
+      // Set up polling to check document status every 3 seconds
+      const interval = setInterval(async () => {
+        try {
+          const job = await getProcessingJobStatus(uploadedDocId);
+          console.log('Processing job status:', job.status, 'Progress:', job.progress);
+          
+          // Update progress
+          setProgress(job.progress || 0);
+          
+          // If job is completed or failed, stop polling and update UI
+          if (job.status === 'completed' || job.status === 'failed') {
+            clearInterval(interval);
+            setPollingInterval(null);
+            setUploading(false);
+            
+            if (job.status === 'completed') {
+              Alert.alert(
+                t('upload.success'),
+                t('upload.successMessage'),
+                [
+                  {
+                    text: t('common.ok'),
+                    onPress: () => {
+                      // Navigate to history page
+                      router.replace('/(app)/history');
+                    },
+                  },
+                ]
+              );
+            } else {
+              Alert.alert(
+                t('upload.error'),
+                job.errorDetails || t('upload.errorMessage')
+              );
+            }
+          }
+        } catch (error) {
+          console.error('Error polling job status:', error);
+        }
+      }, 3000);
+      
+      setPollingInterval(interval);
+      
+      // Clean up interval on unmount
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    }
+  }, [uploadedDocId, uploading]);
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
       quality: 1,
     });
 
@@ -45,7 +101,6 @@ export default function Upload() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
       quality: 1,
     });
 
@@ -71,29 +126,20 @@ export default function Upload() {
       };
 
       // Upload the document
-      await uploadDocument(uploadFile);
+      const result = await uploadDocument(uploadFile);
+      console.log('Upload result:', result);
       
-      // Show success message
-      Alert.alert(
-        t('upload.success'),
-        t('upload.successMessage'),
-        [
-          {
-            text: t('common.ok'),
-            onPress: () => {
-              // Navigate to history page
-              router.replace('/(app)/history');
-            },
-          },
-        ]
-      );
+      // Set document ID for polling
+      setUploadedDocId(result.document._id);
+      setProgress(0);
+      
+      // Do not show success message here - wait for polling to confirm processing is complete
     } catch (error) {
       console.error('Upload error:', error);
       Alert.alert(
         t('upload.error'),
         t('upload.errorMessage')
       );
-    } finally {
       setUploading(false);
     }
   };
@@ -104,7 +150,7 @@ export default function Upload() {
         <View style={styles.uploadingContainer}>
           <ActivityIndicator size="large" color={themeColors.primary} />
           <Text style={[styles.uploadingText, { color: themeColors.text }]}>
-            {t('upload.processing')}
+            {t('upload.processing')} ({progress}%)
           </Text>
         </View>
       );

@@ -1,23 +1,69 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
-import { Document } from '../types/document.types';
+import { Document, ProcessingJob } from '../types/document.types';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
 
 export default function History() {
   const router = useRouter();
-  const { documents, fetchDocuments, loading, error } = useDocuments();
+  const { documents, fetchDocuments, getProcessingJobStatus, loading, error } = useDocuments();
   const { t } = useTranslation();
   const themeColors = useThemeColors();
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timer | null>(null);
+  
+  // Check if there are any documents in 'processing' state
+  const hasProcessingDocuments = documents && documents.some(doc => doc.status === 'processing');
 
   useEffect(() => {
+    // Fetch documents when the component mounts
     fetchDocuments();
+    
+    // Set up an interval to refresh the documents list every 10 seconds
+    const interval = setInterval(() => {
+      fetchDocuments();
+    }, 10000);
+    
+    setRefreshInterval(interval);
+    
+    // Clean up interval on unmount
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, []);
+  
+  // Poll for status updates of processing documents
+  useEffect(() => {
+    if (documents && documents.length > 0) {
+      // Find all processing documents
+      const processingDocs = documents.filter(doc => doc.status === 'processing');
+      
+      if (processingDocs.length > 0) {
+        console.log(`Checking status for ${processingDocs.length} processing documents`);
+        
+        // Check each processing document
+        processingDocs.forEach(async (doc) => {
+          try {
+            const job = await getProcessingJobStatus(doc._id);
+            console.log(`Document ${doc._id} job status: ${job.status}, progress: ${job.progress}`);
+            
+            // If status changes, refresh the documents list
+            if (job.status === 'completed' || job.status === 'failed') {
+              fetchDocuments();
+            }
+          } catch (error) {
+            console.error(`Error checking status for document ${doc._id}:`, error);
+          }
+        });
+      }
+    }
+  }, [documents]);
 
   const renderHistoryItem = ({ item }: { item: Document }) => (
     <TouchableOpacity 
@@ -25,7 +71,23 @@ export default function History() {
         backgroundColor: themeColors.surface,
         shadowColor: themeColors.primary
       }]}
-      onPress={() => console.log('View document details', item._id)}
+      onPress={() => {
+        if (item.status === 'completed') {
+          router.push(`/(app)/doc-view?id=${item._id}`);
+        } else if (item.status === 'failed') {
+          Alert.alert(
+            t('common.error'),
+            t('history.status.failed'),
+            [{ text: t('common.ok'), style: 'default' }]
+          );
+        } else {
+          Alert.alert(
+            t('common.loading'),
+            t('history.status.processing'),
+            [{ text: t('common.ok'), style: 'default' }]
+          );
+        }
+      }}
     >
       <View style={[styles.iconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
         <MaterialIcons 

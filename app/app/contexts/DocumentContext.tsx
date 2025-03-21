@@ -10,6 +10,7 @@ interface DocumentContextType extends DocumentState {
   updateDocumentStatus: (id: string, status: 'processing' | 'completed' | 'failed') => Promise<Document>;
   deleteDocument: (id: string) => Promise<void>;
   getProcessingJobStatus: (id: string) => Promise<ProcessingJob>;
+  viewPdf: (id: string) => Promise<string>;
 }
 
 const defaultContext: DocumentContextType = {
@@ -23,6 +24,7 @@ const defaultContext: DocumentContextType = {
   updateDocumentStatus: async () => { throw new Error('Not implemented'); },
   deleteDocument: async () => { throw new Error('Not implemented'); },
   getProcessingJobStatus: async () => { throw new Error('Not implemented'); },
+  viewPdf: async () => { throw new Error('Not implemented'); },
 };
 
 export const DocumentContext = createContext<DocumentContextType>(defaultContext);
@@ -140,6 +142,21 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({ children }) 
     }
   };
 
+  // View PDF document
+  const viewPdf = async (id: string): Promise<string> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const pdfPath = await documentService.downloadPdfFile(id);
+      return pdfPath;
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to view PDF');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <DocumentContext.Provider
       value={{
@@ -153,6 +170,7 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({ children }) 
         updateDocumentStatus,
         deleteDocument,
         getProcessingJobStatus,
+        viewPdf,
       }}
     >
       {children}

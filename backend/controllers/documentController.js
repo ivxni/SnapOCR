@@ -14,6 +14,15 @@ const uploadDocument = async (req, res) => {
     throw new Error('No file uploaded');
   }
 
+  // Log environment check for debugging
+  console.log('Environment check:');
+  console.log('- NODE_ENV:', process.env.NODE_ENV);
+  console.log('- Mistral API Key configured:', process.env.MISTRAL_API_KEY ? 'Yes' : 'No');
+  
+  if (!process.env.MISTRAL_API_KEY) {
+    console.error('MISTRAL_API_KEY is not configured in environment variables!');
+  }
+
   // Create document record
   const document = await Document.create({
     userId: req.user._id,
@@ -31,10 +40,13 @@ const uploadDocument = async (req, res) => {
     status: 'queued',
   });
 
+  console.log(`Created document ${document._id} and processing job ${processingJob._id}`);
+
   // Start OCR processing in the background
   // In a production app, this would be handled by a queue system like Bull
   setTimeout(async () => {
     try {
+      console.log(`Starting OCR processing for document ${document._id}`);
       await ocrService.processImage(document._id, req.user._id);
     } catch (error) {
       console.error('Background OCR processing error:', error);
