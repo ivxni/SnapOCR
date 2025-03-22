@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Alert, Dimensions, ToastAndroid, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { WebView } from 'react-native-webview';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
+import * as documentService from '../services/documentService';
 
 export default function DocView() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,6 +15,7 @@ export default function DocView() {
   const { viewPdf, loading, error, fetchDocumentById } = useDocuments();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState('');
+  const [sharing, setSharing] = useState(false);
   const { t } = useTranslation();
   const themeColors = useThemeColors();
 
@@ -49,83 +51,71 @@ export default function DocView() {
 
   // Function to generate HTML content for PDF viewing
   const generateHtml = (pdfUrl: string) => {
-    // Add a message about the ngrok warning
     return `
       <!DOCTYPE html>
       <html>
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <style>
             body, html {
               margin: 0;
               padding: 0;
               height: 100%;
               width: 100%;
-              overflow: hidden;
               background-color: #f5f5f5;
-              font-family: Arial, sans-serif;
-            }
-            #pdf-container {
-              width: 100%;
-              height: 100%;
               display: flex;
-              flex-direction: column;
-              align-items: center;
               justify-content: center;
+              align-items: center;
+              overflow: hidden;
             }
-            .warning-box {
-              background-color: #fff9e6;
-              border: 1px solid #f5c400;
-              border-radius: 8px;
-              padding: 16px;
-              margin: 16px;
-              max-width: 500px;
-              text-align: center;
-            }
-            .warning-title {
-              font-weight: bold;
-              font-size: 18px;
-              margin-bottom: 8px;
-              color: #d14900;
-            }
-            .warning-text {
-              color: #333;
-              margin-bottom: 12px;
-            }
-            .warning-button {
-              background-color: #4a86e8;
-              color: white;
-              border: none;
-              padding: 10px 20px;
-              border-radius: 4px;
-              font-weight: bold;
-              cursor: pointer;
-              text-decoration: none;
-              display: inline-block;
-              margin-top: 8px;
-            }
-            iframe {
+            a {
+              display: block;
               width: 100%;
               height: 100%;
-              border: none;
+              text-align: center;
+              padding: 20px;
+              box-sizing: border-box;
+              color: #0066cc;
+              text-decoration: none;
+              font-family: system-ui, -apple-system, sans-serif;
+              font-size: 16px;
+            }
+            a:hover {
+              text-decoration: underline;
             }
           </style>
         </head>
         <body>
-          <div id="pdf-container">
-            <div class="warning-box">
-              <div class="warning-title">PDF Viewer Notice</div>
-              <div class="warning-text">
-                The PDF is hosted on an ngrok server during development.
-                When you click the button below, you may see a security warning from ngrok.
-                This is normal during development. Click "Visit Site" on the ngrok page to view your PDF.
-              </div>
-              <a href="${pdfUrl}" target="_blank" class="warning-button">Open PDF</a>
-            </div>
-          </div>
+          <a href="${pdfUrl}" target="_blank">Zum PDF-Dokument</a>
         </body>
       </html>
     `;
+  };
+
+  // Function to share the PDF document
+  const handleSharePdf = async () => {
+    if (!id) {
+      Alert.alert(t('common.error'), t('docView.invalidDocument'));
+      return;
+    }
+
+    try {
+      setSharing(true);
+      await documentService.sharePdf(id);
+      setSharing(false);
+      
+      // Show a success message
+      if (Platform.OS === 'android') {
+        ToastAndroid.show("Dokument erfolgreich geteilt", ToastAndroid.SHORT);
+      }
+    } catch (error: any) {
+      setSharing(false);
+      console.error('Error sharing PDF:', error);
+      Alert.alert(
+        t('common.error'),
+        error.message || t('docView.sharingFailed')
+      );
+    }
   };
 
   return (
@@ -134,10 +124,35 @@ export default function DocView() {
         options={{
           headerShown: true,
           headerTitle: documentName || t('docView.title'),
+          headerStyle: {
+            backgroundColor: themeColors.background,
+          },
+          headerTitleStyle: {
+            color: themeColors.text,
+          },
+          headerShadowVisible: false,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity 
+              onPress={() => router.back()}
+              style={styles.headerButton}
+            >
               <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
             </TouchableOpacity>
+          ),
+          headerRight: () => (
+            pdfUrl ? (
+              <TouchableOpacity 
+                onPress={handleSharePdf}
+                style={[styles.headerButton, { backgroundColor: themeColors.primary + '20' }]}
+                disabled={sharing}
+              >
+                {sharing ? (
+                  <ActivityIndicator size="small" color={themeColors.primary} />
+                ) : (
+                  <MaterialIcons name="share" size={22} color={themeColors.primary} />
+                )}
+              </TouchableOpacity>
+            ) : null
           ),
         }}
       />
@@ -165,27 +180,25 @@ export default function DocView() {
           </TouchableOpacity>
         </View>
       ) : pdfUrl ? (
-        <WebView
-          source={{ html: generateHtml(pdfUrl) }}
-          style={styles.webview}
-          originWhitelist={['*']}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          allowFileAccess={true}
-          allowUniversalAccessFromFileURLs={true}
-          mixedContentMode="always"
-          startInLoadingState={true}
-          renderLoading={() => (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color={themeColors.primary} />
-            </View>
-          )}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error('WebView error:', nativeEvent);
-            Alert.alert(t('common.error'), t('docView.pdfRenderError'));
-          }}
-        />
+        <View style={styles.webviewContainer}>
+          <WebView
+            source={{ uri: pdfUrl }}
+            style={styles.webview}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color={themeColors.primary} />
+              </View>
+            )}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error('WebView error:', nativeEvent);
+              Alert.alert(t('common.error'), t('docView.pdfRenderError'));
+            }}
+          />
+        </View>
       ) : (
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: themeColors.text }]}>
@@ -231,6 +244,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  webviewContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   webview: {
     flex: 1,
     width: Dimensions.get('window').width,
@@ -246,4 +263,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
+  }
 }); 

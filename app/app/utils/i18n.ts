@@ -62,6 +62,7 @@ export type TranslationKey =
   | 'docView.invalidDocument'
   | 'docView.failedToLoad'
   | 'docView.pdfRenderError'
+  | 'docView.sharingFailed'
   
   // Profile
   | 'profile.title'
@@ -178,6 +179,7 @@ const en: TranslationDictionary = {
   'docView.invalidDocument': 'Invalid document ID',
   'docView.failedToLoad': 'Failed to load document',
   'docView.pdfRenderError': 'Error rendering PDF document',
+  'docView.sharingFailed': 'Sharing failed',
   
   // Profile
   'profile.title': 'Profile',
@@ -290,6 +292,7 @@ const es: TranslationDictionary = {
   'docView.invalidDocument': 'ID de documento inválido',
   'docView.failedToLoad': 'Error al cargar el documento',
   'docView.pdfRenderError': 'Error al renderizar el documento PDF',
+  'docView.sharingFailed': 'Fallo al compartir',
   
   // Profile
   'profile.title': 'Perfil',
@@ -402,6 +405,7 @@ const de: TranslationDictionary = {
   'docView.invalidDocument': 'Ungültige Dokument-ID',
   'docView.failedToLoad': 'Fehler beim Laden des Dokuments',
   'docView.pdfRenderError': 'Fehler beim Rendern des PDF-Dokuments',
+  'docView.sharingFailed': 'Freigabe fehlgeschlagen',
   
   // Profile
   'profile.title': 'Profil',
@@ -512,6 +516,7 @@ const ru: TranslationDictionary = {
   'docView.invalidDocument': 'Неверный ID документа',
   'docView.failedToLoad': 'Не удалось загрузить документ',
   'docView.pdfRenderError': 'Ошибка рендеринга PDF-документа',
+  'docView.sharingFailed': 'Не удалось поделиться',
   
   // Profile
   'profile.title': 'Профиль',
@@ -622,6 +627,7 @@ const tr: TranslationDictionary = {
   'docView.invalidDocument': 'Geçersiz belge ID',
   'docView.failedToLoad': 'Belge yüklenirken hata oluştu',
   'docView.pdfRenderError': 'PDF belgesi işlenirken hata oluştu',
+  'docView.sharingFailed': 'Paylaşım başarısız',
   
   // Profile
   'profile.title': 'Profil',
@@ -732,6 +738,7 @@ const ja: TranslationDictionary = {
   'docView.invalidDocument': '無効なドキュメントID',
   'docView.failedToLoad': 'ドキュメントの読み込みに失敗しました',
   'docView.pdfRenderError': 'PDFドキュメントのレンダリングに失敗しました',
+  'docView.sharingFailed': '共有に失敗',
   
   // Profile
   'profile.title': 'プロフィール',
@@ -842,6 +849,7 @@ const fr: TranslationDictionary = {
   'docView.invalidDocument': 'ID de document invalide',
   'docView.failedToLoad': 'Échec du chargement du document',
   'docView.pdfRenderError': 'Erreur de rendu du document PDF',
+  'docView.sharingFailed': 'Échec de la partage',
   
   // Profile
   'profile.title': 'Profil',

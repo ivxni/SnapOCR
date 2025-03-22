@@ -167,11 +167,11 @@ const processImage = async (documentId, userId) => {
  */
 async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
   try {
-    // Create a PDF document
+    // Create a PDF document with optimized structure for more content on a single page
     const pdfDoc = new PDFDocument({
       margins: {
-        top: 50,
-        bottom: 50,
+        top: 40, // Reduzierter oberer Rand
+        bottom: 40, // Reduzierter unterer Rand
         left: 50,
         right: 50
       },
@@ -210,194 +210,35 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
       });
     }
 
-    // Add title
-    try {
-      // Titel wird entfernt, wie vom Benutzer gewünscht
-      // pdfDoc.fontSize(24).font('Helvetica-Bold').text(fileName, {
-      //   align: 'center'
-      // });
-      // pdfDoc.moveDown();
-    } catch (error) {
-      console.error('Fehler beim Hinzufügen des Titels:', error);
-    }
+    // Immer alle erkannten Inhalte auf eine einzige Seite setzen
+    console.log('Kombiniere alle erkannten Inhalte auf eine Seite (optimiert)');
     
-    // Process each page from OCR
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i];
-      
-      // Add page number if not the first page
-      if (i > 0) {
-        pdfDoc.addPage();
-        
-        // Titel auf neuen Seiten auch entfernt
-        // pdfDoc.fontSize(24).font('Helvetica-Bold').text(fileName, {
-        //   align: 'center'
-        // });
-        // pdfDoc.moveDown();
+    // Kombiniere Texte aller Seiten
+    let allBlocks = [];
+    let allLayouts = [];
+    let allMarkdown = '';
+    
+    pages.forEach(page => {
+      if (page.blocks && Array.isArray(page.blocks)) {
+        allBlocks = allBlocks.concat(page.blocks);
       }
-      
-      // Check if we have detailed block information for formatting
-      if (page.blocks && Array.isArray(page.blocks) && page.blocks.length > 0) {
-        console.log(`Processing ${page.blocks.length} text blocks with formatting`);
-        
-        // Process each block maintaining structure
-        for (const block of page.blocks) {
-          if (block.type === 'text' && block.text) {
-            // Determine font style based on block properties
-            const isBold = block.bold || false;
-            const isItalic = block.italic || false;
-            const fontSize = block.fontSize || 12;
-            
-            // Set font based on style - VORSICHT: Nur Standardschriften verwenden!
-            if (isBold && isItalic) {
-              pdfDoc.font('Helvetica-BoldOblique');
-            } else if (isBold) {
-              pdfDoc.font('Helvetica-Bold');
-            } else if (isItalic) {
-              pdfDoc.font('Helvetica-Oblique');
-            } else {
-              pdfDoc.font('Helvetica');
-            }
-            
-            // Set font size
-            pdfDoc.fontSize(fontSize);
-            
-            // Add text with alignment if available
-            pdfDoc.text(block.text, {
-              align: block.alignment || 'left'
-            });
-            
-            // Add a small space between blocks
-            if (block.text.trim() !== '') {
-              pdfDoc.moveDown(0.5);
-            }
-          } else if (block.type === 'heading' && block.text) {
-            // Headings with proper formatting
-            const level = block.level || 1;
-            const fontSize = level === 1 ? 18 : level === 2 ? 16 : 14;
-            
-            pdfDoc.font('Helvetica-Bold').fontSize(fontSize);
-            pdfDoc.text(block.text, {
-              align: 'left'
-            });
-            pdfDoc.moveDown();
-          } else if (block.type === 'list' && block.items && Array.isArray(block.items)) {
-            // Lists with proper formatting
-            pdfDoc.font('Helvetica').fontSize(12);
-            
-            block.items.forEach((item, index) => {
-              pdfDoc.text(`• ${item}`, {
-                indent: 10,
-                align: 'left'
-              });
-              
-              if (index < block.items.length - 1) {
-                pdfDoc.moveDown(0.5);
-              }
-            });
-            
-            pdfDoc.moveDown();
-          }
-        }
-      } else if (page.layout && Array.isArray(page.layout) && page.layout.length > 0) {
-        // Alternative format: Using layout elements
-        console.log(`Processing ${page.layout.length} layout elements`);
-        
-        for (const element of page.layout) {
-          if (element.type === 'text' && element.text) {
-            const fontSize = element.fontSize || 12;
-            pdfDoc.font('Helvetica').fontSize(fontSize);
-            
-            pdfDoc.text(element.text, {
-              align: element.alignment || 'left'
-            });
-            
-            pdfDoc.moveDown(0.5);
-          }
-        }
-      } else if (page.markdown) {
-        // Fallback to markdown if no structured blocks
-        console.log('Using markdown content for formatting');
-        
-        // Parse markdown content
-        const lines = page.markdown.split('\n');
-        
-        for (const line of lines) {
-          // Detect headings
-          if (line.startsWith('# ')) {
-            // Heading 1
-            pdfDoc.fontSize(18).font('Helvetica-Bold').text(line.replace('# ', ''));
-            pdfDoc.moveDown(0.5);
-          } else if (line.startsWith('## ')) {
-            // Heading 2
-            pdfDoc.fontSize(16).font('Helvetica-Bold').text(line.replace('## ', ''));
-            pdfDoc.moveDown(0.5);
-          } else if (line.startsWith('### ')) {
-            // Heading 3
-            pdfDoc.fontSize(14).font('Helvetica-Bold').text(line.replace('### ', ''));
-            pdfDoc.moveDown(0.5);
-          } else if (line.startsWith('- ') || line.startsWith('* ')) {
-            // List item
-            pdfDoc.fontSize(12).font('Helvetica').text(line, { indent: 10 });
-          } else if (line.trim() === '') {
-            // Empty line
-            pdfDoc.moveDown(0.5);
-          } else {
-            // Normal text
-            pdfDoc.fontSize(12).font('Helvetica').text(line);
-          }
-        }
+      if (page.layout && Array.isArray(page.layout)) {
+        allLayouts = allLayouts.concat(page.layout);
       }
-      
-      // Add original image thumbnail at the end of the page
-      // Das Original-Bild wird entfernt, wie vom Benutzer gewünscht
-      /*
-      try {
-        const imgWidth = 200;
-        const imgHeight = 200;
-        
-        pdfDoc.moveDown(2);
-        
-        // Standard-Schriftart verwenden
-        pdfDoc.fontSize(10).font('Helvetica').text('Original Image:', {
-          align: 'center'
-        });
-        pdfDoc.moveDown(0.5);
-        
-        // Center the image
-        const pageWidth = pdfDoc.page.width - pdfDoc.page.margins.left - pdfDoc.page.margins.right;
-        const xPosition = pdfDoc.page.margins.left + (pageWidth - imgWidth) / 2;
-        
-        // Prüfe, ob das Bild gültig ist
-        if (imageBuffer && imageBuffer.length > 0) {
-          pdfDoc.image(imageBuffer, xPosition, pdfDoc.y, {
-            width: imgWidth,
-            height: imgHeight,
-            fit: [imgWidth, imgHeight]
-          });
-        } else {
-          pdfDoc.text('(Image not available)', {
-            align: 'center'
-          });
-        }
-      } catch (imgError) {
-        console.error('Error adding image thumbnail to PDF:', imgError);
-        // Füge einen Text statt des Bildes ein
-        pdfDoc.text('(Image could not be displayed)', {
-          align: 'center'
-        });
+      if (page.markdown) {
+        allMarkdown += page.markdown + '\n\n';
       }
-      */
-      
-      // Add page number at the bottom
-      const pageNumber = i + 1;
-      const totalPages = pages.length;
-      
-      pdfDoc.fontSize(10).text(`Page ${pageNumber} of ${totalPages}`, {
-        align: 'center',
-        y: pdfDoc.page.height - 50
-      });
-    }
+    });
+    
+    // Erstelle ein kombiniertes Seitenobject
+    const combinedPage = {
+      blocks: allBlocks.length > 0 ? allBlocks : undefined,
+      layout: allLayouts.length > 0 ? allLayouts : undefined,
+      markdown: allMarkdown || undefined
+    };
+    
+    // Verarbeite diese eine kombinierte Seite
+    processPageOptimized(pdfDoc, combinedPage);
     
     // Finalize the PDF
     pdfDoc.end();
@@ -410,6 +251,386 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
   } catch (error) {
     console.error('Error creating PDF with extracted content:', error);
     throw error;
+  }
+}
+
+/**
+ * Verarbeitet eine einzelne Seite für das PDF - optimiert für mehr Inhalt auf einer Seite
+ * @param {PDFDocument} pdfDoc - Das PDFKit-Dokument
+ * @param {Object} page - Die Seiten-Daten
+ */
+function processPageOptimized(pdfDoc, page) {
+  // Check if we have detailed block information for formatting
+  if (page.blocks && Array.isArray(page.blocks) && page.blocks.length > 0) {
+    console.log(`Processing ${page.blocks.length} text blocks with optimized formatting`);
+    
+    // Process each block maintaining structure
+    let currentSection = null;
+    let inList = false;
+    let isFirstBlock = true;
+    
+    for (const block of page.blocks) {
+      if (block.type === 'text' && block.text) {
+        // Determine font style based on block properties
+        const isBold = block.bold || false;
+        const isItalic = block.italic || false;
+        
+        // Kleinere Schriftgrößen für alles
+        let fontSize = block.fontSize ? Math.max(8, block.fontSize * 0.85) : 10;
+        
+        // Detect section headings based on font size or style
+        const isHeading = isBold || fontSize >= 12;
+        
+        // Anrede erkennen (z.B. "Sehr geehrte", "Liebe", usw.)
+        const isGreeting = block.text.match(/^(Sehr geehrte|Liebe|Hallo|Guten Tag|Betreff)/i);
+        
+        if (isHeading && currentSection !== block.text) {
+          // Start a new section with reduced space before
+          if (!isFirstBlock) {
+            pdfDoc.moveDown(0.5); // Reduzierter Abstand vor Überschriften
+          }
+          currentSection = block.text;
+          
+          // Set font based on style with smaller font size
+          pdfDoc.font('Helvetica-Bold').fontSize(Math.min(14, Math.max(12, fontSize)));
+          
+          // Add text with alignment if available
+          pdfDoc.text(block.text, {
+            align: 'left',
+            lineGap: 2 // Reduzierter Zeilenabstand
+          });
+          
+          // Dünnere Trennlinie
+          pdfDoc.moveDown(0.3);
+          const lineWidth = pdfDoc.widthOfString(block.text);
+          pdfDoc
+            .moveTo(pdfDoc.x, pdfDoc.y)
+            .lineTo(pdfDoc.x + Math.min(lineWidth, 300), pdfDoc.y)
+            .lineWidth(0.5) // Dünnere Linie
+            .stroke();
+          
+          pdfDoc.moveDown(0.3);
+          inList = false;
+        } else if (isGreeting) {
+          // Anrede mit kleinerer Schrift und weniger Abstand
+          if (isBold) {
+            pdfDoc.font('Helvetica-Bold');
+          } else {
+            pdfDoc.font('Helvetica');
+          }
+          
+          pdfDoc.fontSize(10); // Kleinere Schrift für Anrede
+          
+          if (!isFirstBlock) {
+            pdfDoc.moveDown(0.3);
+          }
+          
+          pdfDoc.text(block.text, {
+            align: 'left',
+            lineGap: 1 // Sehr geringer Zeilenabstand
+          });
+          
+          pdfDoc.moveDown(0.3);
+        } else {
+          // Set font based on style - VORSICHT: Nur Standardschriften verwenden!
+          if (isBold && isItalic) {
+            pdfDoc.font('Helvetica-BoldOblique');
+          } else if (isBold) {
+            pdfDoc.font('Helvetica-Bold');
+          } else if (isItalic) {
+            pdfDoc.font('Helvetica-Oblique');
+          } else {
+            pdfDoc.font('Helvetica');
+          }
+          
+          // Set smaller font size
+          pdfDoc.fontSize(fontSize);
+          
+          // Check if this is a new paragraph
+          if (!inList && block.text.trim() !== '') {
+            const isIndented = block.x > 60; // Detect if this is indented
+            
+            // Add text with alignment if available
+            pdfDoc.text(block.text, {
+              align: block.alignment || 'left',
+              indent: isIndented ? 15 : 0, // Reduzierte Einrückung
+              paragraphGap: 3, // Reduzierter Abstand zwischen Absätzen
+              lineGap: 1 // Reduzierter Zeilenabstand
+            });
+            
+            // Only add minimal space if not empty
+            if (block.text.trim() !== '') {
+              pdfDoc.moveDown(0.3); // Reduzierter Abstand
+            }
+          } else {
+            // Continue list or paragraph
+            pdfDoc.text(block.text, {
+              align: block.alignment || 'left',
+              indent: inList ? 15 : 0, // Reduzierte Einrückung
+              continued: false,
+              lineGap: 1 // Reduzierter Zeilenabstand
+            });
+            pdfDoc.moveDown(0.3); // Reduzierter Abstand
+          }
+        }
+      } else if (block.type === 'heading' && block.text) {
+        // Headings with optimized formatting
+        const level = block.level || 1;
+        // Kleinere Überschriften
+        const fontSize = level === 1 ? 14 : level === 2 ? 12 : 11;
+        
+        // Add reduced space before headings
+        if (!isFirstBlock) {
+          pdfDoc.moveDown(0.5);
+        }
+        
+        pdfDoc.font('Helvetica-Bold').fontSize(fontSize);
+        pdfDoc.text(block.text, {
+          align: 'left',
+          lineGap: 2 // Reduzierter Zeilenabstand
+        });
+        
+        // Add a thinner separator line for major headings
+        if (level <= 2) {
+          pdfDoc.moveDown(0.3);
+          const lineWidth = pdfDoc.widthOfString(block.text);
+          pdfDoc
+            .moveTo(pdfDoc.x, pdfDoc.y)
+            .lineTo(pdfDoc.x + Math.min(lineWidth, 300), pdfDoc.y)
+            .lineWidth(0.5) // Dünnere Linie
+            .stroke();
+        }
+        
+        pdfDoc.moveDown(0.3);
+        currentSection = block.text;
+        inList = false;
+      } else if (block.type === 'list' && block.items && Array.isArray(block.items)) {
+        // Lists with optimized formatting
+        pdfDoc.font('Helvetica').fontSize(10); // Kleinere Schrift für Listen
+        
+        block.items.forEach((item, index) => {
+          inList = true;
+          const bulletPoint = block.ordered ? `${index+1}. ` : '• ';
+          
+          pdfDoc.text(bulletPoint + item, {
+            indent: 15, // Reduzierte Einrückung
+            align: 'left',
+            paragraphGap: 2, // Reduzierter Abstand
+            lineGap: 1 // Reduzierter Zeilenabstand
+          });
+          
+          if (index < block.items.length - 1) {
+            pdfDoc.moveDown(0.2); // Minimaler Abstand zwischen Listenelementen
+          }
+        });
+        
+        pdfDoc.moveDown(0.3);
+        inList = false;
+      }
+      
+      isFirstBlock = false;
+    }
+  } else if (page.layout && Array.isArray(page.layout) && page.layout.length > 0) {
+    // Alternative format: Using layout elements
+    console.log(`Processing ${page.layout.length} layout elements with optimization`);
+    
+    let currentY = pdfDoc.y;
+    let columnPositions = [];
+    
+    // First pass: detect possible columns by analyzing X positions
+    page.layout.forEach(element => {
+      if (element.x && !columnPositions.includes(element.x)) {
+        columnPositions.push(element.x);
+      }
+    });
+    
+    // Sort column positions
+    columnPositions.sort((a, b) => a - b);
+    
+    // Determine if we have a table-like structure (3+ columns)
+    const hasTableStructure = columnPositions.length >= 3;
+    
+    // Second pass: add content with better formatting
+    for (const element of page.layout) {
+      if (element.type === 'text' && element.text) {
+        // Kleinere Schriftgröße für alles
+        const fontSize = element.fontSize ? Math.max(8, element.fontSize * 0.85) : 10;
+        const isBold = element.bold || false;
+        const isItalic = element.italic || false;
+        
+        // Set appropriate font
+        if (isBold && isItalic) {
+          pdfDoc.font('Helvetica-BoldOblique');
+        } else if (isBold) {
+          pdfDoc.font('Helvetica-Bold');
+        } else if (isItalic) {
+          pdfDoc.font('Helvetica-Oblique');
+        } else {
+          pdfDoc.font('Helvetica');
+        }
+        
+        pdfDoc.fontSize(fontSize);
+        
+        // If we have a table structure and this element has an X position
+        if (hasTableStructure && element.x) {
+          // Find which column this belongs to
+          const columnIndex = columnPositions.findIndex(pos => Math.abs(pos - element.x) < 10);
+          
+          if (columnIndex >= 0) {
+            // Calculate the width of this column
+            const nextColumnX = columnPositions[columnIndex + 1] || pdfDoc.page.width - pdfDoc.page.margins.right;
+            const columnWidth = nextColumnX - columnPositions[columnIndex] - 5; // Reduzierter Abstand
+            
+            // Calculate x position in the PDF (adjust for margins)
+            const pdfX = pdfDoc.page.margins.left + (columnPositions[columnIndex] * 0.75); // Scale factor
+            
+            // If different row, move down
+            if (element.y && currentY !== element.y) {
+              currentY = element.y;
+              pdfDoc.moveDown(0.2); // Reduzierter Abstand
+            }
+            
+            // Position text at the correct column
+            pdfDoc.text(element.text, pdfX, pdfDoc.y, {
+              width: columnWidth,
+              align: element.alignment || 'left',
+              lineGap: 1 // Reduzierter Zeilenabstand
+            });
+          } else {
+            // Normal text
+            pdfDoc.text(element.text, {
+              align: element.alignment || 'left',
+              lineGap: 1 // Reduzierter Zeilenabstand
+            });
+            
+            pdfDoc.moveDown(0.3); // Reduzierter Abstand
+          }
+        } else {
+          // Normal text
+          pdfDoc.text(element.text, {
+            align: element.alignment || 'left',
+            lineGap: 1 // Reduzierter Zeilenabstand
+          });
+          
+          pdfDoc.moveDown(0.3); // Reduzierter Abstand
+        }
+      }
+    }
+  } else if (page.markdown) {
+    // Fallback to markdown if no structured blocks
+    console.log('Using markdown content with optimized formatting');
+    
+    // Parse markdown content
+    const lines = page.markdown.split('\n');
+    let inList = false;
+    let listIndent = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isFirstLine = i === 0;
+      
+      // Detect headings
+      if (line.startsWith('# ')) {
+        // Heading 1
+        if (!isFirstLine) {
+          pdfDoc.moveDown(0.5);
+        }
+        pdfDoc.fontSize(14).font('Helvetica-Bold').text(line.replace('# ', ''), {
+          lineGap: 2 // Reduzierter Zeilenabstand
+        });
+        
+        // Add a separator line
+        pdfDoc.moveDown(0.3);
+        const lineWidth = pdfDoc.widthOfString(line.replace('# ', ''));
+        pdfDoc
+          .moveTo(pdfDoc.x, pdfDoc.y)
+          .lineTo(pdfDoc.x + Math.min(lineWidth, 400), pdfDoc.y)
+          .lineWidth(0.5) // Dünnere Linie
+          .stroke();
+          
+        pdfDoc.moveDown(0.3);
+        inList = false;
+      } else if (line.startsWith('## ')) {
+        // Heading 2
+        if (!isFirstLine) {
+          pdfDoc.moveDown(0.4);
+        }
+        pdfDoc.fontSize(12).font('Helvetica-Bold').text(line.replace('## ', ''), {
+          lineGap: 2 // Reduzierter Zeilenabstand
+        });
+        
+        // Add a thin separator line
+        pdfDoc.moveDown(0.3);
+        const lineWidth = pdfDoc.widthOfString(line.replace('## ', ''));
+        pdfDoc
+          .moveTo(pdfDoc.x, pdfDoc.y)
+          .lineTo(pdfDoc.x + Math.min(lineWidth, 300), pdfDoc.y)
+          .lineWidth(0.5) // Dünnere Linie
+          .stroke();
+          
+        pdfDoc.moveDown(0.3);
+        inList = false;
+      } else if (line.startsWith('### ')) {
+        // Heading 3
+        if (!isFirstLine) {
+          pdfDoc.moveDown(0.3);
+        }
+        pdfDoc.fontSize(11).font('Helvetica-Bold').text(line.replace('### ', ''), {
+          lineGap: 2 // Reduzierter Zeilenabstand
+        });
+        pdfDoc.moveDown(0.3);
+        inList = false;
+      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        // List item
+        if (!inList) {
+          // Start of a new list
+          pdfDoc.moveDown(0.3);
+          listIndent = 15; // Reduzierte Einrückung
+          inList = true;
+        }
+        
+        pdfDoc.fontSize(10).font('Helvetica').text(line, { 
+          indent: listIndent,
+          lineGap: 1 // Reduzierter Zeilenabstand 
+        });
+        pdfDoc.moveDown(0.2); // Minimaler Abstand zwischen Listenelementen
+      } else if (line.trim() === '') {
+        // Empty line
+        if (inList) {
+          // End of list
+          inList = false;
+          pdfDoc.moveDown(0.3);
+        } else {
+          pdfDoc.moveDown(0.5); // Reduzierter Absatzabstand
+        }
+      } else {
+        // Erkenne Anrede
+        const isGreeting = line.match(/^(Sehr geehrte|Liebe|Hallo|Guten Tag|Betreff)/i);
+        
+        if (isGreeting) {
+          // Anrede mit kleinerem Abstand
+          if (!isFirstLine) {
+            pdfDoc.moveDown(0.3);
+          }
+          pdfDoc.fontSize(10).font('Helvetica').text(line, {
+            lineGap: 1 // Sehr geringer Zeilenabstand
+          });
+          pdfDoc.moveDown(0.3);
+        } else {
+          // Normal text
+          if (inList) {
+            // End of list
+            inList = false;
+            pdfDoc.moveDown(0.3);
+          }
+          
+          pdfDoc.fontSize(10).font('Helvetica').text(line, {
+            paragraphGap: 3,
+            lineGap: 1 // Reduzierter Zeilenabstand
+          });
+        }
+      }
+    }
   }
 }
 
