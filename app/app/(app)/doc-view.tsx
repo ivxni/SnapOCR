@@ -49,6 +49,7 @@ export default function DocView() {
 
   // Function to generate HTML content for PDF viewing
   const generateHtml = (pdfUrl: string) => {
+    // Add a message about the ngrok warning
     return `
       <!DOCTYPE html>
       <html>
@@ -62,6 +63,7 @@ export default function DocView() {
               width: 100%;
               overflow: hidden;
               background-color: #f5f5f5;
+              font-family: Arial, sans-serif;
             }
             #pdf-container {
               width: 100%;
@@ -71,19 +73,55 @@ export default function DocView() {
               align-items: center;
               justify-content: center;
             }
-            object {
+            .warning-box {
+              background-color: #fff9e6;
+              border: 1px solid #f5c400;
+              border-radius: 8px;
+              padding: 16px;
+              margin: 16px;
+              max-width: 500px;
+              text-align: center;
+            }
+            .warning-title {
+              font-weight: bold;
+              font-size: 18px;
+              margin-bottom: 8px;
+              color: #d14900;
+            }
+            .warning-text {
+              color: #333;
+              margin-bottom: 12px;
+            }
+            .warning-button {
+              background-color: #4a86e8;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 4px;
+              font-weight: bold;
+              cursor: pointer;
+              text-decoration: none;
+              display: inline-block;
+              margin-top: 8px;
+            }
+            iframe {
               width: 100%;
               height: 100%;
-              display: block;
+              border: none;
             }
           </style>
         </head>
         <body>
           <div id="pdf-container">
-            <object data="${pdfUrl}" type="application/pdf" width="100%" height="100%">
-              <p>It appears you don't have a PDF plugin for this browser. 
-              You can <a href="${pdfUrl}">download the PDF file</a> instead.</p>
-            </object>
+            <div class="warning-box">
+              <div class="warning-title">PDF Viewer Notice</div>
+              <div class="warning-text">
+                The PDF is hosted on an ngrok server during development.
+                When you click the button below, you may see a security warning from ngrok.
+                This is normal during development. Click "Visit Site" on the ngrok page to view your PDF.
+              </div>
+              <a href="${pdfUrl}" target="_blank" class="warning-button">Open PDF</a>
+            </div>
           </div>
         </body>
       </html>

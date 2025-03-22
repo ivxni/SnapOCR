@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -90,7 +90,23 @@ export default function Dashboard() {
               backgroundColor: themeColors.surface,
               shadowColor: themeColors.primary
             }]}
-            onPress={() => console.log('View document', doc._id)}
+            onPress={() => {
+              if (doc.status === 'completed') {
+                router.push(`/(app)/doc-view?id=${doc._id}`);
+              } else if (doc.status === 'failed') {
+                Alert.alert(
+                  t('common.error'),
+                  t('history.status.failed'),
+                  [{ text: t('common.ok'), style: 'default' }]
+                );
+              } else {
+                Alert.alert(
+                  t('common.loading'),
+                  t('history.status.processing'),
+                  [{ text: t('common.ok'), style: 'default' }]
+                );
+              }
+            }}
           >
             <View style={[styles.documentIconContainer, { backgroundColor: themeColors.surfaceVariant }]}>
               <MaterialIcons name="description" size={24} color={themeColors.primary} />

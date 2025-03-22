@@ -68,7 +68,7 @@ const processImage = async (documentId, userId) => {
     const ocrResponse = await client.ocr.process({
       model: 'mistral-ocr-latest',
       document: {
-        type: 'image_url',
+        type: 'document_url',
         imageUrl: `data:${fileType};base64,${base64Image}`
       },
       include_image_base64: true // Include images in response

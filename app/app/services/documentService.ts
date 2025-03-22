@@ -83,8 +83,8 @@ export const getPdfFileUrl = async (id: string): Promise<string> => {
       throw new Error('PDF file not found');
     }
     
-    // Combine the API_URL with the document's pdfFileUrl to get the full URL
-    // Make sure to correctly encode any special characters in the URL
+    // Make sure to use the complete URL with the API_URL
+    // Since we're using ngrok, the full URL is required
     const pdfUrl = `${api.defaults.baseURL}${document.pdfFileUrl}`;
     
     console.log('PDF URL:', pdfUrl);
@@ -96,15 +96,16 @@ export const getPdfFileUrl = async (id: string): Promise<string> => {
   }
 };
 
-// Download PDF file to local cache for viewing
+// Download PDF file for viewing
 export const downloadPdfFile = async (id: string): Promise<string> => {
   try {
-    // Get direct URL to the PDF file from the server
+    // Just return the URL for viewing in the browser
     const fileUrl = await getPdfFileUrl(id);
     
     console.log("Using direct PDF URL:", fileUrl);
     
-    // Return the direct URL for viewing in WebView
+    // For ngrok URLs, we'll open the URL in the browser rather than embedding
+    // This handles the ngrok security warning
     return fileUrl;
   } catch (error) {
     console.error('Error getting PDF URL:', error);
