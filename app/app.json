@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LynxAI",
-    "slug": "lynx",
+    "slug": "lynxai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,13 +21,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.ACCESS_MEDIA_LOCATION"
-      ]
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -52,12 +46,6 @@
         }
       ],
       "expo-localization"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "c63e2c87-c44d-4502-abbd-06d2b2af2aeb"
-      }
-    },
-    "owner": "weblabsio"
+    ]
   }
 }
