@@ -65,16 +65,24 @@ const processImage = async (documentId, userId) => {
 
     console.log('Sending OCR request to Mistral API...');
 
-    // Call Mistral OCR API with purpose=ocr to get text positions
+    // Call Mistral OCR API with improved parameters for better special character recognition
     const ocrResponse = await client.ocr.process({
       model: 'mistral-ocr-latest',
       document: {
         type: 'image_url',
         imageUrl: `data:${fileType};base64,${base64Image}`
       },
-      include_image_base64: true, // Include images in response
-      include_layout_info: true,   // Request layout information
-      purpose: 'ocr'  // Request detailed positioning information
+      include_image_base64: true,
+      include_layout_info: true,
+      purpose: 'transcription', // 'transcription' often works better for detecting special characters than 'ocr'
+      ocr_options: {
+        detect_text: true,
+        detect_formulas: true, // Enable formula detection for mathematical symbols
+        detect_icons: true,    // Better detection of symbols like circled items
+        detect_tables: true,
+        language: 'de',        // German language hint
+        quality: 'high'        // Request high quality OCR
+      }
     });
 
     console.log('Received OCR response from Mistral API:', ocrResponse ? 'Response received' : 'No response');
@@ -101,8 +109,9 @@ const processImage = async (documentId, userId) => {
     const pages = ocrResponse.pages || [];
     const markdownContent = pages.map(page => page.markdown || '').join('\n\n');
 
-    // Update document with OCR text
-    document.ocrText = markdownContent;
+    // Post-process OCR text to fix common issues with special characters
+    const postProcessedMarkdown = postProcessOcrText(markdownContent);
+    document.ocrText = postProcessedMarkdown;
     document.status = 'completed';
     document.processingCompletedAt = new Date();
     
@@ -159,6 +168,35 @@ const processImage = async (documentId, userId) => {
 };
 
 /**
+ * Post-processes OCR text to fix common issues with special characters
+ * @param {string} text - The OCR text to process
+ * @returns {string} - The processed text
+ */
+function postProcessOcrText(text) {
+  if (!text) return text;
+  
+  // Fixes for common OCR errors with special characters
+  let processed = text;
+  
+  // Fix mathematical symbols
+  processed = processed.replace(/\$\\cdot\$/g, '·');     // Replace $\cdot$ with ·
+  processed = processed.replace(/\$\\odot\$/g, '⊙');     // Replace $\odot$ with ⊙
+  processed = processed.replace(/\$\\bullet\$/g, '•');   // Replace $\bullet$ with •
+  processed = processed.replace(/\$\\times\$/g, '×');    // Replace $\times$ with ×
+  
+  // Fix image markdown references that shouldn't be there
+  processed = processed.replace(/!\[img-\d+\]\(img-\d+\.(jpe?g|png|gif)\)/gi, '');
+  
+  // Fix bullet points that might be incorrectly transcribed
+  processed = processed.replace(/o\s+(?=\w)/g, '• ');    // Replace "o " at start of items with bullet points
+  
+  // Improve spacing around special characters
+  processed = processed.replace(/(\w)·(\w)/g, '$1 · $2'); // Add spaces around · when between words
+  
+  return processed;
+}
+
+/**
  * Creates a PDF with extracted content from the image
  * @param {Buffer} imageBuffer - The original image buffer
  * @param {string} outputPath - Path where to save the PDF
@@ -170,8 +208,8 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
     // Create a PDF document with optimized structure for more content on a single page
     const pdfDoc = new PDFDocument({
       margins: {
-        top: 40, // Reduzierter oberer Rand
-        bottom: 40, // Reduzierter unterer Rand
+        top: 40,
+        bottom: 40,
         left: 50,
         right: 50
       },
@@ -195,11 +233,19 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
       console.log('Keine Seiten in der OCR-Antwort gefunden. Erstelle eine einfache PDF mit dem Bild.');
       
       // Füge nur das Bild ein, wenn keine OCR-Daten verfügbar sind
-      pdfDoc.image(imageBuffer, {
-        fit: [500, 700],
-        align: 'center',
-        valign: 'center'
-      });
+      try {
+        pdfDoc.image(imageBuffer, {
+          fit: [500, 700],
+          align: 'center',
+          valign: 'center'
+        });
+      } catch (imageError) {
+        console.error('Fehler beim Einbetten des Bildes:', imageError);
+        pdfDoc.fontSize(12).font('Helvetica-Bold').text(
+          'Das Originalbild konnte nicht eingebettet werden.',
+          { align: 'center' }
+        );
+      }
       
       pdfDoc.end();
       
@@ -226,7 +272,9 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
         allLayouts = allLayouts.concat(page.layout);
       }
       if (page.markdown) {
-        allMarkdown += page.markdown + '\n\n';
+        // Post-process the markdown to fix common OCR issues
+        const processed = postProcessOcrText(page.markdown);
+        allMarkdown += processed + '\n\n';
       }
     });
     

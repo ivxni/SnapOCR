@@ -27,6 +27,25 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "lynxai",
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Die App benötigt Zugriff auf Ihre Fotos, um Dokumente zu scannen.",
+          "cameraPermission": "Die App benötigt Zugriff auf Ihre Kamera, um Dokumente zu scannen.",
+          "microphonePermission": "Die App benötigt Zugriff auf Ihr Mikrofon."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Die App benötigt Zugriff auf Ihre Fotos, um Dokumente zu speichern.",
+          "savePhotosPermission": "Die App benötigt Zugriff, um Dokumente in Ihrer Mediathek zu speichern.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-localization"
+    ]
   }
 }

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Alert, Dimensions, ToastAndroid, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity, Alert, Dimensions, ToastAndroid, Platform, Modal, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,6 +22,12 @@ export default function DocView() {
   const { t } = useTranslation();
   const themeColors = useThemeColors();
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageCropMode, setImageCropMode] = useState(false);
+  const [editOptions, setEditOptions] = useState<{
+    crop: boolean;
+    rotate: boolean;
+    flip: boolean;
+  }>({ crop: false, rotate: false, flip: false });
 
   useEffect(() => {
     if (!id) {
@@ -122,29 +128,137 @@ export default function DocView() {
     }
   };
 
-  // Function to pick and manipulate image
+  // Function to pick and manipulate image with expanded options
   const pickImage = async () => {
     try {
+      // Erst die Berechtigungen prüfen
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Fehler', 'Kamera-Zugriff wird benötigt, um Bilder aufzunehmen.');
+        return;
+      }
+
+      // Open image picker with advanced options
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: undefined, // Kein festes Seitenverhältnis
+        allowsEditing: false, // Wir deaktivieren das direkte Bearbeiten, um unsere eigene UI zu verwenden
         quality: 1,
         allowsMultipleSelection: false,
+        exif: true, // EXIF-Daten erhalten für bessere Bildqualität
       });
 
       if (!result.canceled) {
-        // Erst nach der Bestätigung durch den Nutzer manipulieren
-        const manipulatedImage = await ImageManipulator.manipulateAsync(
-          result.assets[0].uri,
-          [], // Keine automatische Größenänderung
-          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        // Vorverarbeitung des Bildes
+        const originalUri = result.assets[0].uri;
+        setImageUri(originalUri);
+        
+        // Frage den Benutzer nach der gewünschten Bearbeitung
+        Alert.alert(
+          'Bild bearbeiten',
+          'Wie möchten Sie das Bild bearbeiten?',
+          [
+            {
+              text: 'Nicht bearbeiten',
+              onPress: () => {
+                console.log('Keine Bearbeitung gewählt');
+              }
+            },
+            {
+              text: 'Zuschneiden',
+              onPress: async () => {
+                console.log('Zuschneiden gewählt');
+                // Implementiere die Zuschneidefunktion mit ImageManipulator
+                try {
+                  const manipResult = await ImageManipulator.manipulateAsync(
+                    originalUri,
+                    [{ crop: { originX: 0, originY: 0, width: 1000, height: 1000 } }],
+                    { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
+                  );
+                  setImageUri(manipResult.uri);
+                } catch (err) {
+                  console.error('Fehler beim Zuschneiden:', err);
+                  Alert.alert('Fehler', 'Das Bild konnte nicht zugeschnitten werden.');
+                }
+              }
+            },
+            {
+              text: 'Kamera öffnen',
+              onPress: async () => {
+                // Kamera starten für ein neues Bild
+                const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+                if (cameraPermission.status !== 'granted') {
+                  Alert.alert('Fehler', 'Kamera-Zugriff wird benötigt, um Fotos aufzunehmen.');
+                  return;
+                }
+                
+                const cameraResult = await ImagePicker.launchCameraAsync({
+                  allowsEditing: true,
+                  quality: 1,
+                });
+                
+                if (!cameraResult.canceled) {
+                  setImageUri(cameraResult.assets[0].uri);
+                }
+              }
+            }
+          ]
         );
-        setImageUri(manipulatedImage.uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Fehler', 'Fehler beim Laden des Bildes');
+    }
+  };
+
+  // Function to handle image cropping
+  const handleCropImage = async () => {
+    if (!imageUri) return;
+    
+    try {
+      const cropResult = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [{ crop: { originX: 0, originY: 0, width: 1000, height: 1000 } }],
+        { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      setImageUri(cropResult.uri);
+      Alert.alert('Erfolg', 'Bild erfolgreich zugeschnitten');
+    } catch (error) {
+      console.error('Error cropping image:', error);
+      Alert.alert('Fehler', 'Fehler beim Zuschneiden des Bildes');
+    }
+  };
+
+  // Function to handle image rotation
+  const handleRotateImage = async () => {
+    if (!imageUri) return;
+    
+    try {
+      const rotateResult = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [{ rotate: 90 }],
+        { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      setImageUri(rotateResult.uri);
+    } catch (error) {
+      console.error('Error rotating image:', error);
+      Alert.alert('Fehler', 'Fehler beim Drehen des Bildes');
+    }
+  };
+
+  // Function to handle image flip
+  const handleFlipImage = async () => {
+    if (!imageUri) return;
+    
+    try {
+      const flipResult = await ImageManipulator.manipulateAsync(
+        imageUri,
+        [{ flip: ImageManipulator.FlipType.Horizontal }],
+        { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      setImageUri(flipResult.uri);
+    } catch (error) {
+      console.error('Error flipping image:', error);
+      Alert.alert('Fehler', 'Fehler beim Spiegeln des Bildes');
     }
   };
 
@@ -164,6 +278,39 @@ export default function DocView() {
       console.error('Error uploading image:', error);
       Alert.alert('Fehler', 'Fehler beim Hochladen des Bildes');
     }
+  };
+
+  // Render image editing toolbar
+  const renderImageEditTools = () => {
+    if (!imageUri) return null;
+    
+    return (
+      <View style={styles.editToolsContainer}>
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: themeColors.primary }]}
+          onPress={handleRotateImage}
+        >
+          <MaterialIcons name="rotate-right" size={20} color={themeColors.white} />
+          <Text style={[styles.editButtonText, { color: themeColors.white }]}>Drehen</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: themeColors.primary }]}
+          onPress={handleCropImage}
+        >
+          <MaterialIcons name="crop" size={20} color={themeColors.white} />
+          <Text style={[styles.editButtonText, { color: themeColors.white }]}>Zuschneiden</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: themeColors.primary }]}
+          onPress={handleFlipImage}
+        >
+          <MaterialIcons name="flip" size={20} color={themeColors.white} />
+          <Text style={[styles.editButtonText, { color: themeColors.white }]}>Spiegeln</Text>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
@@ -262,6 +409,10 @@ export default function DocView() {
           {imageUri && (
             <View style={styles.previewContainer}>
               <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              
+              {/* Image Editing Tools */}
+              {renderImageEditTools()}
+              
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: themeColors.error }]}
@@ -405,5 +556,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
+  },
+  editToolsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    elevation: 1,
+    margin: 4,
+  },
+  editButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
   },
 }); 
