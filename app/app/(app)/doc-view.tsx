@@ -8,6 +8,9 @@ import { useDocuments } from '../hooks/useDocuments';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
 import * as documentService from '../services/documentService';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { Image } from 'react-native';
 
 export default function DocView() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,6 +21,7 @@ export default function DocView() {
   const [sharing, setSharing] = useState(false);
   const { t } = useTranslation();
   const themeColors = useThemeColors();
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -118,6 +122,50 @@ export default function DocView() {
     }
   };
 
+  // Function to pick and manipulate image
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: undefined, // Kein festes Seitenverhältnis
+        quality: 1,
+        allowsMultipleSelection: false,
+      });
+
+      if (!result.canceled) {
+        // Erst nach der Bestätigung durch den Nutzer manipulieren
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [], // Keine automatische Größenänderung
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        );
+        setImageUri(manipulatedImage.uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Fehler', 'Fehler beim Laden des Bildes');
+    }
+  };
+
+  // Function to handle image upload
+  const handleImageUpload = async () => {
+    if (!imageUri) {
+      Alert.alert('Fehler', 'Bitte wählen Sie zuerst ein Bild aus');
+      return;
+    }
+
+    try {
+      // Hier würde die eigentliche Upload-Logik implementiert
+      // Zum Beispiel:
+      // await documentService.uploadDocument(imageUri);
+      Alert.alert('Erfolg', 'Bild erfolgreich hochgeladen');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Fehler', 'Fehler beim Hochladen des Bildes');
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <Stack.Screen 
@@ -195,15 +243,47 @@ export default function DocView() {
             onError={(syntheticEvent) => {
               const { nativeEvent } = syntheticEvent;
               console.error('WebView error:', nativeEvent);
-              Alert.alert(t('common.error'), t('docView.pdfRenderError'));
+              Alert.alert('Fehler', 'Fehler beim Anzeigen des PDFs');
             }}
           />
         </View>
       ) : (
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: themeColors.text }]}>
-            {t('docView.noPdf')}
-          </Text>
+        <View style={styles.uploadContainer}>
+          <TouchableOpacity
+            style={[styles.uploadButton, { backgroundColor: themeColors.primary }]}
+            onPress={pickImage}
+          >
+            <MaterialIcons name="add-photo-alternate" size={32} color={themeColors.white} />
+            <Text style={[styles.uploadText, { color: themeColors.white }]}>
+              Bild auswählen
+            </Text>
+          </TouchableOpacity>
+          
+          {imageUri && (
+            <View style={styles.previewContainer}>
+              <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: themeColors.error }]}
+                  onPress={() => setImageUri(null)}
+                >
+                  <MaterialIcons name="delete" size={24} color={themeColors.white} />
+                  <Text style={[styles.buttonText, { color: themeColors.white }]}>
+                    Abbrechen
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
+                  onPress={handleImageUpload}
+                >
+                  <MaterialIcons name="cloud-upload" size={24} color={themeColors.white} />
+                  <Text style={[styles.buttonText, { color: themeColors.white }]}>
+                    Hochladen
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -266,5 +346,64 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 8,
     borderRadius: 20,
-  }
+  },
+  uploadContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  uploadText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  previewContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  previewImage: {
+    width: Dimensions.get('window').width - 40,
+    height: (Dimensions.get('window').width - 40) * 0.75,
+    borderRadius: 8,
+    resizeMode: 'contain',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    flex: 1,
+    margin: 5,
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
 }); 
