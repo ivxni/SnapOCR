@@ -1,0 +1,156 @@
+.AuthPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #f8f9fa;
+}
+
+.AuthPage-content {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 500px;
+  padding: 30px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.AuthPage-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+.AuthPage-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.AuthPage-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.AuthPage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.AuthPage-formRow {
+  display: flex;
+  gap: 15px;
+}
+
+.AuthPage-formGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.AuthPage-formGroup--half {
+  width: 50%;
+}
+
+.AuthPage-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 8px;
+}
+
+.AuthPage-input {
+  height: 45px;
+  padding: 0 15px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #2c3e50;
+  background-color: #f8f9fa;
+}
+
+.AuthPage-input:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.AuthPage-error {
+  padding: 12px;
+  background-color: #fdecea;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.AuthPage-errorText {
+  color: #e74c3c;
+  font-size: 14px;
+}
+
+.AuthPage-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.AuthPage-button--primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.AuthPage-button--primary:active {
+  background-color: #2980b9;
+}
+
+.AuthPage-buttonText {
+  font-size: 16px;
+}
+
+.AuthPage-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.AuthPage-footerText {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.AuthPage-link {
+  color: #3498db;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.AuthPage-link:active {
+  color: #2980b9;
+}
+
+.AuthPage-backButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  cursor: pointer;
+}
+
+.AuthPage-backButtonText {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.AuthPage-backButtonText:active {
+  color: #34495e;
+} 
