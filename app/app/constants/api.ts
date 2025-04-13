@@ -9,6 +9,7 @@ export interface ApiEndpoints {
   UPLOAD_DOCUMENT: string;
   DOCUMENT_BY_ID: (id: string) => string;
   DOCUMENT_STATUS: (id: string) => string;
+  DOCUMENT_ORIGINAL: (id: string) => string;
 }
 
 export const ENDPOINTS: ApiEndpoints = {
@@ -23,6 +24,7 @@ export const ENDPOINTS: ApiEndpoints = {
   UPLOAD_DOCUMENT: '/documents/upload',
   DOCUMENT_BY_ID: (id: string) => `/documents/${id}`,
   DOCUMENT_STATUS: (id: string) => `/documents/${id}/status`,
+  DOCUMENT_ORIGINAL: (id: string) => `/documents/original/${id}`,
 };
 
 export interface ApiConfig {

@@ -16,6 +16,11 @@ export interface Document {
   tags?: string[];
   isStarred?: boolean;
   isArchived?: boolean;
+  isEncrypted?: boolean;
+  encryptionMetadata?: {
+    keyFingerprint?: string;
+    encryptionVersion?: string;
+  };
   metadata?: {
     pageCount?: number;
     dimensions?: {
@@ -53,6 +58,12 @@ export interface UploadFile {
   uri: string;
   name?: string;
   type?: string;
+  metadata?: {
+    isEncrypted: boolean;
+    keyFingerprint: string;
+    encryptionVersion: string;
+    [key: string]: any; // Erlaubt weitere Metadaten in Zukunft
+  };
 }
 
 // Create a default export with a React component

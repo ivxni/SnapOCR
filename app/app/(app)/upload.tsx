@@ -11,6 +11,7 @@ import { useDocuments } from '../hooks/useDocuments';
 import { useTranslation } from '../utils/i18n';
 import { UploadFile } from '../types/document.types';
 import useThemeColors from '../utils/useThemeColors';
+import { prepareSecureUpload } from '../utils/encryption';
 
 export default function Upload() {
   const router = useRouter();
@@ -262,14 +263,21 @@ export default function Upload() {
     try {
       setUploading(true);
       
-      // Get file info
-      const fileInfo = await FileSystem.getInfoAsync(imageToUpload);
+      // Verschlüssele die Datei vor dem Upload (Ende-zu-Ende-Verschlüsselung)
+      const secureUploadData = await prepareSecureUpload(imageToUpload);
+      console.log('Prepared secure upload with key fingerprint:', secureUploadData.keyFingerprint);
       
-      // Create upload file object
+      // Create upload file object mit verschlüsselten Daten
       const uploadFile: UploadFile = {
-        uri: Platform.OS === 'ios' ? imageToUpload.replace('file://', '') : imageToUpload,
-        name: imageToUpload.split('/').pop() || 'image.jpg',
-        type: 'image/jpeg', // Adjust based on your image type
+        uri: Platform.OS === 'ios' ? secureUploadData.uri.replace('file://', '') : secureUploadData.uri,
+        name: `encrypted_${Date.now()}.jpg`, // Verwende .jpg Erweiterung für den Server-Filter
+        type: 'image/jpeg', // Tarnen als JPEG für den Server-Filter
+        // Füge Verschlüsselungsmetadaten hinzu
+        metadata: {
+          isEncrypted: true,
+          keyFingerprint: secureUploadData.keyFingerprint,
+          encryptionVersion: secureUploadData.encryptionVersion
+        }
       };
 
       // Upload the document

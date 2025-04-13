@@ -59,6 +59,14 @@ const documentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isEncrypted: {
+      type: Boolean,
+      default: false,
+    },
+    encryptionMetadata: {
+      keyFingerprint: String,
+      encryptionVersion: String,
+    },
     metadata: {
       pageCount: Number,
       dimensions: {
