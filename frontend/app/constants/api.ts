@@ -1,4 +1,4 @@
-export const API_URL: string = 'https://3a50-2a02-3100-6596-300-82b-52f0-8e13-2921.ngrok-free.app/api';
+export const API_URL: string = 'https://7d4d-2003-c9-7717-182e-fdfd-3971-8613-cfd7.ngrok-free.app/api';
 
 export interface ApiEndpoints {
   REGISTER: string;
@@ -9,7 +9,6 @@ export interface ApiEndpoints {
   UPLOAD_DOCUMENT: string;
   DOCUMENT_BY_ID: (id: string) => string;
   DOCUMENT_STATUS: (id: string) => string;
-  DOCUMENT_ORIGINAL: (id: string) => string;
 }
 
 export const ENDPOINTS: ApiEndpoints = {
@@ -24,7 +23,6 @@ export const ENDPOINTS: ApiEndpoints = {
   UPLOAD_DOCUMENT: '/documents/upload',
   DOCUMENT_BY_ID: (id: string) => `/documents/${id}`,
   DOCUMENT_STATUS: (id: string) => `/documents/${id}/status`,
-  DOCUMENT_ORIGINAL: (id: string) => `/documents/original/${id}`,
 };
 
 export interface ApiConfig {

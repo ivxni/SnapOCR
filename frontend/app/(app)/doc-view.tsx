@@ -42,20 +42,12 @@ export default function DocView() {
         const document = await fetchDocumentById(id);
         setDocumentName(document.originalFileName);
         
-        // Check if document is encrypted
-        const isEncrypted = document.isEncrypted || false;
-        
-        // Get PDF file path or decrypted image path
+        // Get PDF file path
         const path = await viewPdf(id);
-        console.log("File path:", path);
+        console.log("PDF URL:", path);
         setPdfUrl(path);
-        
-        // If it's an encrypted document (likely a decrypted image path)
-        if (isEncrypted) {
-          setImageUri(path); // Set as image URI
-        }
       } catch (error) {
-        console.error('Error loading file:', error);
+        console.error('Error loading PDF:', error);
         Alert.alert(
           t('common.error'),
           t('docView.failedToLoad'),
@@ -382,15 +374,6 @@ export default function DocView() {
             </Text>
           </TouchableOpacity>
         </View>
-      ) : imageUri ? (
-        // Display the decrypted image
-        <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: imageUri }} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
       ) : pdfUrl ? (
         <View style={styles.webviewContainer}>
           <WebView
@@ -596,14 +579,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginLeft: 4,
-  },
-  imageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
   },
 }); 

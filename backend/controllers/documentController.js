@@ -23,34 +23,7 @@ const uploadDocument = async (req, res) => {
     console.error('MISTRAL_API_KEY is not configured in environment variables!');
   }
 
-  // Überprüfe, ob die Datei verschlüsselt ist
-  let isEncrypted = false;
-  let keyFingerprint = null;
-  let encryptionVersion = null;
-
-  try {
-    // Überprüfe, ob Metadaten vorhanden sind
-    if (req.body.metadata) {
-      // Wenn Metadaten als String vorliegen, parsen
-      const metadata = typeof req.body.metadata === 'string' 
-        ? JSON.parse(req.body.metadata) 
-        : req.body.metadata;
-      
-      isEncrypted = metadata.isEncrypted === true || metadata.isEncrypted === 'true';
-      keyFingerprint = metadata.keyFingerprint;
-      encryptionVersion = metadata.encryptionVersion;
-    }
-  } catch (error) {
-    console.error('Error parsing metadata:', error);
-    // Wenn es einen Fehler beim Parsen gibt, ignorieren wir die Metadaten
-  }
-
-  console.log('File encryption status:', isEncrypted ? 'Encrypted' : 'Not encrypted');
-  if (isEncrypted) {
-    console.log('Encryption metadata:', { keyFingerprint, encryptionVersion });
-  }
-
-  // Create document record with encryption info if available
+  // Create document record
   const document = await Document.create({
     userId: req.user._id,
     originalFileName: req.file.originalname,
@@ -58,13 +31,6 @@ const uploadDocument = async (req, res) => {
     originalFileSize: req.file.size,
     originalFileUrl: `/uploads/${req.user._id}/${req.file.filename}`,
     status: 'processing',
-    isEncrypted: isEncrypted || false,
-    encryptionMetadata: isEncrypted 
-      ? {
-          keyFingerprint,
-          encryptionVersion
-        }
-      : undefined
   });
 
   // Create processing job
@@ -76,38 +42,8 @@ const uploadDocument = async (req, res) => {
 
   console.log(`Created document ${document._id} and processing job ${processingJob._id}`);
 
-  // Bei verschlüsselten Dateien überspringen wir die OCR und markieren das Dokument direkt als fertig
-  if (isEncrypted) {
-    console.log(`Document ${document._id} is encrypted, skipping OCR processing`);
-    
-    // Markiere das Dokument als abgeschlossen
-    document.status = 'completed';
-    document.processingCompletedAt = new Date();
-    await document.save();
-    
-    // Markiere den Job als abgeschlossen
-    processingJob.status = 'completed';
-    processingJob.progress = 100;
-    processingJob.endTime = new Date();
-    await processingJob.save();
-    
-    // Sende Bestätigung zurück
-    return res.status(201).json({
-      document: {
-        _id: document._id,
-        originalFileName: document.originalFileName,
-        status: document.status,
-        isEncrypted: true
-      },
-      processingJob: {
-        _id: processingJob._id,
-        status: processingJob.status,
-        progress: 100
-      },
-    });
-  }
-
-  // Nur für nicht-verschlüsselte Dateien: Starte OCR-Verarbeitung im Hintergrund
+  // Start OCR processing in the background
+  // In a production app, this would be handled by a queue system like Bull
   setTimeout(async () => {
     try {
       console.log(`Starting OCR processing for document ${document._id}`);
@@ -122,7 +58,6 @@ const uploadDocument = async (req, res) => {
       _id: document._id,
       originalFileName: document.originalFileName,
       status: document.status,
-      isEncrypted: document.isEncrypted || false
     },
     processingJob: {
       _id: processingJob._id,

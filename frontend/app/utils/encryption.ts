@@ -165,6 +165,8 @@ export const prepareSecureUpload = async (fileUri: string) => {
  */
 export const decryptFile = async (encryptedFileUri: string, keyFingerprint?: string): Promise<string> => {
   try {
+    console.log('Starting file decryption for:', encryptedFileUri);
+    
     // Hole den Nutzerschlüssel
     const key = await getUserEncryptionKey();
     
@@ -180,21 +182,67 @@ export const decryptFile = async (encryptedFileUri: string, keyFingerprint?: str
     // Lese die verschlüsselte Datei
     const encryptedDataString = await FileSystem.readAsStringAsync(encryptedFileUri);
     let encryptedData;
+    let encryptedContent;
     
     try {
+      // Versuche zuerst als JSON zu parsen (Standard-Format)
       encryptedData = JSON.parse(encryptedDataString);
-    } catch (error) {
-      throw new Error('Die Datei ist kein gültiges verschlüsseltes Format');
+      
+      // Überprüfe die Struktur der verschlüsselten Daten
+      if (!encryptedData.content) {
+        throw new Error('Ungültiges Verschlüsselungsformat: Inhalt fehlt');
+      }
+      
+      // Dekodiere den Inhalt von Base64
+      encryptedContent = Base64.decode(encryptedData.content);
+    } catch (parseError) {
+      console.log('File is not in JSON format, trying direct decryption of raw data');
+      
+      // Falls die Datei nicht im JSON-Format ist, versuche direkt zu entschlüsseln
+      // Dies kann der Fall sein, wenn die Datei direkt vom Server kam
+      try {
+        // Versuche den Inhalt direkt als Base64 zu interpretieren
+        encryptedContent = Base64.decode(encryptedDataString);
+      } catch (base64Error) {
+        // Wenn Base64-Dekodierung fehlschlägt, versuche die Datei direkt zu verwenden
+        console.log('Direct Base64 decoding failed, using raw content');
+        encryptedContent = encryptedDataString;
+      }
     }
     
-    // Überprüfe die Struktur der verschlüsselten Daten
-    if (!encryptedData.content) {
-      throw new Error('Ungültiges Verschlüsselungsformat: Inhalt fehlt');
+    // Versuche nun, den Inhalt zu entschlüsseln
+    let decryptedContent;
+    try {
+      // Entschlüssele den Inhalt
+      decryptedContent = simpleDecrypt(encryptedContent, key);
+    } catch (decryptError) {
+      console.error('First decryption attempt failed:', decryptError);
+      
+      // Fallback: Versuche, den Inhalt als Base64 zu interpretieren und dann zu entschlüsseln
+      try {
+        const rawContent = Base64.decode(encryptedDataString);
+        decryptedContent = simpleDecrypt(rawContent, key);
+      } catch (fallbackError) {
+        console.error('Fallback decryption also failed:', fallbackError);
+        throw new Error('Entschlüsselung fehlgeschlagen: Dateiformat nicht erkannt');
+      }
     }
     
-    // Entschlüssele den Inhalt
-    const encryptedContent = Base64.decode(encryptedData.content);
-    const decryptedContent = simpleDecrypt(encryptedContent, key);
+    // Prüfe, ob das Ergebnis gültiges Base64 ist (wahrscheinlich ein Bild)
+    let isValidBase64 = false;
+    try {
+      // Einfacher Test: Base64 sollte nur bestimmte Zeichen enthalten
+      const base64Regex = /^[A-Za-z0-9+/]+={0,2}$/;
+      isValidBase64 = base64Regex.test(decryptedContent.replace(/\s/g, ''));
+      
+      // Zusätzlicher Test: Versuche, ein paar Zeichen zu dekodieren
+      if (isValidBase64) {
+        const sample = decryptedContent.substring(0, 100);
+        Base64.decode(sample);
+      }
+    } catch (base64ValidationError) {
+      isValidBase64 = false;
+    }
     
     // Speichere die entschlüsselte Datei temporär
     const tempDir = `${FileSystem.cacheDirectory || ''}decrypted_files/`;
@@ -204,13 +252,42 @@ export const decryptFile = async (encryptedFileUri: string, keyFingerprint?: str
     // Stelle sicher, dass das Verzeichnis existiert
     await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true }).catch(() => {});
     
-    // Schreibe die entschlüsselte Datei
-    await FileSystem.writeAsStringAsync(
-      decryptedUri,
-      decryptedContent,
-      { encoding: FileSystem.EncodingType.Base64 }
-    );
+    if (isValidBase64) {
+      // Wenn es gültiges Base64 ist, schreibe es direkt
+      console.log('Writing decrypted content as Base64');
+      await FileSystem.writeAsStringAsync(
+        decryptedUri,
+        decryptedContent,
+        { encoding: FileSystem.EncodingType.Base64 }
+      );
+    } else {
+      // Sonst versuche, es als UTF-8 Text zu schreiben
+      console.log('Writing decrypted content as text');
+      await FileSystem.writeAsStringAsync(decryptedUri, decryptedContent);
+      
+      // Alternativ: Versuche trotzdem als Base64 zu schreiben, falls der Test falsch war
+      const fallbackUri = tempDir + `fallback_${Date.now()}.jpg`;
+      try {
+        await FileSystem.writeAsStringAsync(
+          fallbackUri,
+          decryptedContent,
+          { encoding: FileSystem.EncodingType.Base64 }
+        );
+        
+        // Prüfe, ob die Fallback-Datei existiert und eine sinnvolle Größe hat
+        const fallbackInfo = await FileSystem.getInfoAsync(fallbackUri);
+        if (fallbackInfo.exists && (fallbackInfo as any).size > 100) {
+          // Wenn ja, verwende sie stattdessen
+          console.log('Using fallback decrypted file');
+          return fallbackUri;
+        }
+      } catch (fallbackWriteError) {
+        console.log('Fallback file write failed:', fallbackWriteError);
+        // Ignoriere den Fehler und verwende die ursprüngliche Datei
+      }
+    }
     
+    console.log('Decryption successful, file saved to:', decryptedUri);
     return decryptedUri;
   } catch (error) {
     console.error('Decryption error:', error);
