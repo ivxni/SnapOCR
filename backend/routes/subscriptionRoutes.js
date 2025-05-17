@@ -19,6 +19,9 @@ router.post('/premium', subscriptionController.subscribeToPremium);
 // Cancel subscription
 router.post('/cancel', subscriptionController.cancelSubscription);
 
+// Reactivate subscription
+router.post('/reactivate', subscriptionController.reactivateSubscription);
+
 // Check if user can process a document
 router.get('/can-process', subscriptionController.canProcessDocument);
 

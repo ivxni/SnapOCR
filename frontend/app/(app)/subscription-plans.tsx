@@ -49,6 +49,22 @@ export default function SubscriptionPlans() {
     }
   };
 
+  const handleReactivateSubscription = async () => {
+    try {
+      setSubscribing(true);
+      await subscriptionService.reactivateSubscription();
+      Alert.alert(
+        'Subscription Reactivated',
+        'Your subscription has been successfully reactivated.',
+        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to reactivate subscription');
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
   const handleStartTrial = async () => {
     try {
       setSubscribing(true);
@@ -127,7 +143,7 @@ export default function SubscriptionPlans() {
 
             <TouchableOpacity 
               style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-              onPress={() => handleSubscribe(subscriptionDetails.billingCycle === 'yearly' ? 'yearly' : 'monthly')}
+              onPress={handleReactivateSubscription}
               disabled={subscribing}
             >
               {subscribing ? (
@@ -400,5 +416,9 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  actionButtonContainer: {
+    marginTop: 20,
+    alignItems: 'center',
   },
 }); 

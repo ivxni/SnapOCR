@@ -60,6 +60,19 @@ const cancelSubscription = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Reactivate a cancelled subscription
+ * @route POST /api/subscription/reactivate
+ * @access Private
+ */
+const reactivateSubscription = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  const result = await subscriptionService.reactivateSubscription(userId);
+  
+  res.status(200).json(result);
+});
+
+/**
  * Check if user can process a document
  * @route GET /api/subscription/can-process
  * @access Private
@@ -94,6 +107,7 @@ module.exports = {
   startFreeTrial,
   subscribeToPremium,
   cancelSubscription,
+  reactivateSubscription,
   canProcessDocument,
   incrementDocumentCount
 }; 

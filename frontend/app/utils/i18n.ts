@@ -30,6 +30,7 @@ export type TranslationKey =
   | 'dashboard.uploadFirst'
   | 'dashboard.documentsRemaining'
   | 'dashboard.upgrade'
+  | 'dashboard.reactivate'
   
   // Upload
   | 'upload.title'
@@ -171,6 +172,7 @@ const en: TranslationDictionary = {
   'dashboard.uploadFirst': 'Upload your first document to get started',
   'dashboard.documentsRemaining': 'documents remaining',
   'dashboard.upgrade': 'Upgrade',
+  'dashboard.reactivate': 'Reactivate',
   
   // Upload
   'upload.title': 'Upload Document',
@@ -308,6 +310,7 @@ const es: TranslationDictionary = {
   'dashboard.uploadFirst': 'Sube tu primer documento para comenzar',
   'dashboard.documentsRemaining': 'documentos restantes',
   'dashboard.upgrade': 'Actualizar',
+  'dashboard.reactivate': 'Reactivar',
   
   // Upload
   'upload.title': 'Subir Documento',
@@ -423,6 +426,7 @@ const de: TranslationDictionary = {
   'dashboard.uploadFirst': 'Laden Sie Ihr erstes Dokument hoch, um zu beginnen',
   'dashboard.documentsRemaining': 'Dokumente verbleibend',
   'dashboard.upgrade': 'Upgrade',
+  'dashboard.reactivate': 'Reaktivieren',
   
   // Upload
   'upload.title': 'Dokument hochladen',
@@ -536,6 +540,7 @@ const ru: TranslationDictionary = {
   'dashboard.uploadFirst': 'Загрузите свой первый документ, чтобы начать',
   'dashboard.documentsRemaining': 'осталось документов',
   'dashboard.upgrade': 'Обновить',
+  'dashboard.reactivate': 'Реактивировать',
   
   // Upload
   'upload.title': 'Загрузить документ',
@@ -649,6 +654,7 @@ const tr: TranslationDictionary = {
   'dashboard.uploadFirst': 'Başlamak için ilk belgenizi yükleyin',
   'dashboard.documentsRemaining': 'belge kaldı',
   'dashboard.upgrade': 'Yükselt',
+  'dashboard.reactivate': 'Reaktivasyon',
   
   // Upload
   'upload.title': 'Belge Yükle',
@@ -762,6 +768,7 @@ const ja: TranslationDictionary = {
   'dashboard.uploadFirst': '最初のドキュメントをアップロードして始めましょう',
   'dashboard.documentsRemaining': '残りのドキュメント',
   'dashboard.upgrade': 'アップグレード',
+  'dashboard.reactivate': '再活性化',
   
   // Upload
   'upload.title': 'ドキュメントをアップロード',
@@ -875,6 +882,7 @@ const fr: TranslationDictionary = {
   'dashboard.uploadFirst': 'Téléchargez votre premier document pour commencer',
   'dashboard.documentsRemaining': 'documents restants',
   'dashboard.upgrade': 'Mettre à niveau',
+  'dashboard.reactivate': 'Réactiver',
   
   // Upload
   'upload.title': 'Télécharger un document',

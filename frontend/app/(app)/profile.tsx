@@ -178,6 +178,35 @@ export default function Profile() {
     );
   };
 
+  const handleReactivateSubscription = () => {
+    Alert.alert(
+      'Reactivate Subscription',
+      'Would you like to reactivate your subscription? Your billing will restart at the end of your current period.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Reactivate', 
+          onPress: async () => {
+            try {
+              setSubscriptionLoading(true);
+              await subscriptionService.reactivateSubscription();
+              await fetchSubscriptionInfo();
+              Alert.alert(
+                'Subscription Reactivated',
+                'Your subscription has been successfully reactivated.',
+                [{ text: 'OK' }]
+              );
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to reactivate subscription');
+            } finally {
+              setSubscriptionLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert(
       t('profile.logoutTitle'),
@@ -471,25 +500,50 @@ export default function Profile() {
               </View>
             ) : (
               <View style={styles.subscriptionActions}>
-                <TouchableOpacity 
-                  style={[
-                    styles.subscriptionButton, 
-                    styles.cancelButton, 
-                    { backgroundColor: themeColors.surfaceVariant },
-                    subscriptionLoading && styles.disabledButton
-                  ]}
-                  onPress={handleCancelSubscription}
-                        disabled={subscriptionLoading || subscriptionDetails.isCanceledButActive}
-    >
-      <Text style={[styles.cancelButtonText, { 
-        color: themeColors.error,
-        opacity: subscriptionDetails.isCanceledButActive ? 0.6 : 1
-      }]}>
-        {subscriptionDetails.isCanceledButActive 
-          ? t('subscription.subscriptionEnding') 
-          : t('subscription.cancelSubscription')}
-                  </Text>
-                </TouchableOpacity>
+                {subscriptionDetails.isCanceledButActive ? (
+                  <>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        { backgroundColor: themeColors.primary },
+                        subscriptionLoading && styles.disabledButton
+                      ]}
+                      onPress={handleReactivateSubscription}
+                      disabled={subscriptionLoading}
+                    >
+                      <MaterialIcons name="refresh" size={20} color={themeColors.white} />
+                      <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                        {t('dashboard.reactivate')}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.cancelButtonText, { 
+                      color: themeColors.textSecondary,
+                      opacity: 0.8,
+                      marginTop: 8,
+                      textAlign: 'center'
+                    }]}>
+                      {t('subscription.subscriptionEnding')}
+                    </Text>
+                  </>
+                ) : (
+                  <TouchableOpacity 
+                    style={[
+                      styles.subscriptionButton, 
+                      styles.cancelButton, 
+                      { backgroundColor: themeColors.surfaceVariant },
+                      subscriptionLoading && styles.disabledButton
+                    ]}
+                    onPress={handleCancelSubscription}
+                    disabled={subscriptionLoading || subscriptionDetails.isCanceledButActive}
+                  >
+                    <Text style={[styles.cancelButtonText, { 
+                      color: themeColors.error,
+                      opacity: subscriptionDetails.isCanceledButActive ? 0.6 : 1
+                    }]}>
+                      {t('subscription.cancelSubscription')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>

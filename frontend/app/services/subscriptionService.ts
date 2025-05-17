@@ -128,6 +128,18 @@ const getDashboardSubscriptionInfo = async (): Promise<{
   }
 };
 
+/**
+ * Reactivate a cancelled subscription
+ */
+const reactivateSubscription = async (): Promise<{message: string; subscription: any}> => {
+  try {
+    const response = await api.post('/subscription/reactivate');
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to reactivate subscription');
+  }
+};
+
 const subscriptionService = {
   getSubscriptionDetails,
   startFreeTrial,
@@ -135,6 +147,7 @@ const subscriptionService = {
   cancelSubscription,
   canProcessDocument,
   getDashboardSubscriptionInfo,
+  reactivateSubscription,
 };
 
 export default subscriptionService; 

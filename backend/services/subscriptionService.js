@@ -107,6 +107,8 @@ const cancelSubscription = async (userId) => {
     // We keep trialStartDate to track that they've had a trial before
   } else {
     // For paid subscriptions, service continues until next billing date
+    // Store the current billing cycle before cancelling
+    user.subscription.previousBillingCycle = user.subscription.billingCycle;
     // We'll mark it to not renew
     user.subscription.billingCycle = 'none';
     // In a real app, you might set a flag to indicate the subscription should be cancelled at the next billing date
@@ -116,6 +118,44 @@ const cancelSubscription = async (userId) => {
   
   return {
     message: 'Subscription cancelled successfully',
+    subscription: user.subscription
+  };
+};
+
+/**
+ * Reactivate a cancelled subscription
+ * @param {string} userId - User ID
+ */
+const reactivateSubscription = async (userId) => {
+  const user = await User.findById(userId);
+  
+  if (!user) {
+    throw new Error('User not found');
+  }
+  
+  // Check if user has a premium plan that's been cancelled
+  const isCanceledButActive = user.subscription.plan === 'premium' && user.subscription.billingCycle === 'none';
+  
+  if (!isCanceledButActive) {
+    throw new Error('No cancelled subscription to reactivate');
+  }
+  
+  // Restore the previous billing cycle (default to monthly if unknown)
+  // In a real implementation, you might store the previous billing cycle when cancelling
+  user.subscription.billingCycle = user.subscription.previousBillingCycle || 'monthly';
+  
+  // Update the next billing date based on the current date
+  const now = new Date();
+  if (user.subscription.billingCycle === 'monthly') {
+    user.subscription.nextBillingDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  } else { // yearly
+    user.subscription.nextBillingDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  }
+  
+  await user.save();
+  
+  return {
+    message: 'Subscription reactivated successfully',
     subscription: user.subscription
   };
 };
@@ -220,6 +260,7 @@ module.exports = {
   startFreeTrial,
   subscribeToPremium,
   cancelSubscription,
+  reactivateSubscription,
   getSubscriptionDetails,
   canProcessDocument,
   incrementDocumentCount,
