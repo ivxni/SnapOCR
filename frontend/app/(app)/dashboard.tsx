@@ -18,17 +18,21 @@ export default function Dashboard() {
   const { t, format } = useTranslation();
   const themeColors = useThemeColors();
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  
+  // We'll keep loading state separate from the visibility state
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState<{
     plan: string;
     remainingDocuments: number;
     totalDocuments: number;
     isInTrial: boolean;
+    isInitialized: boolean; // New flag to track if we've ever loaded data
   }>({ 
     plan: 'free', 
     remainingDocuments: 0, 
     totalDocuments: 0,
-    isInTrial: false
+    isInTrial: false,
+    isInitialized: false
   });
 
   // Refresh data when dashboard comes into focus
@@ -65,7 +69,8 @@ export default function Dashboard() {
         plan: subDetails.plan,
         remainingDocuments: subDetails.remainingDocuments,
         totalDocuments: subDetails.totalDocuments,
-        isInTrial: subDetails.isInTrial
+        isInTrial: subDetails.isInTrial,
+        isInitialized: true // Mark as initialized once we've loaded data
       });
       console.log('Dashboard updated with subscription info:', subDetails.plan, subDetails.isInTrial ? '(TRIAL)' : '');
     } catch (error) {
@@ -221,14 +226,15 @@ export default function Dashboard() {
             </Text>
           </View>
 
-          {/* Subscription Status Badge */}
-          {!subscriptionLoading && (
+          {/* Subscription Status Badge - Only hide on very first load */}
+          {subscriptionInfo.isInitialized && (
             <View style={[
               styles.subscriptionBadge, 
               { 
                 backgroundColor: subscriptionInfo.plan === 'premium' 
                   ? themeColors.primary 
-                  : themeColors.surfaceVariant
+                  : themeColors.surfaceVariant,
+                opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
               }
             ]}>
               <Text style={[
@@ -245,9 +251,12 @@ export default function Dashboard() {
           )}
         </View>
 
-        {/* Document Limits Indicator */}
-        {!subscriptionLoading && (
-          <View style={[styles.documentLimits, { backgroundColor: themeColors.surfaceVariant }]}>
+        {/* Document Limits Indicator - Only hide on very first load */}
+        {subscriptionInfo.isInitialized && (
+          <View style={[styles.documentLimits, { 
+            backgroundColor: themeColors.surfaceVariant,
+            opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
+          }]}>
             <MaterialIcons name="insert-drive-file" size={16} color={themeColors.primary} />
             <Text style={[styles.documentLimitsText, { color: themeColors.text }]}>
               {subscriptionInfo.remainingDocuments} / {subscriptionInfo.totalDocuments} {t('dashboard.documentsRemaining')}
@@ -256,6 +265,7 @@ export default function Dashboard() {
               <TouchableOpacity 
                 style={[styles.upgradeButton, { backgroundColor: themeColors.primary }]}
                 onPress={() => router.push('/(app)/subscription-plans')}
+                disabled={subscriptionLoading}
               >
                 <Text style={[styles.upgradeButtonText, { color: themeColors.white }]}>
                   {t('dashboard.upgrade')}
@@ -342,6 +352,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row', // Add for loader + text alignment
+  },
+  smallLoader: {
+    marginRight: 4,
   },
   subscriptionText: {
     fontSize: 12,

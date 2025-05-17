@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useAuth } from '../hooks/useAuth';
@@ -50,6 +50,18 @@ export default function Profile() {
   const { language } = useLanguage();
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Refresh data when profile comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Profile is focused - refreshing subscription data');
+      fetchSubscriptionInfo();
+      return () => {
+        // Nothing to clean up
+      };
+    }, [])
+  );
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -77,6 +89,8 @@ export default function Profile() {
       setSubscriptionLoading(true);
       const details = await subscriptionService.getSubscriptionDetails();
       setSubscriptionDetails(details);
+      setIsInitialized(true);
+      console.log('Profile updated with subscription info:', details.plan, details.isInTrial ? '(TRIAL)' : '');
     } catch (error) {
       console.error('Error fetching subscription details:', error);
     } finally {
@@ -295,13 +309,14 @@ export default function Profile() {
               </Text>
 
               {/* Subscription badge */}
-              {!subscriptionLoading && subscriptionDetails && (
+              {isInitialized && subscriptionDetails && (
                 <View style={[
                   styles.subscriptionBadge, 
                   { 
                     backgroundColor: subscriptionDetails.plan === 'premium' 
                       ? themeColors.primary 
-                      : themeColors.surfaceVariant
+                      : themeColors.surfaceVariant,
+                    opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
                   }
                 ]}>
                   <Text style={[
@@ -312,7 +327,7 @@ export default function Profile() {
                         : themeColors.text
                     }
                   ]}>
-                    {subscriptionDetails.isInTrial ? 'TRIAL' : subscriptionDetails.plan.toUpperCase()}
+                    {subscriptionDetails.isInTrial ? t('subscription.trial') : subscriptionDetails.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
                   </Text>
                 </View>
               )}
@@ -327,11 +342,12 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* Subscription Section */}
-        {!subscriptionLoading && subscriptionDetails && (
+        {/* Subscription Section - Only hide it on very first load */}
+        {isInitialized && subscriptionDetails && (
           <View style={[styles.section, { 
             backgroundColor: themeColors.surface,
-            shadowColor: themeColors.primary
+            shadowColor: themeColors.primary,
+            opacity: subscriptionLoading ? 0.7 : 1  // Slight opacity during refresh
           }]}>
             <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
               {t('subscription.title')}
@@ -393,11 +409,13 @@ export default function Profile() {
               )}
             </View>
 
+            {/* Action buttons become disabled during loading */}
             {subscriptionDetails.plan === 'free' ? (
               <View style={styles.subscriptionActions}>
                 <TouchableOpacity 
                   style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
                   onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={subscriptionLoading}
                 >
                   <MaterialIcons name="star" size={20} color={themeColors.white} />
                   <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
@@ -408,8 +426,13 @@ export default function Profile() {
             ) : subscriptionDetails.isInTrial ? (
               <View style={styles.subscriptionActions}>
                 <TouchableOpacity 
-                  style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
+                  style={[
+                    styles.subscriptionButton, 
+                    { backgroundColor: themeColors.primary },
+                    subscriptionLoading && styles.disabledButton
+                  ]}
                   onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={subscriptionLoading}
                 >
                   <MaterialIcons name="payments" size={20} color={themeColors.white} />
                   <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
@@ -417,8 +440,14 @@ export default function Profile() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subscriptionButton, styles.secondaryButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  style={[
+                    styles.subscriptionButton, 
+                    styles.secondaryButton, 
+                    { backgroundColor: themeColors.surfaceVariant },
+                    subscriptionLoading && styles.disabledButton
+                  ]}
                   onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={subscriptionLoading}
                 >
                   <MaterialIcons name="calendar-today" size={20} color={themeColors.primary} />
                   <Text style={[styles.subscriptionButtonText, { color: themeColors.primary }]}>
@@ -426,8 +455,14 @@ export default function Profile() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.subscriptionButton, styles.cancelButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  style={[
+                    styles.subscriptionButton, 
+                    styles.cancelButton, 
+                    { backgroundColor: themeColors.surfaceVariant },
+                    subscriptionLoading && styles.disabledButton
+                  ]}
                   onPress={handleCancelSubscription}
+                  disabled={subscriptionLoading}
                 >
                   <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
                     {t('subscription.cancelTrial')}
@@ -437,8 +472,14 @@ export default function Profile() {
             ) : (
               <View style={styles.subscriptionActions}>
                 <TouchableOpacity 
-                  style={[styles.subscriptionButton, styles.cancelButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  style={[
+                    styles.subscriptionButton, 
+                    styles.cancelButton, 
+                    { backgroundColor: themeColors.surfaceVariant },
+                    subscriptionLoading && styles.disabledButton
+                  ]}
                   onPress={handleCancelSubscription}
+                  disabled={subscriptionLoading}
                 >
                   <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
                     {t('subscription.cancelSubscription')}
@@ -780,5 +821,18 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  inlineLoader: {
+    marginLeft: 10,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 }); 
