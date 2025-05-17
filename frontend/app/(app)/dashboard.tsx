@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
@@ -31,8 +31,28 @@ export default function Dashboard() {
     isInTrial: false
   });
 
+  // Refresh data when dashboard comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Dashboard is focused - refreshing data');
+      
+      // Always refresh subscription info immediately
+      fetchSubscriptionInfo();
+      
+      // Refresh documents if needed
+      if (!documents || documents.length === 0 || loading) {
+        fetchDocuments();
+      }
+      
+      // Clean up function
+      return () => {
+        // Nothing to clean up
+      };
+    }, [documents, loading])
+  );
+
+  // Initial data loading
   useEffect(() => {
-    // Fetch documents when the component mounts
     fetchDocuments();
     fetchSubscriptionInfo();
   }, []);
@@ -40,13 +60,14 @@ export default function Dashboard() {
   const fetchSubscriptionInfo = async () => {
     try {
       setSubscriptionLoading(true);
-      const subDetails = await subscriptionService.getSubscriptionDetails();
+      const subDetails = await subscriptionService.getDashboardSubscriptionInfo();
       setSubscriptionInfo({
         plan: subDetails.plan,
-        remainingDocuments: subDetails.documentLimitRemaining,
-        totalDocuments: subDetails.documentLimitTotal,
+        remainingDocuments: subDetails.remainingDocuments,
+        totalDocuments: subDetails.totalDocuments,
         isInTrial: subDetails.isInTrial
       });
+      console.log('Dashboard updated with subscription info:', subDetails.plan, subDetails.isInTrial ? '(TRIAL)' : '');
     } catch (error) {
       console.error('Failed to fetch subscription info:', error);
     } finally {

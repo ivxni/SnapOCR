@@ -91,12 +91,47 @@ const canProcessDocument = async (): Promise<{
   }
 };
 
+/**
+ * Get subscription details optimized for Dashboard refreshes
+ * with more verbose logging to help debug refresh issues
+ */
+const getDashboardSubscriptionInfo = async (): Promise<{
+  plan: 'free' | 'premium';
+  isInTrial: boolean;
+  remainingDocuments: number;
+  totalDocuments: number;
+}> => {
+  try {
+    console.log('Fetching fresh subscription details for dashboard...');
+    const response = await api.get('/subscription');
+    
+    const data = response.data;
+    console.log('Dashboard subscription update:', {
+      plan: data.plan,
+      isInTrial: data.isInTrial,
+      remaining: data.documentLimitRemaining,
+      total: data.documentLimitTotal
+    });
+    
+    return {
+      plan: data.plan,
+      isInTrial: data.isInTrial,
+      remainingDocuments: data.documentLimitRemaining,
+      totalDocuments: data.documentLimitTotal
+    };
+  } catch (error: any) {
+    console.error('Error fetching dashboard subscription info:', error);
+    throw new Error(error.response?.data?.message || 'Failed to get subscription details');
+  }
+};
+
 const subscriptionService = {
   getSubscriptionDetails,
   startFreeTrial,
   subscribeToPremium,
   cancelSubscription,
   canProcessDocument,
+  getDashboardSubscriptionInfo,
 };
 
 export default subscriptionService; 

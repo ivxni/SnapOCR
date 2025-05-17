@@ -40,7 +40,7 @@ export default function SubscriptionPlans() {
       Alert.alert(
         'Success',
         `You have successfully subscribed to the ${billingCycle} premium plan!`,
-        [{ text: 'OK', onPress: () => router.replace('/(app)/profile') }]
+        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to subscribe to premium');
@@ -56,7 +56,7 @@ export default function SubscriptionPlans() {
       Alert.alert(
         'Free Trial Started',
         'You have successfully started your 7-day free trial of premium features!',
-        [{ text: 'OK', onPress: () => router.replace('/(app)/profile') }]
+        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to start free trial');

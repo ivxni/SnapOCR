@@ -19,8 +19,12 @@ const startFreeTrial = async (userId) => {
   }
   
   // Check if user is already on premium or has had a trial before
-  if (user.subscription.plan === 'premium' || user.subscription.trialStartDate) {
-    throw new Error('User is already on premium or has had a trial before');
+  if (user.subscription.plan === 'premium') {
+    throw new Error('User is already on a premium plan');
+  }
+  
+  if (user.subscription.trialStartDate) {
+    throw new Error('User has already used their free trial');
   }
   
   const now = new Date();
@@ -95,10 +99,12 @@ const cancelSubscription = async (userId) => {
     throw new Error('User is not on a premium plan');
   }
   
-  // If user is in trial, end trial immediately
+  // If user is in trial, end trial immediately but keep trialStartDate
+  // so they can't start another free trial
   if (user.subscription.isInTrial) {
     user.subscription.isInTrial = false;
     user.subscription.plan = 'free';
+    // We keep trialStartDate to track that they've had a trial before
   } else {
     // For paid subscriptions, service continues until next billing date
     // We'll mark it to not renew
