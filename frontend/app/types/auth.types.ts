@@ -67,6 +67,7 @@ export interface SubscriptionDetails {
   documentLimitUsed: number;
   documentLimitRemaining: number;
   resetDate?: string;
+  isCanceledButActive?: boolean;
   pricing: {
     monthly: number;
     yearly: number;

@@ -479,10 +479,15 @@ export default function Profile() {
                     subscriptionLoading && styles.disabledButton
                   ]}
                   onPress={handleCancelSubscription}
-                  disabled={subscriptionLoading}
-                >
-                  <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
-                    {t('subscription.cancelSubscription')}
+                        disabled={subscriptionLoading || subscriptionDetails.isCanceledButActive}
+    >
+      <Text style={[styles.cancelButtonText, { 
+        color: themeColors.error,
+        opacity: subscriptionDetails.isCanceledButActive ? 0.6 : 1
+      }]}>
+        {subscriptionDetails.isCanceledButActive 
+          ? t('subscription.subscriptionEnding') 
+          : t('subscription.cancelSubscription')}
                   </Text>
                 </TouchableOpacity>
               </View>

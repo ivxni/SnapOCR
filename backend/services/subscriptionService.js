@@ -138,6 +138,10 @@ const getSubscriptionDetails = async (userId) => {
   // Calculate remaining documents
   const remainingDocuments = user.subscription.documentLimitTotal - user.subscription.documentLimitUsed;
   
+  // Check if subscription has been canceled but is still active
+  // This happens when billingCycle is 'none' but plan is still 'premium'
+  const isCanceledButActive = user.subscription.plan === 'premium' && user.subscription.billingCycle === 'none';
+  
   return {
     plan: user.subscription.plan,
     billingCycle: user.subscription.billingCycle,
@@ -148,6 +152,7 @@ const getSubscriptionDetails = async (userId) => {
     documentLimitUsed: user.subscription.documentLimitUsed,
     documentLimitRemaining: remainingDocuments,
     resetDate: user.subscription.documentLimitResetDate,
+    isCanceledButActive,
     pricing: {
       monthly: PRICING.MONTHLY,
       yearly: PRICING.YEARLY

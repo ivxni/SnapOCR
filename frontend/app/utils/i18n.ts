@@ -122,6 +122,7 @@ export type TranslationKey =
   | 'subscription.subscribeYearly'
   | 'subscription.cancelTrial'
   | 'subscription.cancelSubscription'
+  | 'subscription.subscriptionEnding'
   | 'subscription.limitReached'
   | 'subscription.free'
   | 'subscription.premium'
@@ -262,6 +263,7 @@ const en: TranslationDictionary = {
   'subscription.subscribeYearly': 'Subscribe Yearly',
   'subscription.cancelTrial': 'Cancel Trial',
   'subscription.cancelSubscription': 'Cancel Subscription',
+  'subscription.subscriptionEnding': 'Subscription Ending',
   'subscription.limitReached': 'Document limit reached',
   'subscription.free': 'Free',
   'subscription.premium': 'Premium',

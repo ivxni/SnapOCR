@@ -26,6 +26,7 @@ export default function Dashboard() {
     remainingDocuments: number;
     totalDocuments: number;
     isInTrial: boolean;
+    isCanceledButActive?: boolean;
     isInitialized: boolean; // New flag to track if we've ever loaded data
   }>({ 
     plan: 'free', 
@@ -70,6 +71,7 @@ export default function Dashboard() {
         remainingDocuments: subDetails.remainingDocuments,
         totalDocuments: subDetails.totalDocuments,
         isInTrial: subDetails.isInTrial,
+        isCanceledButActive: subDetails.isCanceledButActive,
         isInitialized: true // Mark as initialized once we've loaded data
       });
       console.log('Dashboard updated with subscription info:', subDetails.plan, subDetails.isInTrial ? '(TRIAL)' : '');

@@ -98,6 +98,7 @@ const canProcessDocument = async (): Promise<{
 const getDashboardSubscriptionInfo = async (): Promise<{
   plan: 'free' | 'premium';
   isInTrial: boolean;
+  isCanceledButActive?: boolean;
   remainingDocuments: number;
   totalDocuments: number;
 }> => {
@@ -109,6 +110,7 @@ const getDashboardSubscriptionInfo = async (): Promise<{
     console.log('Dashboard subscription update:', {
       plan: data.plan,
       isInTrial: data.isInTrial,
+      isCanceledButActive: data.isCanceledButActive,
       remaining: data.documentLimitRemaining,
       total: data.documentLimitTotal
     });
@@ -116,6 +118,7 @@ const getDashboardSubscriptionInfo = async (): Promise<{
     return {
       plan: data.plan,
       isInTrial: data.isInTrial,
+      isCanceledButActive: data.isCanceledButActive,
       remainingDocuments: data.documentLimitRemaining,
       totalDocuments: data.documentLimitTotal
     };

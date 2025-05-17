@@ -76,31 +76,81 @@ export default function SubscriptionPlans() {
     </View>
   );
 
-  if (loading || !subscriptionDetails) {
+  const renderContent = () => {
+    // Since we're already checking for null before calling this function,
+    // we can safely assert that subscriptionDetails is not null
+    if (!subscriptionDetails) {
+      return null; // This should never happen, but it satisfies TypeScript
+    }
+
+    // If already on premium and not canceled, don't show subscription options
+    if (subscriptionDetails.plan === 'premium' && !subscriptionDetails.isCanceledButActive) {
+      return (
+        <View style={styles.contentContainer}>
+          <Text style={[styles.pageTitle, { color: themeColors.text }]}>You're already subscribed</Text>
+          <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+            You already have an active premium subscription.
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: themeColors.primary, marginTop: 20 }]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Return to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // If the subscription is canceled but still active, show a special message
+    if (subscriptionDetails.isCanceledButActive) {
+      return (
+        <View style={styles.contentContainer}>
+          <Text style={[styles.pageTitle, { color: themeColors.text }]}>Your Subscription</Text>
+          <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+            Your premium subscription has been canceled but remains active until your next billing date.
+          </Text>
+          
+          <View style={[styles.planCard, { backgroundColor: themeColors.surface, borderColor: themeColors.primary, borderWidth: 2 }]}>
+            <View style={styles.planHeader}>
+              <Text style={[styles.planTitle, { color: themeColors.text }]}>Premium Plan (Ending)</Text>
+              <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
+                Active until: {subscriptionDetails.nextBillingDate 
+                  ? new Date(subscriptionDetails.nextBillingDate).toLocaleDateString() 
+                  : 'Unknown'}
+              </Text>
+            </View>
+            <View style={styles.featureList}>
+              {renderFeatureItem("50 documents per month", true)}
+              {renderFeatureItem("Priority OCR processing", true)}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
+              onPress={() => handleSubscribe(subscriptionDetails.billingCycle === 'yearly' ? 'yearly' : 'monthly')}
+              disabled={subscribing}
+            >
+              {subscribing ? (
+                <ActivityIndicator size="small" color={themeColors.white} />
+              ) : (
+                <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Reactivate Subscription</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20 }]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Return to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // Default content for non-premium users or when showing plans is appropriate
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]} edges={['top']}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>Loading subscription plans...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  const savingsPercent = Math.round(100 - (subscriptionDetails.pricing.yearly / 12 / subscriptionDetails.pricing.monthly * 100));
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Choose Your Plan</Text>
-        <View style={styles.placeholderButton} />
-      </View>
-
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <Text style={[styles.pageTitle, { color: themeColors.text }]}>Premium Plans</Text>
         <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>Choose the plan that suits your needs</Text>
         
@@ -205,6 +255,36 @@ export default function SubscriptionPlans() {
             <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Continue with Free Plan</Text>
           </TouchableOpacity>
         </View>
+      </View>
+    );
+  };
+
+  if (loading || !subscriptionDetails) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]} edges={['top']}>
+        <ActivityIndicator size="large" color={themeColors.primary} />
+        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>Loading subscription plans...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const savingsPercent = Math.round(100 - (subscriptionDetails.pricing.yearly / 12 / subscriptionDetails.pricing.monthly * 100));
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Choose Your Plan</Text>
+        <View style={styles.placeholderButton} />
+      </View>
+
+      <ScrollView style={styles.content}>
+        {renderContent()}
       </ScrollView>
     </SafeAreaView>
   );
