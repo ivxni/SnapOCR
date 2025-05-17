@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Document } from '../types/document.types';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
+import subscriptionService from '../services/subscriptionService';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -17,11 +18,41 @@ export default function Dashboard() {
   const { t, format } = useTranslation();
   const themeColors = useThemeColors();
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<{
+    plan: string;
+    remainingDocuments: number;
+    totalDocuments: number;
+    isInTrial: boolean;
+  }>({ 
+    plan: 'free', 
+    remainingDocuments: 0, 
+    totalDocuments: 0,
+    isInTrial: false
+  });
 
   useEffect(() => {
     // Fetch documents when the component mounts
     fetchDocuments();
+    fetchSubscriptionInfo();
   }, []);
+
+  const fetchSubscriptionInfo = async () => {
+    try {
+      setSubscriptionLoading(true);
+      const subDetails = await subscriptionService.getSubscriptionDetails();
+      setSubscriptionInfo({
+        plan: subDetails.plan,
+        remainingDocuments: subDetails.documentLimitRemaining,
+        totalDocuments: subDetails.documentLimitTotal,
+        isInTrial: subDetails.isInTrial
+      });
+    } catch (error) {
+      console.error('Failed to fetch subscription info:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Get the 3 most recent documents
@@ -156,15 +187,62 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: themeColors.text }]}>
-          {t('dashboard.title')}
-        </Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
-          {user?.firstName 
-            ? format(t('dashboard.welcome'), { name: `, ${user.firstName}` })
-            : t('dashboard.welcome')
-          }
-        </Text>
+        <View style={styles.headerTopRow}>
+          <View>
+            <Text style={[styles.title, { color: themeColors.text }]}>
+              {t('dashboard.title')}
+            </Text>
+            <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+              {user?.firstName 
+                ? format(t('dashboard.welcome'), { name: `, ${user.firstName}` })
+                : t('dashboard.welcome')
+              }
+            </Text>
+          </View>
+
+          {/* Subscription Status Badge */}
+          {!subscriptionLoading && (
+            <View style={[
+              styles.subscriptionBadge, 
+              { 
+                backgroundColor: subscriptionInfo.plan === 'premium' 
+                  ? themeColors.primary 
+                  : themeColors.surfaceVariant
+              }
+            ]}>
+              <Text style={[
+                styles.subscriptionText, 
+                { 
+                  color: subscriptionInfo.plan === 'premium' 
+                    ? themeColors.white 
+                    : themeColors.text
+                }
+              ]}>
+                {subscriptionInfo.isInTrial ? t('subscription.trial') : subscriptionInfo.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Document Limits Indicator */}
+        {!subscriptionLoading && (
+          <View style={[styles.documentLimits, { backgroundColor: themeColors.surfaceVariant }]}>
+            <MaterialIcons name="insert-drive-file" size={16} color={themeColors.primary} />
+            <Text style={[styles.documentLimitsText, { color: themeColors.text }]}>
+              {subscriptionInfo.remainingDocuments} / {subscriptionInfo.totalDocuments} {t('dashboard.documentsRemaining')}
+            </Text>
+            {subscriptionInfo.plan === 'free' && (
+              <TouchableOpacity 
+                style={[styles.upgradeButton, { backgroundColor: themeColors.primary }]}
+                onPress={() => router.push('/(app)/subscription-plans')}
+              >
+                <Text style={[styles.upgradeButtonText, { color: themeColors.white }]}>
+                  {t('dashboard.upgrade')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
       
       <View style={styles.content}>
@@ -219,6 +297,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -231,6 +314,39 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     marginBottom: 32,
+  },
+  subscriptionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subscriptionText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  documentLimits: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  documentLimitsText: {
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  upgradeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  upgradeButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   centerContent: {
     flex: 1,

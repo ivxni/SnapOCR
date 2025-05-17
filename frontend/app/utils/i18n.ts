@@ -28,6 +28,8 @@ export type TranslationKey =
   | 'dashboard.viewAll'
   | 'dashboard.noDocuments'
   | 'dashboard.uploadFirst'
+  | 'dashboard.documentsRemaining'
+  | 'dashboard.upgrade'
   
   // Upload
   | 'upload.title'
@@ -107,6 +109,27 @@ export type TranslationKey =
   | 'profile.hasNumber'
   | 'profile.passwordsMatch'
   
+  // Subscription
+  | 'subscription.title'
+  | 'subscription.plan'
+  | 'subscription.billing'
+  | 'subscription.trialEnds'
+  | 'subscription.nextBilling'
+  | 'subscription.documents'
+  | 'subscription.resetsOn'
+  | 'subscription.startFreeTrial'
+  | 'subscription.subscribeMontly'
+  | 'subscription.subscribeYearly'
+  | 'subscription.cancelTrial'
+  | 'subscription.cancelSubscription'
+  | 'subscription.limitReached'
+  | 'subscription.free'
+  | 'subscription.premium'
+  | 'subscription.trial'
+  | 'subscription.monthly'
+  | 'subscription.yearly'
+  | 'subscription.documentsRemaining'
+  
   // Language
   | 'language.title'
   | 'language.description'
@@ -145,6 +168,8 @@ const en: TranslationDictionary = {
   'dashboard.viewAll': 'View All Documents',
   'dashboard.noDocuments': 'No documents yet',
   'dashboard.uploadFirst': 'Upload your first document to get started',
+  'dashboard.documentsRemaining': 'documents remaining',
+  'dashboard.upgrade': 'Upgrade',
   
   // Upload
   'upload.title': 'Upload Document',
@@ -224,6 +249,27 @@ const en: TranslationDictionary = {
   'profile.hasNumber': 'Contains at least one number',
   'profile.passwordsMatch': 'Passwords match',
   
+  // Subscription
+  'subscription.title': 'Subscription',
+  'subscription.plan': 'Plan',
+  'subscription.billing': 'Billing',
+  'subscription.trialEnds': 'Trial ends',
+  'subscription.nextBilling': 'Next billing',
+  'subscription.documents': 'Documents',
+  'subscription.resetsOn': 'Resets on',
+  'subscription.startFreeTrial': 'Start 7-Day Free Trial',
+  'subscription.subscribeMontly': 'Subscribe Monthly',
+  'subscription.subscribeYearly': 'Subscribe Yearly',
+  'subscription.cancelTrial': 'Cancel Trial',
+  'subscription.cancelSubscription': 'Cancel Subscription',
+  'subscription.limitReached': 'Document limit reached',
+  'subscription.free': 'Free',
+  'subscription.premium': 'Premium',
+  'subscription.trial': 'Trial',
+  'subscription.monthly': 'Monthly',
+  'subscription.yearly': 'Yearly',
+  'subscription.documentsRemaining': 'documents remaining',
+  
   // Language
   'language.title': 'Language',
   'language.description': 'Select your preferred language for the app interface. The app will restart to apply changes.',
@@ -258,6 +304,8 @@ const es: TranslationDictionary = {
   'dashboard.viewAll': 'Ver Todos los Documentos',
   'dashboard.noDocuments': 'Aún no hay documentos',
   'dashboard.uploadFirst': 'Sube tu primer documento para comenzar',
+  'dashboard.documentsRemaining': 'documentos restantes',
+  'dashboard.upgrade': 'Actualizar',
   
   // Upload
   'upload.title': 'Subir Documento',
@@ -371,6 +419,8 @@ const de: TranslationDictionary = {
   'dashboard.viewAll': 'Alle Dokumente anzeigen',
   'dashboard.noDocuments': 'Noch keine Dokumente',
   'dashboard.uploadFirst': 'Laden Sie Ihr erstes Dokument hoch, um zu beginnen',
+  'dashboard.documentsRemaining': 'Dokumente verbleibend',
+  'dashboard.upgrade': 'Upgrade',
   
   // Upload
   'upload.title': 'Dokument hochladen',
@@ -482,6 +532,8 @@ const ru: TranslationDictionary = {
   'dashboard.viewAll': 'Просмотреть все документы',
   'dashboard.noDocuments': 'Пока нет документов',
   'dashboard.uploadFirst': 'Загрузите свой первый документ, чтобы начать',
+  'dashboard.documentsRemaining': 'осталось документов',
+  'dashboard.upgrade': 'Обновить',
   
   // Upload
   'upload.title': 'Загрузить документ',
@@ -593,6 +645,8 @@ const tr: TranslationDictionary = {
   'dashboard.viewAll': 'Tüm Belgeleri Görüntüle',
   'dashboard.noDocuments': 'Henüz belge yok',
   'dashboard.uploadFirst': 'Başlamak için ilk belgenizi yükleyin',
+  'dashboard.documentsRemaining': 'belge kaldı',
+  'dashboard.upgrade': 'Yükselt',
   
   // Upload
   'upload.title': 'Belge Yükle',
@@ -704,6 +758,8 @@ const ja: TranslationDictionary = {
   'dashboard.viewAll': 'すべてのドキュメントを表示',
   'dashboard.noDocuments': 'ドキュメントがまだありません',
   'dashboard.uploadFirst': '最初のドキュメントをアップロードして始めましょう',
+  'dashboard.documentsRemaining': '残りのドキュメント',
+  'dashboard.upgrade': 'アップグレード',
   
   // Upload
   'upload.title': 'ドキュメントをアップロード',
@@ -815,6 +871,8 @@ const fr: TranslationDictionary = {
   'dashboard.viewAll': 'Voir tous les documents',
   'dashboard.noDocuments': 'Pas encore de documents',
   'dashboard.uploadFirst': 'Téléchargez votre premier document pour commencer',
+  'dashboard.documentsRemaining': 'documents restants',
+  'dashboard.upgrade': 'Mettre à niveau',
   
   // Upload
   'upload.title': 'Télécharger un document',

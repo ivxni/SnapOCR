@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const ocrService = require('../services/ocrService');
+const subscriptionService = require('../services/subscriptionService');
 
 // @desc    Upload a document
 // @route   POST /api/documents/upload
@@ -12,6 +13,19 @@ const uploadDocument = async (req, res) => {
   if (!req.file) {
     res.status(400);
     throw new Error('No file uploaded');
+  }
+
+  // Check if user has reached document limit
+  try {
+    const subscriptionCheck = await subscriptionService.canProcessDocument(req.user._id);
+    
+    if (!subscriptionCheck.canProcess) {
+      res.status(403);
+      throw new Error(`Document limit reached (${subscriptionCheck.usedDocuments}/${subscriptionCheck.totalDocuments}). Please upgrade to premium for more documents.`);
+    }
+  } catch (error) {
+    res.status(403);
+    throw new Error(error.message || 'Unable to process document due to subscription limits.');
   }
 
   // Log environment check for debugging
@@ -41,6 +55,14 @@ const uploadDocument = async (req, res) => {
   });
 
   console.log(`Created document ${document._id} and processing job ${processingJob._id}`);
+
+  // Increment document usage count
+  try {
+    await subscriptionService.incrementDocumentCount(req.user._id);
+  } catch (error) {
+    console.error('Error incrementing document count:', error);
+    // We'll continue with the process even if count increment fails
+  }
 
   // Start OCR processing in the background
   // In a production app, this would be handled by a queue system like Bull

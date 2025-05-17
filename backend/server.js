@@ -5,6 +5,7 @@ const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const documentRoutes = require('./routes/documentRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const path = require('path');
 
 // Load environment variables
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // Error handling middleware
 app.use(notFound);

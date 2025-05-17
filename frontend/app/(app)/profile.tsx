@@ -10,9 +10,11 @@ import { useTranslation } from '../utils/i18n';
 import { useDarkMode, ThemeMode } from '../contexts/DarkModeContext';
 import useThemeColors from '../utils/useThemeColors';
 import authService from '../services/authService';
+import subscriptionService from '../services/subscriptionService';
+import { SubscriptionDetails } from '../types/auth.types';
 
 // Define valid icon names to avoid TypeScript errors
-type IconName = 'notifications' | 'security' | 'help' | 'color-lens' | 'language' | 'logout' | 'chevron-right' | 'account-circle' | 'lock' | 'privacy-tip' | 'description' | 'brightness-4' | 'arrow-back';
+type IconName = 'notifications' | 'security' | 'help' | 'color-lens' | 'language' | 'logout' | 'chevron-right' | 'account-circle' | 'lock' | 'privacy-tip' | 'description' | 'brightness-4' | 'arrow-back' | 'star' | 'payments' | 'calendar-today';
 
 interface MenuItemProps {
   icon: IconName;
@@ -46,6 +48,8 @@ export default function Profile() {
   const themeColors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
   const { language } = useLanguage();
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -53,6 +57,7 @@ export default function Profile() {
         setIsLoading(true);
         // Use the authService directly since getUserProfile is not in the context
         await authService.getUserProfile();
+        await fetchSubscriptionInfo();
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -62,8 +67,102 @@ export default function Profile() {
 
     if (!user || !user.firstName) {
       fetchUserProfile();
+    } else {
+      fetchSubscriptionInfo();
     }
-  }, []);
+  }, [user]);
+
+  const fetchSubscriptionInfo = async () => {
+    try {
+      setSubscriptionLoading(true);
+      const details = await subscriptionService.getSubscriptionDetails();
+      setSubscriptionDetails(details);
+    } catch (error) {
+      console.error('Error fetching subscription details:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const handleStartTrial = async () => {
+    try {
+      setSubscriptionLoading(true);
+      await subscriptionService.startFreeTrial();
+      await fetchSubscriptionInfo();
+      Alert.alert(
+        'Free Trial Started',
+        'You have successfully started your 7-day free trial of premium features!',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to start free trial');
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const handleSubscribe = (billingCycle: 'monthly' | 'yearly') => {
+    Alert.alert(
+      'Confirm Subscription',
+      `Are you sure you want to subscribe to the ${billingCycle} premium plan?\n\n${
+        billingCycle === 'monthly' ? 
+        `$${subscriptionDetails?.pricing.monthly}/month` : 
+        `$${subscriptionDetails?.pricing.yearly}/year (save ${Math.round(100 - (subscriptionDetails?.pricing.yearly || 0) / 12 / (subscriptionDetails?.pricing.monthly || 1) * 100)}%)`
+      }`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Subscribe', 
+          onPress: async () => {
+            try {
+              setSubscriptionLoading(true);
+              await subscriptionService.subscribeToPremium(billingCycle);
+              await fetchSubscriptionInfo();
+              Alert.alert(
+                'Subscription Successful',
+                `You have successfully subscribed to the ${billingCycle} premium plan!`,
+                [{ text: 'OK' }]
+              );
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to subscribe');
+            } finally {
+              setSubscriptionLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleCancelSubscription = () => {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure you want to cancel your premium subscription?',
+      [
+        { text: 'No', style: 'cancel' },
+        { 
+          text: 'Yes, Cancel', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setSubscriptionLoading(true);
+              await subscriptionService.cancelSubscription();
+              await fetchSubscriptionInfo();
+              Alert.alert(
+                'Subscription Cancelled',
+                'Your premium subscription has been cancelled.',
+                [{ text: 'OK' }]
+              );
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to cancel subscription');
+            } finally {
+              setSubscriptionLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -194,6 +293,29 @@ export default function Profile() {
               <Text style={[styles.profileEmail, { color: themeColors.textSecondary }]}>
                 {user.email}
               </Text>
+
+              {/* Subscription badge */}
+              {!subscriptionLoading && subscriptionDetails && (
+                <View style={[
+                  styles.subscriptionBadge, 
+                  { 
+                    backgroundColor: subscriptionDetails.plan === 'premium' 
+                      ? themeColors.primary 
+                      : themeColors.surfaceVariant
+                  }
+                ]}>
+                  <Text style={[
+                    styles.subscriptionText, 
+                    { 
+                      color: subscriptionDetails.plan === 'premium' 
+                        ? themeColors.white 
+                        : themeColors.text
+                    }
+                  ]}>
+                    {subscriptionDetails.isInTrial ? 'TRIAL' : subscriptionDetails.plan.toUpperCase()}
+                  </Text>
+                </View>
+              )}
             </View>
             
             <TouchableOpacity 
@@ -204,6 +326,128 @@ export default function Profile() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Subscription Section */}
+        {!subscriptionLoading && subscriptionDetails && (
+          <View style={[styles.section, { 
+            backgroundColor: themeColors.surface,
+            shadowColor: themeColors.primary
+          }]}>
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+              {t('subscription.title')}
+            </Text>
+            
+            <View style={styles.subscriptionInfo}>
+              <View style={styles.subscriptionDetail}>
+                <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.plan')}:</Text>
+                <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                  {subscriptionDetails.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                  {subscriptionDetails.isInTrial ? ` (${t('subscription.trial')})` : ''}
+                </Text>
+              </View>
+
+              {subscriptionDetails.plan === 'premium' && (
+                <>
+                  <View style={styles.subscriptionDetail}>
+                    <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.billing')}:</Text>
+                    <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                      {subscriptionDetails.billingCycle === 'monthly' ? t('subscription.monthly') : 
+                        subscriptionDetails.billingCycle === 'yearly' ? t('subscription.yearly') : 'None'}
+                    </Text>
+                  </View>
+
+                  {subscriptionDetails.isInTrial && subscriptionDetails.trialEndDate && (
+                    <View style={styles.subscriptionDetail}>
+                      <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.trialEnds')}:</Text>
+                      <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                        {new Date(subscriptionDetails.trialEndDate).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+
+                  {!subscriptionDetails.isInTrial && subscriptionDetails.nextBillingDate && (
+                    <View style={styles.subscriptionDetail}>
+                      <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.nextBilling')}:</Text>
+                      <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                        {new Date(subscriptionDetails.nextBillingDate).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
+
+              <View style={styles.subscriptionDetail}>
+                <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.documents')}:</Text>
+                <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                  {subscriptionDetails.documentLimitRemaining} of {subscriptionDetails.documentLimitTotal} {t('subscription.documentsRemaining')}
+                </Text>
+              </View>
+
+              {subscriptionDetails.resetDate && (
+                <View style={styles.subscriptionDetail}>
+                  <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.resetsOn')}:</Text>
+                  <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                    {new Date(subscriptionDetails.resetDate).toLocaleDateString()}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {subscriptionDetails.plan === 'free' ? (
+              <View style={styles.subscriptionActions}>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                >
+                  <MaterialIcons name="star" size={20} color={themeColors.white} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                    {t('dashboard.upgrade')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : subscriptionDetails.isInTrial ? (
+              <View style={styles.subscriptionActions}>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                >
+                  <MaterialIcons name="payments" size={20} color={themeColors.white} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                    {t('subscription.subscribeMontly')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, styles.secondaryButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                >
+                  <MaterialIcons name="calendar-today" size={20} color={themeColors.primary} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.primary }]}>
+                    {t('subscription.subscribeYearly')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, styles.cancelButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  onPress={handleCancelSubscription}
+                >
+                  <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
+                    {t('subscription.cancelTrial')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.subscriptionActions}>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, styles.cancelButton, { backgroundColor: themeColors.surfaceVariant }]}
+                  onPress={handleCancelSubscription}
+                >
+                  <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
+                    {t('subscription.cancelSubscription')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
         
         <View style={[styles.section, { 
           backgroundColor: themeColors.surface,
@@ -396,6 +640,17 @@ const styles = StyleSheet.create({
   },
   profileEmail: {
     fontSize: 14,
+    marginBottom: 8,
+  },
+  subscriptionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  subscriptionText: {
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   editButton: {
     width: 36,
@@ -479,5 +734,51 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  subscriptionInfo: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  subscriptionDetail: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  subscriptionLabel: {
+    width: 90,
+    fontSize: 14,
+  },
+  subscriptionValue: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  subscriptionActions: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  subscriptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  cancelButton: {
+    marginTop: 8,
+  },
+  subscriptionButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

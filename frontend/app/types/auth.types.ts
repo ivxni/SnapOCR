@@ -4,6 +4,18 @@ export interface User {
   firstName?: string;
   lastName?: string;
   profilePicture?: string;
+  subscription?: {
+    plan: 'free' | 'premium';
+    billingCycle: 'none' | 'monthly' | 'yearly';
+    trialStartDate?: string;
+    trialEndDate?: string;
+    isInTrial: boolean;
+    lastBillingDate?: string;
+    nextBillingDate?: string;
+    documentLimitTotal: number;
+    documentLimitUsed: number;
+    documentLimitResetDate?: string;
+  };
   preferences?: {
     notifications: boolean;
     theme: string;
@@ -41,6 +53,23 @@ export interface ProfileUpdateData {
     notifications?: boolean;
     theme?: string;
     language?: string;
+  };
+}
+
+export interface SubscriptionDetails {
+  plan: 'free' | 'premium';
+  billingCycle: 'none' | 'monthly' | 'yearly';
+  isInTrial: boolean;
+  trialStartDate?: string;
+  trialEndDate?: string;
+  nextBillingDate?: string;
+  documentLimitTotal: number;
+  documentLimitUsed: number;
+  documentLimitRemaining: number;
+  resetDate?: string;
+  pricing: {
+    monthly: number;
+    yearly: number;
   };
 }
 

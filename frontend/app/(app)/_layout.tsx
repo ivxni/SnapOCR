@@ -62,6 +62,13 @@ export default function AppLayout() {
             headerShown: false
           }} 
         />
+        <Stack.Screen 
+          name="subscription-plans" 
+          options={{ 
+            title: 'Subscription Plans',
+            headerShown: false
+          }} 
+        />
       </Stack>
     </ProtectedRoute>
   );
