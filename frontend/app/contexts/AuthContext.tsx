@@ -1,7 +1,10 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import authService from '../services/authService';
 import { User, RegisterData, ProfileUpdateData, AuthState } from '../types/auth.types';
+import subscriptionService from '../services/subscriptionService';
 
 // Create context with default values
 interface AuthContextType extends AuthState {
@@ -9,6 +12,9 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   updateProfile: (userData: ProfileUpdateData) => Promise<User>;
+  token: string | null;
+  initialized: boolean;
+  updateUser: (user: User) => Promise<void>;
 }
 
 const defaultContext: AuthContextType = {
@@ -20,34 +26,102 @@ const defaultContext: AuthContextType = {
   login: async () => { throw new Error('Not implemented'); },
   logout: async () => { throw new Error('Not implemented'); },
   updateProfile: async () => { throw new Error('Not implemented'); },
+  token: null,
+  initialized: false,
+  updateUser: async () => { throw new Error('Not implemented'); },
 };
 
-export const AuthContext = createContext<AuthContextType>(defaultContext);
+const AuthContext = createContext<AuthContextType>(defaultContext);
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [initialized, setInitialized] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is logged in on app start
+  // On mount, check if user is logged in
   useEffect(() => {
-    const loadUser = async () => {
+    const checkLoggedIn = async () => {
       try {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
+        setLoading(true);
+        // Get token from secure storage or async storage
+        const storedToken = await getToken();
+        
+        if (storedToken) {
+          setToken(storedToken);
+          // Get user profile
+          const profile = await authService.getUserProfile();
+          setUser(profile);
+          
+          // Initialize purchases if on mobile
+          if ((Platform.OS === 'ios' || Platform.OS === 'android') && profile?._id) {
+            try {
+              await subscriptionService.initializePurchases(profile._id);
+              console.log('RevenueCat initialized during auth context setup');
+            } catch (error) {
+              console.error('Failed to initialize RevenueCat:', error);
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error loading user:', error);
+        console.error('Error checking login state:', error);
+        // Clear token and user in case of error
+        await clearStorage();
+        setToken(null);
+        setUser(null);
       } finally {
         setLoading(false);
+        setInitialized(true);
       }
     };
 
-    loadUser();
+    checkLoggedIn();
   }, []);
+
+  const saveToken = async (newToken: string) => {
+    try {
+      if (Platform.OS === 'web') {
+        // Use AsyncStorage on web
+        await AsyncStorage.setItem('token', newToken);
+      } else {
+        // Use SecureStore on native
+        await SecureStore.setItemAsync('token', newToken);
+      }
+      setToken(newToken);
+    } catch (error) {
+      console.error('Error saving token:', error);
+    }
+  };
+
+  const getToken = async (): Promise<string | null> => {
+    try {
+      if (Platform.OS === 'web') {
+        return await AsyncStorage.getItem('token');
+      } else {
+        return await SecureStore.getItemAsync('token');
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
+
+  const clearStorage = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        await AsyncStorage.removeItem('token');
+      } else {
+        await SecureStore.deleteItemAsync('token');
+      }
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+    }
+  };
 
   // Register user
   const register = async (userData: RegisterData): Promise<User> => {
@@ -56,6 +130,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.register(userData);
       setUser(response);
+      
+      // Initialize purchases if on mobile
+      if ((Platform.OS === 'ios' || Platform.OS === 'android') && response._id) {
+        try {
+          await subscriptionService.initializePurchases(response._id);
+          console.log('RevenueCat initialized after registration');
+        } catch (error) {
+          console.error('Failed to initialize RevenueCat after registration:', error);
+        }
+      }
+      
+      await saveToken(response.token as string);
       return response;
     } catch (error: any) {
       setError(error.response?.data?.message || 'Registration failed');
@@ -72,6 +158,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.login(email, password);
       setUser(response);
+      
+      // Initialize purchases if on mobile
+      if ((Platform.OS === 'ios' || Platform.OS === 'android') && response._id) {
+        try {
+          await subscriptionService.initializePurchases(response._id);
+          console.log('RevenueCat initialized after login');
+        } catch (error) {
+          console.error('Failed to initialize RevenueCat after login:', error);
+        }
+      }
+      
+      if (response.token) {
+        await saveToken(response.token as string);
+      }
       return response;
     } catch (error: any) {
       setError(error.response?.data?.message || 'Login failed');
@@ -88,7 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // First set user to null to prevent any API calls that depend on authentication
       setUser(null);
       // Then clear the token
-      await authService.logout();
+      await clearStorage();
     } catch (error: any) {
       console.error('Logout error:', error);
     } finally {
@@ -103,6 +203,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.updateUserProfile(userData);
       setUser((prevUser) => prevUser ? { ...prevUser, ...response } : response);
+      
+      // Initialize purchases if on mobile
+      if ((Platform.OS === 'ios' || Platform.OS === 'android') && response._id) {
+        try {
+          await subscriptionService.initializePurchases(response._id);
+          console.log('RevenueCat initialized after profile update');
+        } catch (error) {
+          console.error('Failed to initialize RevenueCat after profile update:', error);
+        }
+      }
+      
       return response;
     } catch (error: any) {
       setError(error.response?.data?.message || 'Profile update failed');
@@ -112,22 +223,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUser = async (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
+  const value = {
+    user,
+    loading,
+    error,
+    register,
+    login,
+    logout,
+    updateProfile,
+    isAuthenticated: !!user,
+    token,
+    initialized,
+    updateUser,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        error,
-        register,
-        login,
-        logout,
-        updateProfile,
-        isAuthenticated: !!user,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 // Add default export

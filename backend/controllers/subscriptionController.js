@@ -102,6 +102,58 @@ const incrementDocumentCount = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Verify purchase receipt from Apple/Google
+ * @route POST /api/subscription/verify-purchase
+ * @access Private
+ */
+const verifyPurchase = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { platform, productIdentifier, billingCycle, transactionId } = req.body;
+  
+  if (!platform || !productIdentifier || !billingCycle) {
+    res.status(400);
+    throw new Error('Please provide all required purchase information');
+  }
+  
+  try {
+    const result = await subscriptionService.verifyPurchase(
+      userId, 
+      platform, 
+      productIdentifier, 
+      billingCycle,
+      transactionId
+    );
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+/**
+ * Restore purchases from Apple/Google
+ * @route POST /api/subscription/restore-purchases
+ * @access Private
+ */
+const restorePurchases = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { platform, purchases } = req.body;
+  
+  if (!platform || !purchases) {
+    res.status(400);
+    throw new Error('Please provide all required purchase information');
+  }
+  
+  try {
+    const result = await subscriptionService.restorePurchases(userId, platform, purchases);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
 module.exports = {
   getSubscriptionDetails,
   startFreeTrial,
@@ -109,5 +161,7 @@ module.exports = {
   cancelSubscription,
   reactivateSubscription,
   canProcessDocument,
-  incrementDocumentCount
+  incrementDocumentCount,
+  verifyPurchase,
+  restorePurchases
 }; 

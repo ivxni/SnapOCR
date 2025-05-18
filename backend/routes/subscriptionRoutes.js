@@ -28,4 +28,10 @@ router.get('/can-process', subscriptionController.canProcessDocument);
 // Increment document count
 router.post('/increment', subscriptionController.incrementDocumentCount);
 
+// Verify purchase from Apple/Google
+router.post('/verify-purchase', subscriptionController.verifyPurchase);
+
+// Restore purchases from Apple/Google
+router.post('/restore-purchases', subscriptionController.restorePurchases);
+
 module.exports = router; 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,31 +7,46 @@ import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
 import subscriptionService from '../services/subscriptionService';
 import { SubscriptionDetails } from '../types/auth.types';
+import { PurchasesPackage } from 'react-native-purchases';
+import { useAuth } from '../hooks/useAuth';
 
 export default function SubscriptionPlans() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const themeColors = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
 
   useEffect(() => {
-    fetchSubscriptionDetails();
-  }, []);
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        
+        // Initialize purchases if on mobile
+        if ((Platform.OS === 'ios' || Platform.OS === 'android') && user?._id) {
+          await subscriptionService.initializePurchases(user._id);
+          const availablePackages = await subscriptionService.getAvailablePackages();
+          setPackages(availablePackages);
+          console.log(`Found ${availablePackages.length} subscription packages`);
+        }
+        
+        // Get subscription details
+        const details = await subscriptionService.getSubscriptionDetails();
+        setSubscriptionDetails(details);
+      } catch (error) {
+        console.error('Error initializing subscription data:', error);
+        Alert.alert('Error', 'Failed to load subscription details. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchSubscriptionDetails = async () => {
-    try {
-      setLoading(true);
-      const details = await subscriptionService.getSubscriptionDetails();
-      setSubscriptionDetails(details);
-    } catch (error) {
-      console.error('Error fetching subscription details:', error);
-      Alert.alert('Error', 'Failed to load subscription details. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    initializeData();
+  }, [user]);
 
   const handleSubscribe = async (billingCycle: 'monthly' | 'yearly') => {
     try {
@@ -43,9 +58,30 @@ export default function SubscriptionPlans() {
         [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to subscribe to premium');
+      if (error.message === 'Purchase cancelled') {
+        // User cancelled, no need to show an error
+        console.log('User cancelled purchase');
+      } else {
+        Alert.alert('Error', error.message || 'Failed to subscribe to premium');
+      }
     } finally {
       setSubscribing(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setRestoring(true);
+      const result = await subscriptionService.restorePurchases();
+      Alert.alert(
+        'Restore Complete',
+        result.message,
+        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to restore purchases');
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -252,7 +288,7 @@ export default function SubscriptionPlans() {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.planCard, { backgroundColor: themeColors.surface, marginBottom: 40 }]}>
+        <View style={[styles.planCard, { backgroundColor: themeColors.surface, marginBottom: 20 }]}>
           <View style={styles.planHeader}>
             <Text style={[styles.planTitle, { color: themeColors.text }]}>Free Plan</Text>
             <Text style={[styles.planPrice, { color: themeColors.primary }]}>$0.00</Text>
@@ -271,6 +307,25 @@ export default function SubscriptionPlans() {
             <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Continue with Free Plan</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Restore Purchases Button (only shown on mobile) */}
+        {(Platform.OS === 'ios' || Platform.OS === 'android') && (
+          <TouchableOpacity 
+            style={[styles.restoreButton, { borderColor: themeColors.border }]}
+            onPress={handleRestorePurchases}
+            disabled={restoring}
+          >
+            {restoring ? (
+              <ActivityIndicator size="small" color={themeColors.primary} />
+            ) : (
+              <Text style={[styles.restoreButtonText, { color: themeColors.primary }]}>
+                Restore Purchases
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
+        
+        <View style={{ height: 40 }} /> {/* Bottom padding */}
       </View>
     );
   };
@@ -420,5 +475,18 @@ const styles = StyleSheet.create({
   actionButtonContainer: {
     marginTop: 20,
     alignItems: 'center',
+  },
+  restoreButton: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginBottom: 20,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 

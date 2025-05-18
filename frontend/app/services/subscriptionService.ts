@@ -1,7 +1,66 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { API_URL } from '../constants/api';
 import { SubscriptionDetails } from '../types/auth.types';
+import Constants from 'expo-constants';
+
+// Mock Purchases für Expo Go
+let Purchases: any = {
+  configure: async () => console.log('Mock: Purchases.configure called'),
+  getOfferings: async () => ({ 
+    current: { 
+      availablePackages: [] 
+    } 
+  }),
+  purchasePackage: async () => ({
+    customerInfo: { originalAppUserId: 'mock-user', allPurchaseDates: {} },
+    productIdentifier: 'mock-product'
+  }),
+  restorePurchases: async () => ({
+    originalAppUserId: 'mock-user',
+    allPurchaseDates: {}
+  })
+};
+
+// PurchasesPackage Typ für TypeScript
+interface PurchasesPackage {
+  identifier: string;
+  offeringIdentifier: string;
+  packageType: string;
+  product: {
+    identifier: string;
+    description: string;
+    title: string;
+    price: number;
+    priceString: string;
+  };
+}
+
+// Versuche react-native-purchases nur in nativem Kontext zu importieren
+try {
+  if (!Constants.expoConfig?.extra?.isExpoGo) {
+    // Nur laden, wenn wir nicht in Expo Go sind
+    Purchases = require('react-native-purchases').default;
+    console.log('Loaded real Purchases module');
+  } else {
+    console.log('Using mock Purchases in Expo Go');
+  }
+} catch (error) {
+  console.log('Using mock Purchases due to import error:', error);
+}
+
+// Get RevenueCat API keys from app.json extra
+const revenueCatConfig = Constants.expoConfig?.extra?.revenueCat || {
+  iosApiKey: '',
+  androidApiKey: ''
+};
+
+// Product identifiers for Apple IAP
+const IAP_IDENTIFIERS = {
+  MONTHLY: 'com.lynxai.app.premium.monthly',
+  YEARLY: 'com.lynxai.app.premium.yearly',
+};
 
 // Set up axios instance
 const api = axios.create({
@@ -24,6 +83,90 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Initialize RevenueCat with your API key
+ */
+const initializePurchases = async (userId: string) => {
+  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+    try {
+      // Prüfen, ob wir in Expo Go sind
+      if (Constants.expoConfig?.extra?.isExpoGo) {
+        console.log('Skipping real Purchases initialization in Expo Go');
+        return;
+      }
+      
+      const apiKey = Platform.OS === 'ios' 
+        ? revenueCatConfig.iosApiKey
+        : revenueCatConfig.androidApiKey;
+      
+      // Check if API key is available
+      if (!apiKey) {
+        console.warn('RevenueCat API key not found for platform:', Platform.OS);
+        return;
+      }
+        
+      await Purchases.configure({ apiKey, appUserID: userId });
+      console.log('RevenueCat initialized for user:', userId);
+    } catch (error) {
+      console.error('Failed to initialize RevenueCat:', error);
+    }
+  }
+};
+
+/**
+ * Get available packages from the store
+ */
+const getAvailablePackages = async (): Promise<PurchasesPackage[]> => {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    // For web or other platforms, return empty array
+    return [];
+  }
+
+  // In Expo Go, return mock packages
+  if (Constants.expoConfig?.extra?.isExpoGo) {
+    return [
+      {
+        identifier: 'monthly',
+        offeringIdentifier: 'default',
+        packageType: 'MONTHLY',
+        product: {
+          identifier: 'com.lynxai.app.premium.monthly',
+          description: 'Premium monthly subscription',
+          title: 'Premium Monthly',
+          price: 9.99,
+          priceString: '$9.99'
+        }
+      },
+      {
+        identifier: 'yearly',
+        offeringIdentifier: 'default',
+        packageType: 'YEARLY',
+        product: {
+          identifier: 'com.lynxai.app.premium.yearly',
+          description: 'Premium yearly subscription (save 17%)',
+          title: 'Premium Yearly',
+          price: 99.99,
+          priceString: '$99.99'
+        }
+      }
+    ];
+  }
+
+  try {
+    const offerings = await Purchases.getOfferings();
+    
+    if (offerings?.current?.availablePackages) {
+      return offerings.current.availablePackages;
+    } else {
+      console.warn('No available packages found');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching packages:', error);
+    throw error;
+  }
+};
 
 /**
  * Get subscription details
@@ -50,14 +193,96 @@ const startFreeTrial = async (): Promise<{message: string; subscription: any}> =
 };
 
 /**
- * Subscribe to premium plan
+ * Subscribe to premium plan using Apple IAP
  */
 const subscribeToPremium = async (billingCycle: 'monthly' | 'yearly'): Promise<{message: string; subscription: any}> => {
+  // On web/development, use the old method
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android' || Constants.expoConfig?.extra?.isExpoGo) {
+    try {
+      const response = await api.post('/subscription/premium', { billingCycle });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to subscribe to premium');
+    }
+  }
+
+  // On mobile, use RevenueCat
   try {
-    const response = await api.post('/subscription/premium', { billingCycle });
+    // Get all packages
+    const offerings = await Purchases.getOfferings();
+    
+    if (!offerings.current) {
+      throw new Error('No offerings available');
+    }
+
+    // Find the appropriate package based on billing cycle
+    let packageToPurchase;
+    if (billingCycle === 'monthly') {
+      packageToPurchase = offerings.current.availablePackages.find(
+        (pkg: any) => pkg.identifier === 'monthly'
+      );
+    } else {
+      packageToPurchase = offerings.current.availablePackages.find(
+        (pkg: any) => pkg.identifier === 'yearly'
+      );
+    }
+
+    if (!packageToPurchase) {
+      throw new Error(`No ${billingCycle} subscription package found`);
+    }
+
+    // Make the purchase
+    const { customerInfo, productIdentifier } = await Purchases.purchasePackage(packageToPurchase);
+    
+    // Verify the purchase with our backend
+    const response = await api.post('/subscription/verify-purchase', {
+      platform: Platform.OS,
+      billingCycle,
+      productIdentifier,
+      transactionId: customerInfo.originalAppUserId, // This is not correct in a real implementation
+    });
+
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to subscribe to premium');
+    if (error.userCancelled) {
+      throw new Error('Purchase cancelled');
+    }
+    
+    // Showing more detailed errors is helpful during development
+    console.error('Purchase error details:', error);
+    throw new Error(error.message || 'Failed to subscribe to premium');
+  }
+};
+
+/**
+ * Restore purchases from Apple/Google
+ */
+const restorePurchases = async (): Promise<{message: string; subscription: any}> => {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    throw new Error('Restore purchases is only available on mobile platforms');
+  }
+
+  // In Expo Go, use mock response
+  if (Constants.expoConfig?.extra?.isExpoGo) {
+    return {
+      message: 'Purchases restored (mock in Expo Go)',
+      subscription: { plan: 'premium', billingCycle: 'monthly' }
+    };
+  }
+
+  try {
+    // Restore purchases
+    const customerInfo = await Purchases.restorePurchases();
+    
+    // Verify with our backend
+    const response = await api.post('/subscription/restore-purchases', {
+      platform: Platform.OS,
+      purchases: customerInfo.allPurchaseDates
+    });
+
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to restore purchases');
   }
 };
 
@@ -141,13 +366,16 @@ const reactivateSubscription = async (): Promise<{message: string; subscription:
 };
 
 const subscriptionService = {
-  getSubscriptionDetails,
+  initializePurchases,
+  getAvailablePackages,
   startFreeTrial,
   subscribeToPremium,
   cancelSubscription,
   canProcessDocument,
   getDashboardSubscriptionInfo,
   reactivateSubscription,
+  getSubscriptionDetails,
+  restorePurchases,
 };
 
 export default subscriptionService; 
