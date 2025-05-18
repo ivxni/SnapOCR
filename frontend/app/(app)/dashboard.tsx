@@ -36,12 +36,12 @@ export default function Dashboard() {
     isInitialized: false
   });
 
-  // Refresh data when dashboard comes into focus
+  // Refresh data when dashboard comes into focus - using empty dependency array to prevent infinite loops
   useFocusEffect(
     React.useCallback(() => {
       console.log('Dashboard is focused - refreshing data');
       
-      // Always refresh subscription info immediately
+      // Fetch subscription info only once per focus
       fetchSubscriptionInfo();
       
       // Refresh documents if needed
@@ -53,7 +53,7 @@ export default function Dashboard() {
       return () => {
         // Nothing to clean up
       };
-    }, [documents, loading])
+    }, []) // Empty dependency array to run only when screen is focused
   );
 
   // Initial data loading
