@@ -117,44 +117,143 @@ export default function SubscriptionPlans() {
     }
   };
 
-  const renderFeatureItem = (text: string, isPremium: boolean) => (
+  const renderFeatureItem = (text: string, included: boolean) => (
     <View style={styles.featureItem}>
       <MaterialIcons 
-        name={isPremium ? "check" : "close"} 
+        name={included ? "check-circle" : "cancel"} 
         size={20} 
-        color={isPremium ? themeColors.success : themeColors.error} 
+        color={included ? themeColors.primary : themeColors.error} 
       />
       <Text style={[styles.featureText, { color: themeColors.text }]}>{text}</Text>
     </View>
   );
 
   const renderContent = () => {
-    // Since we're already checking for null before calling this function,
-    // we can safely assert that subscriptionDetails is not null
     if (!subscriptionDetails) {
-      return null; // This should never happen, but it satisfies TypeScript
+      return null;
     }
 
-    // If already on premium and not canceled, don't show subscription options
-    if (subscriptionDetails.plan === 'premium' && !subscriptionDetails.isCanceledButActive) {
+    const savingsPercent = Math.round(100 - (subscriptionDetails.pricing.yearly / 12 / subscriptionDetails.pricing.monthly * 100));
+
+    // If the user is already on a premium plan, show a plan change interface
+    if (subscriptionDetails.plan === 'premium' && !subscriptionDetails.isInTrial && !subscriptionDetails.isCanceledButActive) {
       return (
         <View style={styles.contentContainer}>
-          <Text style={[styles.pageTitle, { color: themeColors.text }]}>You're already subscribed</Text>
+          <Text style={[styles.pageTitle, { color: themeColors.text }]}>{t('subscription.changePlan')}</Text>
           <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
-            You already have an active premium subscription.
+            {t('subscription.billing')}: {subscriptionDetails.billingCycle === 'monthly' ? t('subscription.monthly') : t('subscription.yearly')}
           </Text>
           
+          {/* Current plan */}
+          <View style={[styles.planCard, { 
+            backgroundColor: themeColors.surface, 
+            borderColor: themeColors.primary,
+            borderWidth: subscriptionDetails.billingCycle === 'monthly' ? 2 : 0
+          }]}>
+            <View style={styles.planHeader}>
+              <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.monthly')} {t('subscription.premium')}</Text>
+              <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.monthly}</Text>
+              <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>{t('subscription.monthly').toLowerCase()}</Text>
+            </View>
+            <View style={styles.featureList}>
+              {renderFeatureItem("50 documents per month", true)}
+              {renderFeatureItem("Priority OCR processing", true)}
+              {renderFeatureItem("Cancel anytime", true)}
+            </View>
+            
+            {subscriptionDetails.billingCycle !== 'monthly' && (
+              <TouchableOpacity 
+                style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
+                onPress={() => handleSubscribe('monthly')}
+                disabled={subscribing}
+              >
+                {subscribing ? (
+                  <ActivityIndicator size="small" color={themeColors.white} />
+                ) : (
+                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.changePlan')}</Text>
+                )}
+              </TouchableOpacity>
+            )}
+            
+            {subscriptionDetails.billingCycle === 'monthly' && (
+              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
+                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.billing')} {t('subscription.monthly')}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Yearly plan */}
+          <View style={[styles.planCard, { 
+            backgroundColor: themeColors.surface,
+            borderColor: themeColors.primary,
+            borderWidth: subscriptionDetails.billingCycle === 'yearly' ? 2 : 0
+          }]}>
+            <View style={styles.bestValueTag}>
+              <Text style={[styles.bestValueText, { color: themeColors.white }]}>BEST VALUE</Text>
+            </View>
+            <View style={styles.planHeader}>
+              <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.yearly')} {t('subscription.premium')}</Text>
+              <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.yearly}</Text>
+              <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>{t('subscription.yearly').toLowerCase()}</Text>
+            </View>
+            <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
+              {t('common.save')} {savingsPercent}% {t('common.and')} ${Math.round(subscriptionDetails.pricing.monthly * 12 - subscriptionDetails.pricing.yearly)}
+            </Text>
+            <View style={styles.featureList}>
+              {renderFeatureItem("50 documents per month", true)}
+              {renderFeatureItem("Priority OCR processing", true)}
+              {renderFeatureItem("Cancel anytime", true)}
+              {renderFeatureItem(`Save ${savingsPercent}% compared to monthly plan`, true)}
+            </View>
+            
+            {subscriptionDetails.billingCycle !== 'yearly' && (
+              <TouchableOpacity 
+                style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
+                onPress={() => handleSubscribe('yearly')}
+                disabled={subscribing}
+              >
+                {subscribing ? (
+                  <ActivityIndicator size="small" color={themeColors.white} />
+                ) : (
+                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.changePlan')}</Text>
+                )}
+              </TouchableOpacity>
+            )}
+            
+            {subscriptionDetails.billingCycle === 'yearly' && (
+              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
+                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.billing')} {t('subscription.yearly')}</Text>
+              </View>
+            )}
+          </View>
+          
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.primary, marginTop: 20 }]}
+            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20 }]}
             onPress={() => router.back()}
           >
-            <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Return to Dashboard</Text>
+            <Text style={[styles.actionButtonText, { color: themeColors.text }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
+          
+          {(Platform.OS === 'ios' || Platform.OS === 'android') && (
+            <TouchableOpacity 
+              style={[styles.restoreButton, { borderColor: themeColors.border }]}
+              onPress={handleRestorePurchases}
+              disabled={restoring}
+            >
+              {restoring ? (
+                <ActivityIndicator size="small" color={themeColors.primary} />
+              ) : (
+                <Text style={[styles.restoreButtonText, { color: themeColors.primary }]}>
+                  {t('subscription.restore')}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       );
     }
-
-    // If the subscription is canceled but still active, show a special message
+    
+    // If the subscription is canceled but still active, show the original reactivation view
     if (subscriptionDetails.isCanceledButActive) {
       return (
         <View style={styles.contentContainer}>
@@ -307,23 +406,6 @@ export default function SubscriptionPlans() {
             <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Continue with Free Plan</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Restore Purchases Button (only shown on mobile) */}
-        {(Platform.OS === 'ios' || Platform.OS === 'android') && (
-          <TouchableOpacity 
-            style={[styles.restoreButton, { borderColor: themeColors.border }]}
-            onPress={handleRestorePurchases}
-            disabled={restoring}
-          >
-            {restoring ? (
-              <ActivityIndicator size="small" color={themeColors.primary} />
-            ) : (
-              <Text style={[styles.restoreButtonText, { color: themeColors.primary }]}>
-                Restore Purchases
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
         
         <View style={{ height: 40 }} /> {/* Bottom padding */}
       </View>
@@ -338,8 +420,6 @@ export default function SubscriptionPlans() {
       </SafeAreaView>
     );
   }
-
-  const savingsPercent = Math.round(100 - (subscriptionDetails.pricing.yearly / 12 / subscriptionDetails.pricing.monthly * 100));
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
@@ -488,5 +568,17 @@ const styles = StyleSheet.create({
   restoreButtonText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  currentPlanBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  currentPlanText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 }); 

@@ -513,7 +513,7 @@ export default function Profile() {
                     >
                       <MaterialIcons name="refresh" size={20} color={themeColors.white} />
                       <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                        {t('dashboard.reactivate')}
+                        {t('subscription.reactivate')}
                       </Text>
                     </TouchableOpacity>
                     <Text style={[styles.cancelButtonText, { 
@@ -526,23 +526,36 @@ export default function Profile() {
                     </Text>
                   </>
                 ) : (
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      styles.cancelButton, 
-                      { backgroundColor: themeColors.surfaceVariant },
-                      subscriptionLoading && styles.disabledButton
-                    ]}
-                    onPress={handleCancelSubscription}
-                    disabled={subscriptionLoading || subscriptionDetails.isCanceledButActive}
-                  >
-                    <Text style={[styles.cancelButtonText, { 
-                      color: themeColors.error,
-                      opacity: subscriptionDetails.isCanceledButActive ? 0.6 : 1
-                    }]}>
-                      {t('subscription.cancelSubscription')}
-                    </Text>
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        { backgroundColor: themeColors.primary },
+                        subscriptionLoading && styles.disabledButton
+                      ]}
+                      onPress={() => router.push('/(app)/subscription-plans')}
+                      disabled={subscriptionLoading}
+                    >
+                      <MaterialIcons name="payments" size={20} color={themeColors.white} />
+                      <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                        {t('subscription.changePlan')}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        styles.cancelButton, 
+                        { backgroundColor: themeColors.surfaceVariant },
+                        subscriptionLoading && styles.disabledButton
+                      ]}
+                      onPress={handleCancelSubscription}
+                      disabled={subscriptionLoading}
+                    >
+                      <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
+                        {t('subscription.cancel')}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
                 )}
               </View>
             )}

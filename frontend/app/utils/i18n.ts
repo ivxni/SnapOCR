@@ -123,6 +123,10 @@ export type TranslationKey =
   | 'subscription.subscribeYearly'
   | 'subscription.cancelTrial'
   | 'subscription.cancelSubscription'
+  | 'subscription.cancel'
+  | 'subscription.changePlan'
+  | 'subscription.reactivate'
+  | 'subscription.restore'
   | 'subscription.subscriptionEnding'
   | 'subscription.limitReached'
   | 'subscription.free'
@@ -255,24 +259,28 @@ const en: TranslationDictionary = {
   // Subscription
   'subscription.title': 'Subscription',
   'subscription.plan': 'Plan',
-  'subscription.billing': 'Billing',
-  'subscription.trialEnds': 'Trial ends',
-  'subscription.nextBilling': 'Next billing',
+  'subscription.billing': 'Billing Cycle',
+  'subscription.trialEnds': 'Trial Ends',
+  'subscription.nextBilling': 'Next Billing Date',
   'subscription.documents': 'Documents',
-  'subscription.resetsOn': 'Resets on',
-  'subscription.startFreeTrial': 'Start 7-Day Free Trial',
+  'subscription.resetsOn': 'Resets On',
+  'subscription.startFreeTrial': 'Start Free Trial',
   'subscription.subscribeMontly': 'Subscribe Monthly',
   'subscription.subscribeYearly': 'Subscribe Yearly',
   'subscription.cancelTrial': 'Cancel Trial',
   'subscription.cancelSubscription': 'Cancel Subscription',
-  'subscription.subscriptionEnding': 'Subscription Ending',
+  'subscription.cancel': 'Cancel Subscription',
+  'subscription.changePlan': 'Change Plan',
+  'subscription.reactivate': 'Reactivate Subscription',
+  'subscription.restore': 'Restore Purchases',
+  'subscription.subscriptionEnding': 'Your subscription will end on',
   'subscription.limitReached': 'Document limit reached',
   'subscription.free': 'Free',
   'subscription.premium': 'Premium',
   'subscription.trial': 'Trial',
   'subscription.monthly': 'Monthly',
   'subscription.yearly': 'Yearly',
-  'subscription.documentsRemaining': 'documents remaining',
+  'subscription.documentsRemaining': 'remaining',
   
   // Language
   'language.title': 'Language',
@@ -509,7 +517,33 @@ const de: TranslationDictionary = {
   // Language
   'language.title': 'Sprache',
   'language.description': 'Wählen Sie Ihre bevorzugte Sprache für die App-Oberfläche. Die App wird neu gestartet, um Änderungen zu übernehmen.',
-  'language.info': 'Einige Inhalte können unabhängig von Ihrer Sprachauswahl weiterhin auf Englisch angezeigt werden.'
+  'language.info': 'Einige Inhalte können unabhängig von Ihrer Sprachauswahl weiterhin auf Englisch angezeigt werden.',
+  // German translations
+  // Subscription section in the German dictionary
+  'subscription.title': 'Abonnement',
+  'subscription.plan': 'Plan',
+  'subscription.billing': 'Abrechnungszyklus',
+  'subscription.trialEnds': 'Testphase endet',
+  'subscription.nextBilling': 'Nächste Abrechnung',
+  'subscription.documents': 'Dokumente',
+  'subscription.resetsOn': 'Zurückgesetzt am',
+  'subscription.startFreeTrial': 'Kostenlose Testphase starten',
+  'subscription.subscribeMontly': 'Monatlich abonnieren',
+  'subscription.subscribeYearly': 'Jährlich abonnieren',
+  'subscription.cancelTrial': 'Testphase beenden',
+  'subscription.cancelSubscription': 'Abonnement kündigen',
+  'subscription.cancel': 'Abonnement kündigen',
+  'subscription.changePlan': 'Plan ändern',
+  'subscription.reactivate': 'Abonnement reaktivieren',
+  'subscription.restore': 'Käufe wiederherstellen',
+  'subscription.subscriptionEnding': 'Ihr Abonnement endet am',
+  'subscription.limitReached': 'Dokumentlimit erreicht',
+  'subscription.free': 'Kostenlos',
+  'subscription.premium': 'Premium',
+  'subscription.trial': 'Testphase',
+  'subscription.monthly': 'Monatlich',
+  'subscription.yearly': 'Jährlich',
+  'subscription.documentsRemaining': 'verbleibend'
 };
 
 // Russian translations
