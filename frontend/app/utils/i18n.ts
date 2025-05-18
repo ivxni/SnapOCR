@@ -125,6 +125,9 @@ export type TranslationKey =
   | 'subscription.cancelSubscription'
   | 'subscription.cancel'
   | 'subscription.changePlan'
+  | 'subscription.current'
+  | 'subscription.switchToMonthly'
+  | 'subscription.switchToYearly'
   | 'subscription.reactivate'
   | 'subscription.restore'
   | 'subscription.subscriptionEnding'
@@ -271,6 +274,9 @@ const en: TranslationDictionary = {
   'subscription.cancelSubscription': 'Cancel Subscription',
   'subscription.cancel': 'Cancel Subscription',
   'subscription.changePlan': 'Change Plan',
+  'subscription.current': 'Current Plan',
+  'subscription.switchToMonthly': 'Switch to Monthly',
+  'subscription.switchToYearly': 'Switch to Yearly',
   'subscription.reactivate': 'Reactivate Subscription',
   'subscription.restore': 'Restore Purchases',
   'subscription.subscriptionEnding': 'Your subscription will end on',
@@ -534,6 +540,9 @@ const de: TranslationDictionary = {
   'subscription.cancelSubscription': 'Abonnement kündigen',
   'subscription.cancel': 'Abonnement kündigen',
   'subscription.changePlan': 'Plan ändern',
+  'subscription.current': 'Aktueller Plan',
+  'subscription.switchToMonthly': 'Zu monatlicher Zahlung wechseln',
+  'subscription.switchToYearly': 'Zu jährlicher Zahlung wechseln',
   'subscription.reactivate': 'Abonnement reaktivieren',
   'subscription.restore': 'Käufe wiederherstellen',
   'subscription.subscriptionEnding': 'Ihr Abonnement endet am',

@@ -147,9 +147,14 @@ export default function SubscriptionPlans() {
           {/* Current plan */}
           <View style={[styles.planCard, { 
             backgroundColor: themeColors.surface, 
-            borderColor: themeColors.primary,
-            borderWidth: subscriptionDetails.billingCycle === 'monthly' ? 2 : 0
+            borderColor: subscriptionDetails.billingCycle === 'monthly' ? themeColors.primary : 'rgba(0,0,0,0.05)',
+            borderWidth: subscriptionDetails.billingCycle === 'monthly' ? 2 : 1
           }]}>
+            {subscriptionDetails.billingCycle === 'monthly' && (
+              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
+                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.current')}</Text>
+              </View>
+            )}
             <View style={styles.planHeader}>
               <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.monthly')} {t('subscription.premium')}</Text>
               <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.monthly}</Text>
@@ -170,27 +175,28 @@ export default function SubscriptionPlans() {
                 {subscribing ? (
                   <ActivityIndicator size="small" color={themeColors.white} />
                 ) : (
-                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.changePlan')}</Text>
+                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.switchToMonthly')}</Text>
                 )}
               </TouchableOpacity>
-            )}
-            
-            {subscriptionDetails.billingCycle === 'monthly' && (
-              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
-                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.billing')} {t('subscription.monthly')}</Text>
-              </View>
             )}
           </View>
 
           {/* Yearly plan */}
           <View style={[styles.planCard, { 
             backgroundColor: themeColors.surface,
-            borderColor: themeColors.primary,
-            borderWidth: subscriptionDetails.billingCycle === 'yearly' ? 2 : 0
+            borderColor: subscriptionDetails.billingCycle === 'yearly' ? themeColors.primary : 'rgba(0,0,0,0.05)',
+            borderWidth: subscriptionDetails.billingCycle === 'yearly' ? 2 : 1
           }]}>
-            <View style={styles.bestValueTag}>
+            <View style={[styles.bestValueTag, { backgroundColor: themeColors.primary }]}>
               <Text style={[styles.bestValueText, { color: themeColors.white }]}>BEST VALUE</Text>
             </View>
+            
+            {subscriptionDetails.billingCycle === 'yearly' && (
+              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
+                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.current')}</Text>
+              </View>
+            )}
+            
             <View style={styles.planHeader}>
               <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.yearly')} {t('subscription.premium')}</Text>
               <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.yearly}</Text>
@@ -215,20 +221,14 @@ export default function SubscriptionPlans() {
                 {subscribing ? (
                   <ActivityIndicator size="small" color={themeColors.white} />
                 ) : (
-                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.changePlan')}</Text>
+                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.switchToYearly')}</Text>
                 )}
               </TouchableOpacity>
-            )}
-            
-            {subscriptionDetails.billingCycle === 'yearly' && (
-              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
-                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.billing')} {t('subscription.yearly')}</Text>
-              </View>
             )}
           </View>
           
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20 }]}
+            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20, marginBottom: 8 }]}
             onPress={() => router.back()}
           >
             <Text style={[styles.actionButtonText, { color: themeColors.text }]}>{t('common.cancel')}</Text>
@@ -460,6 +460,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   headerTitle: {
     fontSize: 18,
@@ -489,7 +491,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   planCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     position: 'relative',
@@ -498,24 +500,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   bestValueTag: {
     position: 'absolute',
-    top: -10,
+    top: -12,
     right: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bestValueText: {
     fontSize: 12,
     fontWeight: 'bold',
   },
   planHeader: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   planTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
@@ -525,28 +534,31 @@ const styles = StyleSheet.create({
   },
   perPeriod: {
     fontSize: 14,
+    marginTop: 4,
   },
   planDescription: {
     marginBottom: 16,
     fontSize: 14,
+    lineHeight: 20,
   },
   featureList: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   featureText: {
     marginLeft: 10,
     fontSize: 14,
   },
   actionButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4,
   },
   actionButtonText: {
     fontSize: 16,
@@ -558,11 +570,12 @@ const styles = StyleSheet.create({
   },
   restoreButton: {
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderStyle: 'dashed',
+    marginTop: 20,
     marginBottom: 20,
   },
   restoreButtonText: {
@@ -571,11 +584,17 @@ const styles = StyleSheet.create({
   },
   currentPlanBadge: {
     position: 'absolute',
-    top: -10,
+    top: -12,
     right: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1,
   },
   currentPlanText: {
     fontSize: 12,
