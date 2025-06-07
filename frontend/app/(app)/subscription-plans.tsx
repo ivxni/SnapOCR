@@ -380,7 +380,8 @@ export default function SubscriptionPlans() {
           </LinearGradient>
         </View>
 
-        {!subscriptionDetails.trialStartDate && (
+        {/* Only show trial if user has never had a trial (no trialEndDate and no trialStartDate) */}
+        {!subscriptionDetails?.trialStartDate && !subscriptionDetails?.trialEndDate && (
           <PlanCard
             title={t('subscription.trial')}
             price="0"

@@ -330,13 +330,27 @@ export default function Profile() {
                 { 
                   backgroundColor: subscriptionDetails?.plan === 'premium'
                     ? themeColors.primary
-                    : themeColors.surfaceVariant,
+                    : subscriptionDetails?.isInTrial
+                      ? themeColors.warning || '#FF9500'
+                      : 'transparent',
+                  borderWidth: subscriptionDetails?.plan === 'free' && !subscriptionDetails?.isInTrial ? 1 : 0,
+                  borderColor: subscriptionDetails?.plan === 'free' && !subscriptionDetails?.isInTrial ? themeColors.border : 'transparent',
                 }
               ]}>
                 <MaterialIcons 
-                  name="star" 
+                  name={subscriptionDetails?.plan === 'premium' 
+                    ? "star" 
+                    : subscriptionDetails?.isInTrial 
+                      ? "access-time"
+                      : "account-circle"
+                  } 
                   size={12} 
-                  color={subscriptionDetails?.plan === 'premium' ? themeColors.white : themeColors.primary}
+                  color={subscriptionDetails?.plan === 'premium' 
+                    ? themeColors.white 
+                    : subscriptionDetails?.isInTrial
+                      ? themeColors.white
+                      : themeColors.textSecondary
+                  }
                   style={{ marginRight: 4 }}
                 />
                 <Text 
@@ -345,7 +359,9 @@ export default function Profile() {
                     { 
                       color: subscriptionDetails?.plan === 'premium'
                         ? themeColors.white
-                        : themeColors.text
+                        : subscriptionDetails?.isInTrial
+                          ? themeColors.white
+                          : themeColors.textSecondary
                     }
                   ]}
                 >
@@ -424,37 +440,74 @@ export default function Profile() {
             <View style={styles.subscriptionActions}>
               {subscriptionDetails.plan === 'free' && !subscriptionDetails.isInTrial && (
                 <>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      { backgroundColor: themeColors.primary },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={handleStartTrial}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="star" size={20} color={themeColors.white} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                  {/* Only show trial button if user has never had a trial (no trialEndDate exists) */}
+                  {!subscriptionDetails?.trialEndDate && (
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        { backgroundColor: themeColors.primary },
+                        isLoading && styles.disabledButton
+                      ]}
+                      onPress={handleStartTrial}
+                      disabled={isLoading}
+                    >
+                      <MaterialIcons name="star" size={20} color={themeColors.white} />
+                      <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
                         {t('subscription.trial')}
                       </Text>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {/* Enhanced Premium button styling */}
                   <TouchableOpacity 
                     style={[
-                      styles.subscriptionButton, 
-                      styles.secondaryButton, 
-                      { 
-                        backgroundColor: themeColors.surfaceVariant,
-                        borderColor: themeColors.primary
+                      styles.subscriptionButton,
+                      {
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderColor: themeColors.primary,
+                        shadowColor: themeColors.primary,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 8,
+                        elevation: 4,
                       },
                       isLoading && styles.disabledButton
                     ]}
                     onPress={() => router.push('/(app)/subscription-plans')}
                     disabled={isLoading}
                   >
-                    <MaterialIcons name="payments" size={20} color={themeColors.primary} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.primary }]}>
-                        {t('subscription.premium')}
+                    <MaterialIcons 
+                      name="diamond" 
+                      size={20} 
+                      color={themeColors.primary} 
+                    />
+                    <Text style={[
+                      styles.subscriptionButtonText, 
+                      { 
+                        color: themeColors.primary,
+                        fontWeight: '600',
+                      }
+                    ]}>
+                      {t('subscription.premium')}
+                    </Text>
+                    <View style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      backgroundColor: themeColors.primary,
+                      borderRadius: 10,
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                    }}>
+                      <Text style={{
+                        color: themeColors.white,
+                        fontSize: 8,
+                        fontWeight: 'bold',
+                      }}>
+                        UPGRADE
                       </Text>
+                    </View>
                   </TouchableOpacity>
                 </>
               )}
