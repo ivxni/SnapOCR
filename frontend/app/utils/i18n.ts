@@ -138,6 +138,24 @@ export type TranslationKey =
   | 'subscription.monthly'
   | 'subscription.yearly'
   | 'subscription.documentsRemaining'
+  | 'subscription.trialDescription'
+  | 'subscription.monthlyDescription'
+  | 'subscription.yearlyDescription'
+  | 'subscription.freeDescription'
+  | 'subscription.feature.documents'
+  | 'subscription.feature.documentsWeekly'
+  | 'subscription.feature.priority'
+  | 'subscription.feature.standard'
+  | 'subscription.feature.cancel'
+  | 'subscription.feature.savings'
+  | 'subscription.feature.premium'
+  | 'subscription.chooseYourPlan'
+  | 'subscription.recommended'
+  | 'subscription.managePlan'
+  | 'subscription.accessUntil'
+  | 'subscription.days7'
+  | 'subscription.continueFree'
+  | 'common.annually'
   
   // Language
   | 'language.title'
@@ -287,6 +305,24 @@ const en: TranslationDictionary = {
   'subscription.monthly': 'Monthly',
   'subscription.yearly': 'Yearly',
   'subscription.documentsRemaining': 'remaining',
+  'subscription.trialDescription': 'Try all premium features free for 7 days',
+  'subscription.monthlyDescription': 'Pay monthly with flexibility',
+  'subscription.yearlyDescription': 'Save money with our yearly plan',
+  'subscription.freeDescription': 'Limited features at no cost',
+  'subscription.feature.documents': '50 documents per month',
+  'subscription.feature.documentsWeekly': '5 documents per week',
+  'subscription.feature.priority': 'Priority OCR processing',
+  'subscription.feature.standard': 'Standard OCR processing',
+  'subscription.feature.cancel': 'Cancel anytime',
+  'subscription.feature.savings': 'Save on yearly subscription',
+  'subscription.feature.premium': 'Additional premium features',
+  'subscription.chooseYourPlan': 'Choose the plan that suits your needs',
+  'subscription.recommended': 'Recommended',
+  'subscription.managePlan': 'Manage Your Plan',
+  'subscription.accessUntil': 'Access until',
+  'subscription.days7': '7 days',
+  'subscription.continueFree': 'Continue with Free',
+  'common.annually': 'annually',
   
   // Language
   'language.title': 'Language',
@@ -552,7 +588,25 @@ const de: TranslationDictionary = {
   'subscription.trial': 'Testphase',
   'subscription.monthly': 'Monatlich',
   'subscription.yearly': 'Jährlich',
-  'subscription.documentsRemaining': 'verbleibend'
+  'subscription.documentsRemaining': 'verbleibend',
+  'subscription.trialDescription': 'Testen Sie alle Premium-Funktionen 7 Tage lang kostenlos',
+  'subscription.monthlyDescription': 'Monatlich mit Flexibilität bezahlen',
+  'subscription.yearlyDescription': 'Sparen Sie Geld mit unserem Jahresplan',
+  'subscription.freeDescription': 'Begrenzte Funktionen ohne Kosten',
+  'subscription.feature.documents': '50 Dokumente pro Monat',
+  'subscription.feature.documentsWeekly': '5 Dokumente pro Woche',
+  'subscription.feature.priority': 'Prioritäts-OCR-Verarbeitung',
+  'subscription.feature.standard': 'Standard-OCR-Verarbeitung',
+  'subscription.feature.cancel': 'Jederzeit kündbar',
+  'subscription.feature.savings': 'Sparen Sie bei jährlicher Zahlung',
+  'subscription.feature.premium': 'Zusätzliche Premium-Funktionen',
+  'subscription.chooseYourPlan': 'Wählen Sie den für Sie passenden Plan',
+  'subscription.recommended': 'Empfohlen',
+  'subscription.managePlan': 'Ihr Plan verwalten',
+  'subscription.accessUntil': 'Zugang bis',
+  'subscription.days7': '7 Tage',
+  'subscription.continueFree': 'Mit kostenlosem Plan fortfahren',
+  'common.annually': 'jährlich',
 };
 
 // Russian translations

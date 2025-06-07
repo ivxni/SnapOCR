@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
 import subscriptionService from '../services/subscriptionService';
 import { SubscriptionDetails } from '../types/auth.types';
 import { PurchasesPackage } from 'react-native-purchases';
 import { useAuth } from '../hooks/useAuth';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export default function SubscriptionPlans() {
   const router = useRouter();
@@ -53,16 +56,15 @@ export default function SubscriptionPlans() {
       setSubscribing(true);
       await subscriptionService.subscribeToPremium(billingCycle);
       Alert.alert(
-        'Success',
-        `You have successfully subscribed to the ${billingCycle} premium plan!`,
-        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+        t('common.success'),
+        t(billingCycle === 'monthly' ? 'subscription.subscribeMontly' : 'subscription.subscribeYearly'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
       if (error.message === 'Purchase cancelled') {
-        // User cancelled, no need to show an error
         console.log('User cancelled purchase');
       } else {
-        Alert.alert('Error', error.message || 'Failed to subscribe to premium');
+        Alert.alert(t('common.error'), error.message || t('profile.updateFailed'));
       }
     } finally {
       setSubscribing(false);
@@ -74,12 +76,12 @@ export default function SubscriptionPlans() {
       setRestoring(true);
       const result = await subscriptionService.restorePurchases();
       Alert.alert(
-        'Restore Complete',
+        t('common.success'),
         result.message,
-        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to restore purchases');
+      Alert.alert(t('common.error'), error.message || t('profile.updateFailed'));
     } finally {
       setRestoring(false);
     }
@@ -90,12 +92,12 @@ export default function SubscriptionPlans() {
       setSubscribing(true);
       await subscriptionService.reactivateSubscription();
       Alert.alert(
-        'Subscription Reactivated',
-        'Your subscription has been successfully reactivated.',
-        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+        t('common.success'),
+        t('subscription.reactivate'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to reactivate subscription');
+      Alert.alert(t('common.error'), error.message || t('profile.updateFailed'));
     } finally {
       setSubscribing(false);
     }
@@ -106,12 +108,12 @@ export default function SubscriptionPlans() {
       setSubscribing(true);
       await subscriptionService.startFreeTrial();
       Alert.alert(
-        'Free Trial Started',
-        'You have successfully started your 7-day free trial of premium features!',
-        [{ text: 'OK', onPress: () => router.replace('/(app)/dashboard') }]
+        t('common.success'),
+        t('subscription.startFreeTrial'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/(app)/dashboard') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to start free trial');
+      Alert.alert(t('common.error'), error.message || t('profile.updateFailed'));
     } finally {
       setSubscribing(false);
     }
@@ -119,12 +121,125 @@ export default function SubscriptionPlans() {
 
   const renderFeatureItem = (text: string, included: boolean) => (
     <View style={styles.featureItem}>
-      <MaterialIcons 
-        name={included ? "check-circle" : "cancel"} 
-        size={20} 
-        color={included ? themeColors.primary : themeColors.error} 
-      />
+      <View style={[
+        styles.featureIconContainer,
+        { backgroundColor: included ? themeColors.primary + '20' : themeColors.error + '20' }
+      ]}>
+        <MaterialIcons 
+          name={included ? "check" : "close"} 
+          size={16} 
+          color={included ? themeColors.primary : themeColors.error} 
+        />
+      </View>
       <Text style={[styles.featureText, { color: themeColors.text }]}>{text}</Text>
+    </View>
+  );
+
+  const PlanCard = ({ 
+    title, 
+    price, 
+    period, 
+    description, 
+    features, 
+    onPress, 
+    loading, 
+    buttonText, 
+    isRecommended = false,
+    isCurrentPlan = false,
+    gradientColors = [themeColors.surface, themeColors.surface],
+    borderColor = themeColors.border
+  }: {
+    title: string;
+    price: string | number;
+    period?: string;
+    description?: string;
+    features: Array<{ text: string; included: boolean }>;
+    onPress?: () => void;
+    loading?: boolean;
+    buttonText?: string;
+    isRecommended?: boolean;
+    isCurrentPlan?: boolean;
+    gradientColors?: [string, string];
+    borderColor?: string;
+  }) => (
+    <View style={[styles.planCardContainer, { borderColor }]}>
+      <LinearGradient
+        colors={gradientColors}
+        style={styles.planCard}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        {isRecommended && (
+          <View style={[styles.recommendedBadge, { backgroundColor: themeColors.primary }]}>
+            <MaterialIcons name="star" size={16} color={themeColors.white} />
+            <Text style={[styles.recommendedText, { color: themeColors.white }]}>
+              {t('subscription.recommended')}
+            </Text>
+          </View>
+        )}
+        
+        {isCurrentPlan && (
+          <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.success }]}>
+            <MaterialIcons name="check-circle" size={16} color={themeColors.white} />
+            <Text style={[styles.currentPlanText, { color: themeColors.white }]}>
+              {t('subscription.current')}
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.planHeader}>
+          <Text style={[styles.planTitle, { color: themeColors.text }]}>{title}</Text>
+          <View style={styles.priceContainer}>
+            <Text style={[styles.planPrice, { color: themeColors.primary }]}>
+              <Text style={styles.currencySymbol}>$</Text>
+              <Text>{price}</Text>
+            </Text>
+            {period && (
+              <Text style={[styles.pricePeriod, { color: themeColors.textSecondary }]}>
+                <Text>/{period}</Text>
+              </Text>
+            )}
+          </View>
+          {description && (
+            <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
+              {description}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.featureList}>
+          {features.map((feature, index) => (
+            <View key={index}>
+              {renderFeatureItem(feature.text, feature.included)}
+            </View>
+          ))}
+        </View>
+
+        {onPress && buttonText && (
+          <TouchableOpacity 
+            style={[
+              styles.planButton,
+              { backgroundColor: isRecommended ? themeColors.primary : themeColors.surfaceVariant }
+            ]}
+            onPress={onPress}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator 
+                size="small" 
+                color={isRecommended ? themeColors.white : themeColors.primary} 
+              />
+            ) : (
+              <Text style={[
+                styles.planButtonText, 
+                { color: isRecommended ? themeColors.white : themeColors.primary }
+              ]}>
+                {buttonText}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </LinearGradient>
     </View>
   );
 
@@ -135,106 +250,252 @@ export default function SubscriptionPlans() {
 
     const savingsPercent = Math.round(100 - (subscriptionDetails.pricing.yearly / 12 / subscriptionDetails.pricing.monthly * 100));
 
-    // If the user is already on a premium plan, show a plan change interface
+    // Premium user with active subscription
     if (subscriptionDetails.plan === 'premium' && !subscriptionDetails.isInTrial && !subscriptionDetails.isCanceledButActive) {
       return (
         <View style={styles.contentContainer}>
-          <Text style={[styles.pageTitle, { color: themeColors.text }]}>{t('subscription.changePlan')}</Text>
-          <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
-            {t('subscription.billing')}: {subscriptionDetails.billingCycle === 'monthly' ? t('subscription.monthly') : t('subscription.yearly')}
-          </Text>
-          
-          {/* Current plan */}
-          <View style={[styles.planCard, { 
-            backgroundColor: themeColors.surface, 
-            borderColor: subscriptionDetails.billingCycle === 'monthly' ? themeColors.primary : 'rgba(0,0,0,0.05)',
-            borderWidth: subscriptionDetails.billingCycle === 'monthly' ? 2 : 1
-          }]}>
-            {subscriptionDetails.billingCycle === 'monthly' && (
-              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
-                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.current')}</Text>
-              </View>
-            )}
-            <View style={styles.planHeader}>
-              <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.monthly')} {t('subscription.premium')}</Text>
-              <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.monthly}</Text>
-              <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>{t('subscription.monthly').toLowerCase()}</Text>
-            </View>
-            <View style={styles.featureList}>
-              {renderFeatureItem("50 documents per month", true)}
-              {renderFeatureItem("Priority OCR processing", true)}
-              {renderFeatureItem("Cancel anytime", true)}
-            </View>
-            
-            {subscriptionDetails.billingCycle !== 'monthly' && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-                onPress={() => handleSubscribe('monthly')}
-                disabled={subscribing}
-              >
-                {subscribing ? (
-                  <ActivityIndicator size="small" color={themeColors.white} />
-                ) : (
-                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.switchToMonthly')}</Text>
-                )}
-              </TouchableOpacity>
-            )}
+          <View style={styles.headerSection}>
+            <LinearGradient
+              colors={[themeColors.primary + '20', themeColors.primaryLight + '10']}
+              style={styles.headerGradient}
+            >
+              <MaterialIcons name="workspace-premium" size={48} color={themeColors.primary} />
+              <Text style={[styles.pageTitle, { color: themeColors.text }]}>
+                {t('subscription.managePlan')}
+              </Text>
+              <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+                <Text>{t('subscription.billing')}: </Text>
+                <Text style={{ color: themeColors.primary, fontWeight: '600' }}>
+                  {subscriptionDetails.billingCycle === 'monthly' ? t('subscription.monthly') : t('subscription.yearly')}
+                </Text>
+              </Text>
+            </LinearGradient>
           </View>
 
-          {/* Yearly plan */}
-          <View style={[styles.planCard, { 
-            backgroundColor: themeColors.surface,
-            borderColor: subscriptionDetails.billingCycle === 'yearly' ? themeColors.primary : 'rgba(0,0,0,0.05)',
-            borderWidth: subscriptionDetails.billingCycle === 'yearly' ? 2 : 1
-          }]}>
-            <View style={[styles.bestValueTag, { backgroundColor: themeColors.primary }]}>
-              <Text style={[styles.bestValueText, { color: themeColors.white }]}>BEST VALUE</Text>
-            </View>
-            
-            {subscriptionDetails.billingCycle === 'yearly' && (
-              <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.primary }]}>
-                <Text style={[styles.currentPlanText, { color: themeColors.white }]}>{t('subscription.current')}</Text>
-              </View>
-            )}
-            
-            <View style={styles.planHeader}>
-              <Text style={[styles.planTitle, { color: themeColors.text }]}>{t('subscription.yearly')} {t('subscription.premium')}</Text>
-              <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.yearly}</Text>
-              <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>{t('subscription.yearly').toLowerCase()}</Text>
-            </View>
-            <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
-              {t('common.save')} {savingsPercent}% {t('common.and')} ${Math.round(subscriptionDetails.pricing.monthly * 12 - subscriptionDetails.pricing.yearly)}
-            </Text>
-            <View style={styles.featureList}>
-              {renderFeatureItem("50 documents per month", true)}
-              {renderFeatureItem("Priority OCR processing", true)}
-              {renderFeatureItem("Cancel anytime", true)}
-              {renderFeatureItem(`Save ${savingsPercent}% compared to monthly plan`, true)}
-            </View>
-            
-            {subscriptionDetails.billingCycle !== 'yearly' && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-                onPress={() => handleSubscribe('yearly')}
-                disabled={subscribing}
-              >
-                {subscribing ? (
-                  <ActivityIndicator size="small" color={themeColors.white} />
-                ) : (
-                  <Text style={[styles.actionButtonText, { color: themeColors.white }]}>{t('subscription.switchToYearly')}</Text>
-                )}
-              </TouchableOpacity>
-            )}
+          <PlanCard
+            title={`${t('subscription.monthly')} ${t('subscription.premium')}`}
+            price={subscriptionDetails.pricing.monthly}
+            period={t('subscription.monthly').toLowerCase()}
+            features={[
+              { text: t('subscription.feature.documents'), included: true },
+              { text: t('subscription.feature.priority'), included: true },
+              { text: t('subscription.feature.cancel'), included: true }
+            ]}
+            onPress={subscriptionDetails.billingCycle !== 'monthly' ? () => handleSubscribe('monthly') : undefined}
+            loading={subscribing}
+            buttonText={subscriptionDetails.billingCycle !== 'monthly' ? t('subscription.switchToMonthly') : undefined}
+            isCurrentPlan={subscriptionDetails.billingCycle === 'monthly'}
+            borderColor={subscriptionDetails.billingCycle === 'monthly' ? themeColors.primary : themeColors.border}
+            gradientColors={subscriptionDetails.billingCycle === 'monthly' ? 
+              [themeColors.primary + '10', themeColors.surface] : 
+              [themeColors.surface, themeColors.surface]
+            }
+          />
+
+          <PlanCard
+            title={`${t('subscription.yearly')} ${t('subscription.premium')}`}
+            price={subscriptionDetails.pricing.yearly}
+            period={t('subscription.yearly').toLowerCase()}
+            description={`${t('common.save')} ${savingsPercent}% - $${Math.round(subscriptionDetails.pricing.monthly * 12 - subscriptionDetails.pricing.yearly)} ${t('common.annually')}`}
+            features={[
+              { text: t('subscription.feature.documents'), included: true },
+              { text: t('subscription.feature.priority'), included: true },
+              { text: t('subscription.feature.cancel'), included: true },
+              { text: t('subscription.feature.savings'), included: true }
+            ]}
+            onPress={subscriptionDetails.billingCycle !== 'yearly' ? () => handleSubscribe('yearly') : undefined}
+            loading={subscribing}
+            buttonText={subscriptionDetails.billingCycle !== 'yearly' ? t('subscription.switchToYearly') : undefined}
+            isRecommended={subscriptionDetails.billingCycle !== 'yearly'}
+            isCurrentPlan={subscriptionDetails.billingCycle === 'yearly'}
+            borderColor={subscriptionDetails.billingCycle === 'yearly' ? themeColors.primary : themeColors.border}
+            gradientColors={subscriptionDetails.billingCycle === 'yearly' ? 
+              [themeColors.primary + '10', themeColors.surface] : 
+              [themeColors.primaryLight + '05', themeColors.surface]
+            }
+          />
+        </View>
+      );
+    }
+
+    // Cancelled subscription
+    if (subscriptionDetails.isCanceledButActive) {
+      return (
+        <View style={styles.contentContainer}>
+          <View style={styles.headerSection}>
+            <LinearGradient
+              colors={[themeColors.warning + '20', themeColors.warning + '05']}
+              style={styles.headerGradient}
+            >
+              <MaterialIcons name="warning" size={48} color={themeColors.warning} />
+              <Text style={[styles.pageTitle, { color: themeColors.text }]}>
+                {t('subscription.subscriptionEnding')}
+              </Text>
+              <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+                <Text>{t('subscription.accessUntil')}: </Text>
+                <Text style={{ color: themeColors.warning, fontWeight: '600' }}>
+                  {subscriptionDetails.nextBillingDate 
+                    ? new Date(subscriptionDetails.nextBillingDate).toLocaleDateString() 
+                    : "Unknown"}
+                </Text>
+              </Text>
+            </LinearGradient>
           </View>
-          
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20, marginBottom: 8 }]}
-            onPress={() => router.back()}
+
+          <PlanCard
+            title={`${t('subscription.premium')} (${t('subscription.subscriptionEnding')})`}
+            price="Active"
+            description={`${t('subscription.nextBilling')}: ${subscriptionDetails.nextBillingDate 
+              ? new Date(subscriptionDetails.nextBillingDate).toLocaleDateString() 
+              : "Unknown"}`}
+            features={[
+              { text: t('subscription.feature.documents'), included: true },
+              { text: t('subscription.feature.priority'), included: true }
+            ]}
+            onPress={handleReactivateSubscription}
+            loading={subscribing}
+            buttonText={t('subscription.reactivate')}
+            isRecommended={true}
+            borderColor={themeColors.warning}
+            gradientColors={[themeColors.warning + '10', themeColors.surface]}
+          />
+        </View>
+      );
+    }
+
+    // Default subscription plans view
+    return (
+      <View style={styles.contentContainer}>
+        <View style={styles.headerSection}>
+          <LinearGradient
+            colors={[themeColors.primary + '15', themeColors.primaryLight + '05']}
+            style={styles.headerGradient}
           >
-            <Text style={[styles.actionButtonText, { color: themeColors.text }]}>{t('common.cancel')}</Text>
-          </TouchableOpacity>
-          
-          {(Platform.OS === 'ios' || Platform.OS === 'android') && (
+            <MaterialIcons name="rocket-launch" size={48} color={themeColors.primary} />
+            <Text style={[styles.pageTitle, { color: themeColors.text }]}>
+              {t('subscription.title')}
+            </Text>
+            <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+              {t('subscription.chooseYourPlan')}
+            </Text>
+          </LinearGradient>
+        </View>
+
+        {!subscriptionDetails.trialStartDate && (
+          <PlanCard
+            title={t('subscription.trial')}
+            price="0"
+            period={t('subscription.days7')}
+            description={t('subscription.trialDescription')}
+            features={[
+              { text: t('subscription.feature.documents'), included: true },
+              { text: t('subscription.feature.priority'), included: true },
+              { text: t('subscription.feature.cancel'), included: true }
+            ]}
+            onPress={handleStartTrial}
+            loading={subscribing}
+            buttonText={t('subscription.startFreeTrial')}
+            isRecommended={true}
+            borderColor={themeColors.success}
+            gradientColors={[themeColors.success + '10', themeColors.surface]}
+          />
+        )}
+
+        <PlanCard
+          title={`${t('subscription.monthly')} ${t('subscription.premium')}`}
+          price={subscriptionDetails.pricing.monthly}
+          period={t('subscription.monthly').toLowerCase()}
+          description={t('subscription.monthlyDescription')}
+          features={[
+            { text: t('subscription.feature.documents'), included: true },
+            { text: t('subscription.feature.priority'), included: true },
+            { text: t('subscription.feature.cancel'), included: true }
+          ]}
+          onPress={() => handleSubscribe('monthly')}
+          loading={subscribing}
+          buttonText={t('subscription.subscribeMontly')}
+          borderColor={themeColors.border}
+          gradientColors={[themeColors.surface, themeColors.surface]}
+        />
+
+        <PlanCard
+          title={`${t('subscription.yearly')} ${t('subscription.premium')}`}
+          price={subscriptionDetails.pricing.yearly}
+          period={t('subscription.yearly').toLowerCase()}
+          description={`${t('subscription.yearlyDescription')} - ${t('common.save')} ${savingsPercent}%!`}
+          features={[
+            { text: t('subscription.feature.documents'), included: true },
+            { text: t('subscription.feature.priority'), included: true },
+            { text: t('subscription.feature.cancel'), included: true },
+            { text: t('subscription.feature.savings'), included: true }
+          ]}
+          onPress={() => handleSubscribe('yearly')}
+          loading={subscribing}
+          buttonText={t('subscription.subscribeYearly')}
+          isRecommended={true}
+          borderColor={themeColors.primary}
+          gradientColors={[themeColors.primary + '10', themeColors.surface]}
+        />
+
+        <PlanCard
+          title={t('subscription.free')}
+          price="0"
+          description={t('subscription.freeDescription')}
+          features={[
+            { text: t('subscription.feature.documentsWeekly'), included: true },
+            { text: t('subscription.feature.standard'), included: true },
+            { text: t('subscription.feature.priority'), included: false },
+            { text: t('subscription.feature.premium'), included: false }
+          ]}
+          onPress={() => router.back()}
+          buttonText={t('subscription.continueFree')}
+          borderColor={themeColors.border}
+          gradientColors={[themeColors.surfaceVariant, themeColors.surface]}
+        />
+      </View>
+    );
+  };
+
+  if (loading || !subscriptionDetails) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]} edges={['top']}>
+        <LinearGradient
+          colors={[themeColors.primary + '20', themeColors.background]}
+          style={styles.loadingContainer}
+        >
+          <ActivityIndicator size="large" color={themeColors.primary} />
+          <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+            {t('common.loading')}
+          </Text>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          {t('subscription.title')}
+        </Text>
+        <View style={styles.placeholderButton} />
+      </View>
+
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {renderContent()}
+        
+        {(Platform.OS === 'ios' || Platform.OS === 'android') && (
+          <View style={styles.restoreSection}>
             <TouchableOpacity 
               style={[styles.restoreButton, { borderColor: themeColors.border }]}
               onPress={handleRestorePurchases}
@@ -243,199 +504,18 @@ export default function SubscriptionPlans() {
               {restoring ? (
                 <ActivityIndicator size="small" color={themeColors.primary} />
               ) : (
-                <Text style={[styles.restoreButtonText, { color: themeColors.primary }]}>
-                  {t('subscription.restore')}
-                </Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
-      );
-    }
-    
-    // If the subscription is canceled but still active, show the original reactivation view
-    if (subscriptionDetails.isCanceledButActive) {
-      return (
-        <View style={styles.contentContainer}>
-          <Text style={[styles.pageTitle, { color: themeColors.text }]}>Your Subscription</Text>
-          <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
-            Your premium subscription has been canceled but remains active until your next billing date.
-          </Text>
-          
-          <View style={[styles.planCard, { backgroundColor: themeColors.surface, borderColor: themeColors.primary, borderWidth: 2 }]}>
-            <View style={styles.planHeader}>
-              <Text style={[styles.planTitle, { color: themeColors.text }]}>Premium Plan (Ending)</Text>
-              <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
-                Active until: {subscriptionDetails.nextBillingDate 
-                  ? new Date(subscriptionDetails.nextBillingDate).toLocaleDateString() 
-                  : 'Unknown'}
-              </Text>
-            </View>
-            <View style={styles.featureList}>
-              {renderFeatureItem("50 documents per month", true)}
-              {renderFeatureItem("Priority OCR processing", true)}
-            </View>
-
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-              onPress={handleReactivateSubscription}
-              disabled={subscribing}
-            >
-              {subscribing ? (
-                <ActivityIndicator size="small" color={themeColors.white} />
-              ) : (
-                <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Reactivate Subscription</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant, marginTop: 20 }]}
-            onPress={() => router.back()}
-          >
-            <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Return to Dashboard</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    // Default content for non-premium users or when showing plans is appropriate
-    return (
-      <View style={styles.contentContainer}>
-        <Text style={[styles.pageTitle, { color: themeColors.text }]}>Premium Plans</Text>
-        <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>Choose the plan that suits your needs</Text>
-        
-        {!subscriptionDetails.trialStartDate && (
-          <View style={[styles.planCard, { backgroundColor: themeColors.surface, borderColor: themeColors.primary }]}>
-            <View style={styles.planHeader}>
-              <Text style={[styles.planTitle, { color: themeColors.text }]}>Free 7-Day Trial</Text>
-              <Text style={[styles.planPrice, { color: themeColors.primary }]}>$0.00</Text>
-            </View>
-            <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>Try all premium features free for 7 days</Text>
-            <View style={styles.featureList}>
-              {renderFeatureItem("50 documents per month", true)}
-              {renderFeatureItem("Priority OCR processing", true)}
-              {renderFeatureItem("Cancel anytime", true)}
-            </View>
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-              onPress={handleStartTrial}
-              disabled={subscribing}
-            >
-              {subscribing ? (
-                <ActivityIndicator size="small" color={themeColors.white} />
-              ) : (
-                <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Start Free Trial</Text>
+                <>
+                  <MaterialIcons name="restore" size={20} color={themeColors.primary} />
+                  <Text style={[styles.restoreButtonText, { color: themeColors.primary }]}>
+                    {t('subscription.restore')}
+                  </Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
         )}
-
-        <View style={[styles.planCard, { backgroundColor: themeColors.surface }]}>
-          <View style={styles.planHeader}>
-            <Text style={[styles.planTitle, { color: themeColors.text }]}>Monthly Premium</Text>
-            <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.monthly}</Text>
-            <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>per month</Text>
-          </View>
-          <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>Pay monthly with flexibility</Text>
-          <View style={styles.featureList}>
-            {renderFeatureItem("50 documents per month", true)}
-            {renderFeatureItem("Priority OCR processing", true)}
-            {renderFeatureItem("Cancel anytime", true)}
-          </View>
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-            onPress={() => handleSubscribe('monthly')}
-            disabled={subscribing}
-          >
-            {subscribing ? (
-              <ActivityIndicator size="small" color={themeColors.white} />
-            ) : (
-              <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Subscribe Monthly</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.planCard, { backgroundColor: themeColors.surface, borderColor: themeColors.primary, borderWidth: 2 }]}>
-          <View style={[styles.bestValueTag, { backgroundColor: themeColors.primary }]}>
-            <Text style={[styles.bestValueText, { color: themeColors.white }]}>BEST VALUE</Text>
-          </View>
-          <View style={styles.planHeader}>
-            <Text style={[styles.planTitle, { color: themeColors.text }]}>Yearly Premium</Text>
-            <Text style={[styles.planPrice, { color: themeColors.primary }]}>${subscriptionDetails.pricing.yearly}</Text>
-            <Text style={[styles.perPeriod, { color: themeColors.textSecondary }]}>per year</Text>
-          </View>
-          <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
-            Save {savingsPercent}% compared to monthly plan
-          </Text>
-          <View style={styles.featureList}>
-            {renderFeatureItem("50 documents per month", true)}
-            {renderFeatureItem("Priority OCR processing", true)}
-            {renderFeatureItem("All future premium features", true)}
-            {renderFeatureItem("Save " + savingsPercent + "% compared to monthly plan", true)}
-          </View>
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.primary }]}
-            onPress={() => handleSubscribe('yearly')}
-            disabled={subscribing}
-          >
-            {subscribing ? (
-              <ActivityIndicator size="small" color={themeColors.white} />
-            ) : (
-              <Text style={[styles.actionButtonText, { color: themeColors.white }]}>Subscribe Yearly</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.planCard, { backgroundColor: themeColors.surface, marginBottom: 20 }]}>
-          <View style={styles.planHeader}>
-            <Text style={[styles.planTitle, { color: themeColors.text }]}>Free Plan</Text>
-            <Text style={[styles.planPrice, { color: themeColors.primary }]}>$0.00</Text>
-          </View>
-          <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>Limited features at no cost</Text>
-          <View style={styles.featureList}>
-            {renderFeatureItem("5 documents per week", true)}
-            {renderFeatureItem("Standard OCR processing", true)}
-            {renderFeatureItem("Priority OCR processing", false)}
-            {renderFeatureItem("Additional premium features", false)}
-          </View>
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: themeColors.surfaceVariant }]}
-            onPress={() => router.back()}
-          >
-            <Text style={[styles.actionButtonText, { color: themeColors.text }]}>Continue with Free Plan</Text>
-          </TouchableOpacity>
-        </View>
         
-        <View style={{ height: 40 }} /> {/* Bottom padding */}
-      </View>
-    );
-  };
-
-  if (loading || !subscriptionDetails) {
-    return (
-      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]} edges={['top']}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>Loading subscription plans...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={themeColors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Choose Your Plan</Text>
-        <View style={styles.placeholderButton} />
-      </View>
-
-      <ScrollView style={styles.content}>
-        {renderContent()}
+        <View style={styles.bottomPadding} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -448,27 +528,39 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
+    borderRadius: 20,
+    margin: 20,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    fontWeight: '500',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    paddingVertical: 16,
   },
-  headerTitle: {
+  title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    zIndex: 1,
   },
   backButton: {
     padding: 8,
+    zIndex: 2,
   },
   placeholderButton: {
     width: 40,
@@ -476,70 +568,105 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   contentContainer: {
-    padding: 16,
+    padding: 20,
+  },
+  headerSection: {
+    marginBottom: 24,
+  },
+  headerGradient: {
+    alignItems: 'center',
+    padding: 24,
+    borderRadius: 20,
+    marginBottom: 8,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
+    marginTop: 12,
     marginBottom: 8,
     textAlign: 'center',
   },
   pageSubtitle: {
     fontSize: 16,
-    marginBottom: 24,
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  planCardContainer: {
+    marginBottom: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    overflow: 'hidden',
   },
   planCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 24,
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
   },
-  bestValueTag: {
+  recommendedBadge: {
     position: 'absolute',
-    top: -12,
+    top: -1,
     right: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 10,
   },
-  bestValueText: {
+  recommendedText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    marginLeft: 4,
+    textTransform: 'uppercase',
+  },
+  currentPlanBadge: {
+    position: 'absolute',
+    top: -1,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  currentPlanText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 4,
+    textTransform: 'uppercase',
   },
   planHeader: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   planTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
     marginBottom: 8,
   },
   planPrice: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 36,
+    fontWeight: '800',
   },
-  perPeriod: {
-    fontSize: 14,
-    marginTop: 4,
+  currencySymbol: {
+    fontSize: 24,
+  },
+  pricePeriod: {
+    fontSize: 18,
+    marginLeft: 4,
   },
   planDescription: {
-    marginBottom: 16,
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 20,
+    marginTop: 8,
   },
   featureList: {
     marginBottom: 24,
@@ -547,57 +674,51 @@ const styles = StyleSheet.create({
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+  },
+  featureIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   featureText: {
-    marginLeft: 10,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    flex: 1,
   },
-  actionButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
+  planButton: {
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: 8,
   },
-  actionButtonText: {
+  planButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  actionButtonContainer: {
-    marginTop: 20,
-    alignItems: 'center',
+  restoreSection: {
+    paddingHorizontal: 20,
+    marginTop: 16,
   },
   restoreButton: {
-    paddingVertical: 12,
-    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
     borderStyle: 'dashed',
-    marginTop: 20,
-    marginBottom: 20,
   },
   restoreButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
   },
-  currentPlanBadge: {
-    position: 'absolute',
-    top: -12,
-    right: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 1,
-  },
-  currentPlanText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  bottomPadding: {
+    height: 40,
   },
 }); 

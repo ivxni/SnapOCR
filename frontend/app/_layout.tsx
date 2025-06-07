@@ -4,6 +4,7 @@ import { PaperProvider, MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 import { lightTheme } from './constants/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { DocumentProvider } from './contexts/DocumentContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { DarkModeProvider, useDarkMode } from './contexts/DarkModeContext';
 import { useAuth } from './hooks/useAuth';
@@ -58,21 +59,23 @@ export default function RootLayout() {
       <DarkModeProvider>
         <ThemeProvider>
           <AuthProvider>
-            <DocumentProvider>
-              <AuthProtection />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen 
-                  name="(app)" 
-                  options={{ 
-                    headerShown: false,
-                    // Prevent going back to the get started screen
-                    gestureEnabled: false
-                  }} 
-                />
-              </Stack>
-            </DocumentProvider>
+            <SubscriptionProvider>
+              <DocumentProvider>
+                <AuthProtection />
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen 
+                    name="(app)" 
+                    options={{ 
+                      headerShown: false,
+                      // Prevent going back to the get started screen
+                      gestureEnabled: false
+                    }} 
+                  />
+                </Stack>
+              </DocumentProvider>
+            </SubscriptionProvider>
           </AuthProvider>
         </ThemeProvider>
       </DarkModeProvider>

@@ -21,6 +21,7 @@ export default function Dashboard() {
   
   // We'll keep loading state separate from the visibility state
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionRefreshing, setSubscriptionRefreshing] = useState(false); // New state for background refresh
   const [subscriptionInfo, setSubscriptionInfo] = useState<{
     plan: string;
     remainingDocuments: number;
@@ -41,8 +42,8 @@ export default function Dashboard() {
     React.useCallback(() => {
       console.log('Dashboard is focused - refreshing data');
       
-      // Fetch subscription info only once per focus
-      fetchSubscriptionInfo();
+      // Fetch subscription info in background (don't show loading)
+      fetchSubscriptionInfo(true); // Pass true for background refresh
       
       // Refresh documents if needed
       if (!documents || documents.length === 0 || loading) {
@@ -59,12 +60,18 @@ export default function Dashboard() {
   // Initial data loading
   useEffect(() => {
     fetchDocuments();
-    fetchSubscriptionInfo();
+    fetchSubscriptionInfo(false); // Initial load, show loading
   }, []);
 
-  const fetchSubscriptionInfo = async () => {
+  const fetchSubscriptionInfo = async (isBackgroundRefresh = false) => {
     try {
-      setSubscriptionLoading(true);
+      // Only show loading on initial load, not on background refresh
+      if (!isBackgroundRefresh) {
+        setSubscriptionLoading(true);
+      } else {
+        setSubscriptionRefreshing(true);
+      }
+      
       const subDetails = await subscriptionService.getDashboardSubscriptionInfo();
       setSubscriptionInfo({
         plan: subDetails.plan,
@@ -78,7 +85,11 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch subscription info:', error);
     } finally {
-      setSubscriptionLoading(false);
+      if (!isBackgroundRefresh) {
+        setSubscriptionLoading(false);
+      } else {
+        setSubscriptionRefreshing(false);
+      }
     }
   };
 
@@ -236,9 +247,16 @@ export default function Dashboard() {
                 backgroundColor: subscriptionInfo.plan === 'premium' 
                   ? themeColors.primary 
                   : themeColors.surfaceVariant,
-                opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
+                opacity: subscriptionRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
               }
             ]}>
+              {subscriptionRefreshing && (
+                <ActivityIndicator 
+                  size="small" 
+                  color={subscriptionInfo.plan === 'premium' ? themeColors.white : themeColors.primary} 
+                  style={styles.smallLoader}
+                />
+              )}
               <Text style={[
                 styles.subscriptionText, 
                 { 
@@ -257,7 +275,7 @@ export default function Dashboard() {
         {subscriptionInfo.isInitialized && (
           <View style={[styles.documentLimits, { 
             backgroundColor: themeColors.surfaceVariant,
-            opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
+            opacity: subscriptionRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
           }]}>
             <MaterialIcons name="insert-drive-file" size={16} color={themeColors.primary} />
             <Text style={[styles.documentLimitsText, { color: themeColors.text }]}>
@@ -267,7 +285,7 @@ export default function Dashboard() {
               <TouchableOpacity 
                 style={[styles.upgradeButton, { backgroundColor: themeColors.primary }]}
                 onPress={() => router.push('/(app)/subscription-plans')}
-                disabled={subscriptionLoading}
+                disabled={subscriptionRefreshing}
               >
                 <Text style={[styles.upgradeButtonText, { color: themeColors.white }]}>
                   {t('dashboard.upgrade')}

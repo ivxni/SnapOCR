@@ -49,6 +49,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const { language } = useLanguage();
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionRefreshing, setSubscriptionRefreshing] = useState(false);
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -56,7 +57,7 @@ export default function Profile() {
   useFocusEffect(
     React.useCallback(() => {
       console.log('Profile is focused - refreshing subscription data');
-      fetchSubscriptionInfo();
+      fetchSubscriptionInfo(true);
       return () => {
         // Nothing to clean up
       };
@@ -69,7 +70,7 @@ export default function Profile() {
         setIsLoading(true);
         // Use the authService directly since getUserProfile is not in the context
         await authService.getUserProfile();
-        await fetchSubscriptionInfo();
+        await fetchSubscriptionInfo(false);
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -80,13 +81,18 @@ export default function Profile() {
     if (!user || !user.firstName) {
       fetchUserProfile();
     } else {
-      fetchSubscriptionInfo();
+      fetchSubscriptionInfo(false);
     }
   }, [user]);
 
-  const fetchSubscriptionInfo = async () => {
+  const fetchSubscriptionInfo = async (isBackgroundRefresh = false) => {
     try {
-      setSubscriptionLoading(true);
+      if (!isBackgroundRefresh) {
+        setSubscriptionLoading(true);
+      } else {
+        setSubscriptionRefreshing(true);
+      }
+      
       const details = await subscriptionService.getSubscriptionDetails();
       setSubscriptionDetails(details);
       setIsInitialized(true);
@@ -94,7 +100,11 @@ export default function Profile() {
     } catch (error) {
       console.error('Error fetching subscription details:', error);
     } finally {
-      setSubscriptionLoading(false);
+      if (!isBackgroundRefresh) {
+        setSubscriptionLoading(false);
+      } else {
+        setSubscriptionRefreshing(false);
+      }
     }
   };
 
@@ -102,7 +112,7 @@ export default function Profile() {
     try {
       setSubscriptionLoading(true);
       await subscriptionService.startFreeTrial();
-      await fetchSubscriptionInfo();
+      await fetchSubscriptionInfo(false); // Force refresh with loading
       Alert.alert(
         'Free Trial Started',
         'You have successfully started your 7-day free trial of premium features!',
@@ -131,7 +141,7 @@ export default function Profile() {
             try {
               setSubscriptionLoading(true);
               await subscriptionService.subscribeToPremium(billingCycle);
-              await fetchSubscriptionInfo();
+              await fetchSubscriptionInfo(false); // Force refresh with loading
               Alert.alert(
                 'Subscription Successful',
                 `You have successfully subscribed to the ${billingCycle} premium plan!`,
@@ -161,7 +171,7 @@ export default function Profile() {
             try {
               setSubscriptionLoading(true);
               await subscriptionService.cancelSubscription();
-              await fetchSubscriptionInfo();
+              await fetchSubscriptionInfo(false); // Force refresh with loading
               Alert.alert(
                 'Subscription Cancelled',
                 'Your premium subscription has been cancelled.',
@@ -190,7 +200,7 @@ export default function Profile() {
             try {
               setSubscriptionLoading(true);
               await subscriptionService.reactivateSubscription();
-              await fetchSubscriptionInfo();
+              await fetchSubscriptionInfo(false); // Force refresh with loading
               Alert.alert(
                 'Subscription Reactivated',
                 'Your subscription has been successfully reactivated.',
@@ -345,9 +355,16 @@ export default function Profile() {
                     backgroundColor: subscriptionDetails.plan === 'premium' 
                       ? themeColors.primary 
                       : themeColors.surfaceVariant,
-                    opacity: subscriptionLoading ? 0.7 : 1 // Slight opacity during loading
+                    opacity: subscriptionRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
                   }
                 ]}>
+                  {subscriptionRefreshing && (
+                    <ActivityIndicator 
+                      size="small" 
+                      color={subscriptionDetails.plan === 'premium' ? themeColors.white : themeColors.primary} 
+                      style={{ marginRight: 4 }}
+                    />
+                  )}
                   <Text style={[
                     styles.subscriptionText, 
                     { 
@@ -376,7 +393,7 @@ export default function Profile() {
           <View style={[styles.section, { 
             backgroundColor: themeColors.surface,
             shadowColor: themeColors.primary,
-            opacity: subscriptionLoading ? 0.7 : 1  // Slight opacity during refresh
+            opacity: subscriptionRefreshing ? 0.8 : 1  // Subtle indicator during background refresh
           }]}>
             <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
               {t('subscription.title')}
@@ -444,7 +461,7 @@ export default function Profile() {
                 <TouchableOpacity 
                   style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
                   onPress={() => router.push('/(app)/subscription-plans')}
-                  disabled={subscriptionLoading}
+                  disabled={subscriptionRefreshing}
                 >
                   <MaterialIcons name="star" size={20} color={themeColors.white} />
                   <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
@@ -458,10 +475,10 @@ export default function Profile() {
                   style={[
                     styles.subscriptionButton, 
                     { backgroundColor: themeColors.primary },
-                    subscriptionLoading && styles.disabledButton
+                    subscriptionRefreshing && styles.disabledButton
                   ]}
                   onPress={() => router.push('/(app)/subscription-plans')}
-                  disabled={subscriptionLoading}
+                  disabled={subscriptionRefreshing}
                 >
                   <MaterialIcons name="payments" size={20} color={themeColors.white} />
                   <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
