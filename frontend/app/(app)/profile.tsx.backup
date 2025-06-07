@@ -110,11 +110,11 @@ export default function Profile() {
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Subscribe', 
-          onPress: async () => {
-            try {
-              setIsLoading(true);
-              await subscriptionService.subscribeToPremium(billingCycle);
-              await refreshSubscription(true); // Force refresh after action
+                        onPress: async () => {
+                try {
+                  setIsLoading(true);
+                  await subscriptionService.subscribeToPremium(billingCycle);
+                  await refreshSubscription(true); // Force refresh after action
               Alert.alert(
                 'Subscription Successful',
                 `You have successfully subscribed to the ${billingCycle} premium plan!`,
@@ -140,11 +140,11 @@ export default function Profile() {
         { 
           text: 'Yes, Cancel', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsLoading(true);
-              await subscriptionService.cancelSubscription();
-              await refreshSubscription(true); // Force refresh after action
+                      onPress: async () => {
+              try {
+                setIsLoading(true);
+                await subscriptionService.cancelSubscription();
+                await refreshSubscription(true); // Force refresh after action
               Alert.alert(
                 'Subscription Cancelled',
                 'Your premium subscription has been cancelled.',
@@ -259,8 +259,7 @@ export default function Profile() {
     );
   };
 
-  // Handle loading state
-  if (!isInitialized) {
+  if (loading || isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.primary} />
@@ -269,7 +268,6 @@ export default function Profile() {
     );
   }
 
-  // Handle error state
   if (!user) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]}>
@@ -277,7 +275,7 @@ export default function Profile() {
         <Text style={[styles.errorText, { color: themeColors.error }]}>{t('profile.errorProfile')}</Text>
         <TouchableOpacity 
           style={[styles.retryButton, { backgroundColor: themeColors.surfaceVariant }]}
-          onPress={() => router.replace('/(auth)/login')}
+          onPress={() => authService.getUserProfile()}
         >
           <Text style={[styles.retryButtonText, { color: themeColors.primary }]}>{t('common.retry')}</Text>
         </TouchableOpacity>
@@ -288,7 +286,6 @@ export default function Profile() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={['top']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <TouchableOpacity 
@@ -300,13 +297,12 @@ export default function Profile() {
             <Text style={[styles.headerTitle, { color: themeColors.text }]}>{t('profile.title')}</Text>
             <View style={styles.placeholder} />
           </View>
-
-          {/* Profile Header */}
+          
           <View style={styles.profileHeader}>
             {user.profilePicture ? (
               <Image 
-                source={{ uri: user.profilePicture }}
-                style={styles.avatar}
+                source={{ uri: user.profilePicture }} 
+                style={styles.avatar} 
               />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: themeColors.primary }]}>
@@ -323,35 +319,37 @@ export default function Profile() {
               <Text style={[styles.profileEmail, { color: themeColors.textSecondary }]}>
                 {user.email}
               </Text>
-              
-              {/* Subscription Badge */}
-              <View style={[
-                styles.subscriptionBadge, 
-                { 
-                  backgroundColor: subscriptionDetails?.plan === 'premium'
-                    ? themeColors.primary
-                    : themeColors.surfaceVariant,
-                }
-              ]}>
-                <MaterialIcons 
-                  name="star" 
-                  size={12} 
-                  color={subscriptionDetails?.plan === 'premium' ? themeColors.white : themeColors.primary}
-                  style={{ marginRight: 4 }}
-                />
-                <Text 
-                  style={[
+
+              {/* Subscription badge */}
+              {isInitialized && subscriptionDetails && (
+                <View style={[
+                  styles.subscriptionBadge, 
+                  { 
+                    backgroundColor: subscriptionDetails.plan === 'premium' 
+                      ? themeColors.primary 
+                      : themeColors.surfaceVariant,
+                    opacity: isRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
+                  }
+                ]}>
+                  {isRefreshing && (
+                    <ActivityIndicator 
+                      size="small" 
+                      color={subscriptionDetails.plan === 'premium' ? themeColors.white : themeColors.primary} 
+                      style={{ marginRight: 4 }}
+                    />
+                  )}
+                  <Text style={[
                     styles.subscriptionText, 
                     { 
-                      color: subscriptionDetails?.plan === 'premium'
-                        ? themeColors.white
+                      color: subscriptionDetails.plan === 'premium' 
+                        ? themeColors.white 
                         : themeColors.text
                     }
-                  ]}
-                >
-                  {subscriptionDetails?.isInTrial ? t('subscription.trial') : subscriptionDetails?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
-                </Text>
-              </View>
+                  ]}>
+                    {subscriptionDetails.isInTrial ? t('subscription.trial') : subscriptionDetails.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                  </Text>
+                </View>
+              )}
             </View>
             
             <TouchableOpacity 
@@ -363,183 +361,195 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* Subscription Section */}
-        <View style={[styles.section, { 
-          backgroundColor: themeColors.surface,
-          shadowColor: themeColors.primary
-        }]}>
-          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
-            {t('subscription.title')}
-          </Text>
-          
-          <View style={styles.subscriptionInfo}>
-            <View style={styles.subscriptionDetail}>
-              <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.plan')}:</Text>
-              <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                {subscriptionDetails?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
-                {subscriptionDetails?.isInTrial ? ` (${t('subscription.trial')})` : ''}
-              </Text>
-            </View>
+        {/* Subscription Section - Only hide it on very first load */}
+        {(isInitialized && subscriptionDetails) ? (
+          <View style={[styles.section, { 
+            backgroundColor: themeColors.surface,
+            shadowColor: themeColors.primary
+          }]}>
+            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+              {t('subscription.title')}
+            </Text>
             
-            {subscriptionDetails?.plan === 'premium' && (
-              <>
+            <View style={styles.subscriptionInfo}>
+              <View style={styles.subscriptionDetail}>
+                <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.plan')}:</Text>
+                <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                  {subscriptionDetails.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                  {subscriptionDetails.isInTrial ? ` (${t('subscription.trial')})` : ''}
+                </Text>
+              </View>
+
+              {subscriptionDetails.plan === 'premium' && (
+                <>
+                  <View style={styles.subscriptionDetail}>
+                    <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.billing')}:</Text>
+                    <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                      {subscriptionDetails.billingCycle === 'monthly' ? t('subscription.monthly') : 
+                        subscriptionDetails.billingCycle === 'yearly' ? t('subscription.yearly') : 'None'}
+                    </Text>
+                  </View>
+
+                  {subscriptionDetails.isInTrial && subscriptionDetails.trialEndDate && (
+                    <View style={styles.subscriptionDetail}>
+                      <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.trialEnds')}:</Text>
+                      <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                        {new Date(subscriptionDetails.trialEndDate).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+
+                  {!subscriptionDetails.isInTrial && subscriptionDetails.nextBillingDate && (
+                    <View style={styles.subscriptionDetail}>
+                      <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.nextBilling')}:</Text>
+                      <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                        {new Date(subscriptionDetails.nextBillingDate).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
+
+              <View style={styles.subscriptionDetail}>
+                <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.documents')}:</Text>
+                <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
+                  {subscriptionDetails.documentLimitRemaining} of {subscriptionDetails.documentLimitTotal} {t('subscription.documentsRemaining')}
+                </Text>
+              </View>
+
+              {subscriptionDetails.resetDate && (
                 <View style={styles.subscriptionDetail}>
-                  <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.billing')}:</Text>
+                  <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.resetsOn')}:</Text>
                   <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                    {subscriptionDetails?.billingCycle === 'monthly' ? t('subscription.monthly') :
-                     subscriptionDetails?.billingCycle === 'yearly' ? t('subscription.yearly') : 'None'}
+                    {new Date(subscriptionDetails.resetDate).toLocaleDateString()}
                   </Text>
                 </View>
-                
-                {subscriptionDetails?.isInTrial && subscriptionDetails?.trialEndDate && (
-                  <View style={styles.subscriptionDetail}>
-                    <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.trialEnds')}:</Text>
-                    <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                      {new Date(subscriptionDetails.trialEndDate).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
-                
-                {!subscriptionDetails?.isInTrial && subscriptionDetails?.nextBillingDate && (
-                  <View style={styles.subscriptionDetail}>
-                    <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.nextBilling')}:</Text>
-                    <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                      {new Date(subscriptionDetails.nextBillingDate).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
-              </>
-            )}
-            
-            <View style={styles.subscriptionDetail}>
-              <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.documents')}:</Text>
-              <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                {subscriptionDetails?.documentLimitUsed} / {subscriptionDetails?.documentLimitTotal}
-              </Text>
+              )}
             </View>
-          </View>
-          
-          {/* Subscription Actions */}
-          {subscriptionDetails && (
-            <View style={styles.subscriptionActions}>
-              {subscriptionDetails.plan === 'free' && !subscriptionDetails.isInTrial && (
-                <>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      { backgroundColor: themeColors.primary },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={handleStartTrial}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="star" size={20} color={themeColors.white} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                        {t('subscription.trial')}
-                      </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      styles.secondaryButton, 
-                      { 
-                        backgroundColor: themeColors.surfaceVariant,
-                        borderColor: themeColors.primary
-                      },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={() => router.push('/(app)/subscription-plans')}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="payments" size={20} color={themeColors.primary} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.primary }]}>
-                        {t('subscription.premium')}
-                      </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              
-              {subscriptionDetails.isInTrial && (
-                <>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      { backgroundColor: themeColors.primary },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={() => router.push('/(app)/subscription-plans')}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="payments" size={20} color={themeColors.white} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                        {t('subscription.premium')}
-                      </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              
-                             {subscriptionDetails?.plan === 'premium' && subscriptionDetails?.isCanceledButActive && (
-                <>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      { backgroundColor: themeColors.primary },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={handleReactivateSubscription}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="refresh" size={20} color={themeColors.white} />
-                    <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                      {t('subscription.reactivate')}
-                    </Text>
-                  </TouchableOpacity>
-                  <Text style={[styles.cancelButtonText, { 
-                    color: themeColors.textSecondary,
-                    opacity: 0.8,
-                    marginTop: 8,
-                    textAlign: 'center'
-                  }]}>
-                    {t('subscription.subscriptionEnding')}
+
+            {/* Action buttons become disabled during loading */}
+            {subscriptionDetails.plan === 'free' ? (
+              <View style={styles.subscriptionActions}>
+                <TouchableOpacity 
+                  style={[styles.subscriptionButton, { backgroundColor: themeColors.primary }]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={isLoading}
+                >
+                  <MaterialIcons name="star" size={20} color={themeColors.white} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                    {t('dashboard.upgrade')}
                   </Text>
-                </>
-              )}
-              
-                             {subscriptionDetails?.plan === 'premium' && !subscriptionDetails?.isCanceledButActive && (
-                <>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      { backgroundColor: themeColors.primary },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={() => router.push('/(app)/subscription-plans')}
-                    disabled={isLoading}
-                  >
-                    <MaterialIcons name="payments" size={20} color={themeColors.white} />
-                    <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                      {t('subscription.changePlan')}
+                </TouchableOpacity>
+              </View>
+            ) : subscriptionDetails.isInTrial ? (
+              <View style={styles.subscriptionActions}>
+                <TouchableOpacity 
+                  style={[
+                    styles.subscriptionButton, 
+                    { backgroundColor: themeColors.primary },
+                    isLoading && styles.disabledButton
+                  ]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={isLoading}
+                >
+                  <MaterialIcons name="payments" size={20} color={themeColors.white} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                    {t('subscription.subscribeMontly')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.subscriptionButton, 
+                    styles.secondaryButton, 
+                    { backgroundColor: themeColors.surfaceVariant },
+                    isLoading && styles.disabledButton
+                  ]}
+                  onPress={() => router.push('/(app)/subscription-plans')}
+                  disabled={isLoading}
+                >
+                  <MaterialIcons name="calendar-today" size={20} color={themeColors.primary} />
+                  <Text style={[styles.subscriptionButtonText, { color: themeColors.primary }]}>
+                    {t('subscription.subscribeYearly')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.subscriptionButton, 
+                    styles.cancelButton, 
+                    { backgroundColor: themeColors.surfaceVariant },
+                    isLoading && styles.disabledButton
+                  ]}
+                  onPress={handleCancelSubscription}
+                  disabled={isLoading}
+                >
+                  <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
+                    {t('subscription.cancelTrial')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.subscriptionActions}>
+                {subscriptionDetails.isCanceledButActive ? (
+                  <>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        { backgroundColor: themeColors.primary },
+                        isLoading && styles.disabledButton
+                      ]}
+                      onPress={handleReactivateSubscription}
+                      disabled={isLoading}
+                    >
+                      <MaterialIcons name="refresh" size={20} color={themeColors.white} />
+                      <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                        {t('subscription.reactivate')}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.cancelButtonText, { 
+                      color: themeColors.textSecondary,
+                      opacity: 0.8,
+                      marginTop: 8,
+                      textAlign: 'center'
+                    }]}>
+                      {t('subscription.subscriptionEnding')}
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[
-                      styles.subscriptionButton, 
-                      styles.cancelButton, 
-                      { backgroundColor: themeColors.surfaceVariant },
-                      isLoading && styles.disabledButton
-                    ]}
-                    onPress={handleCancelSubscription}
-                    disabled={isLoading}
-                  >
-                    <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
-                      {t('subscription.cancel')}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-          )}
-        </View>
+                  </>
+                ) : (
+                  <>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        { backgroundColor: themeColors.primary },
+                        isLoading && styles.disabledButton
+                      ]}
+                      onPress={() => router.push('/(app)/subscription-plans')}
+                      disabled={isLoading}
+                    >
+                      <MaterialIcons name="payments" size={20} color={themeColors.white} />
+                      <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                        {t('subscription.changePlan')}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[
+                        styles.subscriptionButton, 
+                        styles.cancelButton, 
+                        { backgroundColor: themeColors.surfaceVariant },
+                        isLoading && styles.disabledButton
+                      ]}
+                      onPress={handleCancelSubscription}
+                      disabled={isLoading}
+                    >
+                      <Text style={[styles.cancelButtonText, { color: themeColors.error }]}>
+                        {t('subscription.cancel')}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={[styles.section, { 
           backgroundColor: themeColors.surface,
@@ -739,8 +749,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   subscriptionText: {
     fontSize: 10,

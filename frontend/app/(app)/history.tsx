@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
@@ -14,56 +14,102 @@ export default function History() {
   const { documents, fetchDocuments, getProcessingJobStatus, loading, error } = useDocuments();
   const { t } = useTranslation();
   const themeColors = useThemeColors();
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timer | null>(null);
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Check if there are any documents in 'processing' state
   const hasProcessingDocuments = documents && documents.some(doc => doc.status === 'processing');
 
+  // Initial load only
   useEffect(() => {
-    // Fetch documents when the component mounts
-    fetchDocuments();
-    
-    // Set up an interval to refresh the documents list every 10 seconds
-    const interval = setInterval(() => {
-      fetchDocuments();
-    }, 10000);
-    
-    setRefreshInterval(interval);
-    
-    // Clean up interval on unmount
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+    const initialLoad = async () => {
+      await fetchDocuments();
+      setIsInitialized(true);
     };
+    initialLoad();
   }, []);
+
+  // Background refresh when screen comes into focus (only if needed)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isInitialized && documents && documents.length > 0) {
+        // Only do background refresh if we already have data
+        // Add a small delay to avoid triggering during navigation
+        const timeoutId = setTimeout(() => {
+          console.log('History screen focused - background refresh');
+          backgroundRefresh();
+        }, 200);
+        
+        return () => {
+          clearTimeout(timeoutId);
+        };
+      }
+    }, [isInitialized, documents])
+  );
+
+  const backgroundRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchDocuments();
+    } catch (error) {
+      console.error('Background refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
-  // Poll for status updates of processing documents
+  // Poll for status updates of processing documents (only when necessary)
   useEffect(() => {
-    if (documents && documents.length > 0) {
+    if (documents && documents.length > 0 && isInitialized) {
       // Find all processing documents
       const processingDocs = documents.filter(doc => doc.status === 'processing');
       
       if (processingDocs.length > 0) {
-        console.log(`Checking status for ${processingDocs.length} processing documents`);
+        console.log(`Setting up polling for ${processingDocs.length} processing documents`);
         
-        // Check each processing document
-        processingDocs.forEach(async (doc) => {
-          try {
-            const job = await getProcessingJobStatus(doc._id);
-            console.log(`Document ${doc._id} job status: ${job.status}, progress: ${job.progress}`);
-            
-            // If status changes, refresh the documents list
-            if (job.status === 'completed' || job.status === 'failed') {
-              fetchDocuments();
+        // Set up polling interval only when there are processing documents
+        const pollInterval = setInterval(async () => {
+          console.log('Polling processing documents...');
+          let hasUpdates = false;
+          
+          for (const doc of processingDocs) {
+            try {
+              const job = await getProcessingJobStatus(doc._id);
+              console.log(`Document ${doc._id} job status: ${job.status}, progress: ${job.progress}`);
+              
+              // If status changes, mark for refresh
+              if (job.status === 'completed' || job.status === 'failed') {
+                hasUpdates = true;
+              }
+            } catch (error) {
+              console.error(`Error checking status for document ${doc._id}:`, error);
             }
-          } catch (error) {
-            console.error(`Error checking status for document ${doc._id}:`, error);
           }
-        });
+          
+          // Only refresh if there are actual updates
+          if (hasUpdates) {
+            backgroundRefresh();
+          }
+        }, 5000); // Check every 5 seconds instead of 10
+        
+        setRefreshInterval(pollInterval);
+        
+        // Clean up interval
+        return () => {
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+        };
+      } else {
+        // No processing documents, clear any existing interval
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+          setRefreshInterval(null);
+        }
       }
     }
-  }, [documents]);
+  }, [documents, isInitialized]);
 
   const renderHistoryItem = ({ item }: { item: Document }) => (
     <TouchableOpacity 
@@ -124,16 +170,8 @@ export default function History() {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
-          {t('history.loadingDocuments')}
-        </Text>
-      </SafeAreaView>
-    );
-  }
+  // Don't show loading screen - go straight to the main UI even if loading
+  // This prevents the flash when navigating to history
 
   if (error) {
     return (
@@ -166,6 +204,7 @@ export default function History() {
         <Text style={[styles.title, { color: themeColors.text }]}>
           {t('history.title')}
         </Text>
+        {/* Remove visible refresh indicator - keep it completely hidden */}
       </View>
       
       {documents && documents.length > 0 ? (
@@ -176,7 +215,7 @@ export default function History() {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
         />
-      ) : (
+      ) : isInitialized ? (
         <View style={styles.emptyState}>
           <MaterialIcons name="description" size={80} color={themeColors.disabled} />
           <Text style={[styles.emptyStateText, { color: themeColors.text }]}>
@@ -193,6 +232,11 @@ export default function History() {
               {t('upload.title')}
             </Text>
           </TouchableOpacity>
+        </View>
+      ) : (
+        // Show minimal loading for very first time only
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="large" color={themeColors.primary} />
         </View>
       )}
     </SafeAreaView>
@@ -321,5 +365,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     top: '50%',
     transform: [{ translateY: -20 }],
+  },
+  refreshIndicator: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 10,
   },
 }); 

@@ -33,17 +33,39 @@ interface SubscriptionProviderProps {
 }
 
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
-  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
+  // Initialize with placeholder data to prevent UI popping
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>({
+    plan: 'free',
+    isInTrial: false,
+    trialEndDate: undefined,
+    billingCycle: 'none',
+    nextBillingDate: undefined,
+    isCanceledButActive: false,
+    documentLimitTotal: 10,
+    documentLimitRemaining: 10,
+    documentLimitUsed: 0,
+    resetDate: undefined,
+    pricing: {
+      monthly: 9.99,
+      yearly: 99.99
+    }
+  });
   const [dashboardInfo, setDashboardInfo] = useState<{
     plan: string;
     remainingDocuments: number;
     totalDocuments: number;
     isInTrial: boolean;
     isCanceledButActive?: boolean;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  } | null>({
+    plan: 'free', // Default to free to prevent UI flashing
+    remainingDocuments: 0,
+    totalDocuments: 10,
+    isInTrial: false,
+    isCanceledButActive: false,
+  });
+  const [isLoading, setIsLoading] = useState(false); // Start as false to prevent loading screens
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(true); // Start as true to show UI immediately
   const [error, setError] = useState<string | null>(null);
   const lastFetchTime = useRef<number>(0);
   const cacheTime = 30000; // 30 seconds cache

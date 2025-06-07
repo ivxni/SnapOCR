@@ -10,6 +10,7 @@ import subscriptionService from '../services/subscriptionService';
 import { SubscriptionDetails } from '../types/auth.types';
 import { PurchasesPackage } from 'react-native-purchases';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -18,17 +19,17 @@ export default function SubscriptionPlans() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const themeColors = useThemeColors();
-  const [loading, setLoading] = useState(true);
+  
+  // Use subscription context instead of local state
+  const { subscriptionDetails, isRefreshing, isInitialized, refreshSubscription } = useSubscription();
+  
   const [subscribing, setSubscribing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
 
   useEffect(() => {
     const initializeData = async () => {
       try {
-        setLoading(true);
-        
         // Initialize purchases if on mobile
         if ((Platform.OS === 'ios' || Platform.OS === 'android') && user?._id) {
           await subscriptionService.initializePurchases(user._id);
@@ -36,15 +37,9 @@ export default function SubscriptionPlans() {
           setPackages(availablePackages);
           console.log(`Found ${availablePackages.length} subscription packages`);
         }
-        
-        // Get subscription details
-        const details = await subscriptionService.getSubscriptionDetails();
-        setSubscriptionDetails(details);
       } catch (error) {
         console.error('Error initializing subscription data:', error);
         Alert.alert('Error', 'Failed to load subscription details. Please try again.');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -55,6 +50,7 @@ export default function SubscriptionPlans() {
     try {
       setSubscribing(true);
       await subscriptionService.subscribeToPremium(billingCycle);
+      await refreshSubscription(true); // Force refresh after subscription change
       Alert.alert(
         t('common.success'),
         t(billingCycle === 'monthly' ? 'subscription.subscribeMontly' : 'subscription.subscribeYearly'),
@@ -75,6 +71,7 @@ export default function SubscriptionPlans() {
     try {
       setRestoring(true);
       const result = await subscriptionService.restorePurchases();
+      await refreshSubscription(true); // Force refresh after restore
       Alert.alert(
         t('common.success'),
         result.message,
@@ -91,6 +88,7 @@ export default function SubscriptionPlans() {
     try {
       setSubscribing(true);
       await subscriptionService.reactivateSubscription();
+      await refreshSubscription(true); // Force refresh after reactivation
       Alert.alert(
         t('common.success'),
         t('subscription.reactivate'),
@@ -107,6 +105,7 @@ export default function SubscriptionPlans() {
     try {
       setSubscribing(true);
       await subscriptionService.startFreeTrial();
+      await refreshSubscription(true); // Force refresh after trial start
       Alert.alert(
         t('common.success'),
         t('subscription.startFreeTrial'),
@@ -456,7 +455,7 @@ export default function SubscriptionPlans() {
     );
   };
 
-  if (loading || !subscriptionDetails) {
+  if (!isInitialized || !subscriptionDetails) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: themeColors.background }]} edges={['top']}>
         <LinearGradient

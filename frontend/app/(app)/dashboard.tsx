@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Document } from '../types/document.types';
 import { useTranslation } from '../utils/i18n';
 import useThemeColors from '../utils/useThemeColors';
-import subscriptionService from '../services/subscriptionService';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -18,80 +18,40 @@ export default function Dashboard() {
   const { t, format } = useTranslation();
   const themeColors = useThemeColors();
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [documentsInitialized, setDocumentsInitialized] = useState(false);
   
-  // We'll keep loading state separate from the visibility state
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const [subscriptionRefreshing, setSubscriptionRefreshing] = useState(false); // New state for background refresh
-  const [subscriptionInfo, setSubscriptionInfo] = useState<{
-    plan: string;
-    remainingDocuments: number;
-    totalDocuments: number;
-    isInTrial: boolean;
-    isCanceledButActive?: boolean;
-    isInitialized: boolean; // New flag to track if we've ever loaded data
-  }>({ 
-    plan: 'free', 
-    remainingDocuments: 0, 
-    totalDocuments: 0,
-    isInTrial: false,
-    isInitialized: false
-  });
+  // Use subscription context instead of local state
+  const { dashboardInfo, isRefreshing, isInitialized, refreshSubscription } = useSubscription();
 
-  // Refresh data when dashboard comes into focus - using empty dependency array to prevent infinite loops
+  // Refresh data when dashboard comes into focus (but avoid unnecessary document reloads)
   useFocusEffect(
     React.useCallback(() => {
-      console.log('Dashboard is focused - refreshing data');
-      
-      // Fetch subscription info in background (don't show loading)
-      fetchSubscriptionInfo(true); // Pass true for background refresh
-      
-      // Refresh documents if needed
-      if (!documents || documents.length === 0 || loading) {
-        fetchDocuments();
-      }
-      
-      // Clean up function
+      // Add a small delay to ensure we're actually focused and not just passing through
+      const timeoutId = setTimeout(() => {
+        console.log('Dashboard is focused - background refresh only');
+        
+        // Always refresh subscription data in background (this is what we want)
+        refreshSubscription(false); // Background refresh via context
+        
+        // Only refresh documents on initial load or if there was an error - never on navigation return
+        // This prevents the reload flash when coming back from history
+      }, 50); // Small delay to prevent flash during navigation
+
       return () => {
-        // Nothing to clean up
+        clearTimeout(timeoutId);
       };
-    }, []) // Empty dependency array to run only when screen is focused
+    }, [refreshSubscription])
   );
 
-  // Initial data loading
+  // Initial data loading only once
   useEffect(() => {
-    fetchDocuments();
-    fetchSubscriptionInfo(false); // Initial load, show loading
-  }, []);
-
-  const fetchSubscriptionInfo = async (isBackgroundRefresh = false) => {
-    try {
-      // Only show loading on initial load, not on background refresh
-      if (!isBackgroundRefresh) {
-        setSubscriptionLoading(true);
-      } else {
-        setSubscriptionRefreshing(true);
-      }
-      
-      const subDetails = await subscriptionService.getDashboardSubscriptionInfo();
-      setSubscriptionInfo({
-        plan: subDetails.plan,
-        remainingDocuments: subDetails.remainingDocuments,
-        totalDocuments: subDetails.totalDocuments,
-        isInTrial: subDetails.isInTrial,
-        isCanceledButActive: subDetails.isCanceledButActive,
-        isInitialized: true // Mark as initialized once we've loaded data
+    if (!documentsInitialized) {
+      console.log('Dashboard initial load - fetching documents');
+      fetchDocuments().finally(() => {
+        setDocumentsInitialized(true);
       });
-      console.log('Dashboard updated with subscription info:', subDetails.plan, subDetails.isInTrial ? '(TRIAL)' : '');
-    } catch (error) {
-      console.error('Failed to fetch subscription info:', error);
-    } finally {
-      if (!isBackgroundRefresh) {
-        setSubscriptionLoading(false);
-      } else {
-        setSubscriptionRefreshing(false);
-      }
     }
-  };
+  }, [documentsInitialized]);
 
   useEffect(() => {
     // Get the 3 most recent documents
@@ -104,7 +64,8 @@ export default function Dashboard() {
   }, [documents]);
 
   const renderContent = () => {
-    if (loading) {
+    // Only show loading on very first load, never again during navigation
+    if (loading && !documentsInitialized) {
       return (
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={themeColors.primary} />
@@ -240,52 +201,46 @@ export default function Dashboard() {
           </View>
 
           {/* Subscription Status Badge - Only hide on very first load */}
-          {subscriptionInfo.isInitialized && (
+          {isInitialized && dashboardInfo && (
             <View style={[
               styles.subscriptionBadge, 
               { 
-                backgroundColor: subscriptionInfo.plan === 'premium' 
+                backgroundColor: dashboardInfo.plan === 'premium' 
                   ? themeColors.primary 
-                  : themeColors.surfaceVariant,
-                opacity: subscriptionRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
+                  : themeColors.surfaceVariant
+                // Remove opacity change - keep it always visible and stable
               }
             ]}>
-              {subscriptionRefreshing && (
-                <ActivityIndicator 
-                  size="small" 
-                  color={subscriptionInfo.plan === 'premium' ? themeColors.white : themeColors.primary} 
-                  style={styles.smallLoader}
-                />
-              )}
+              {/* Remove loading indicator - keep badge always clean */}
               <Text style={[
                 styles.subscriptionText, 
                 { 
-                  color: subscriptionInfo.plan === 'premium' 
+                  color: dashboardInfo.plan === 'premium' 
                     ? themeColors.white 
                     : themeColors.text
                 }
               ]}>
-                {subscriptionInfo.isInTrial ? t('subscription.trial') : subscriptionInfo.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                {dashboardInfo.isInTrial ? t('subscription.trial') : dashboardInfo.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
               </Text>
             </View>
           )}
         </View>
 
         {/* Document Limits Indicator - Only hide on very first load */}
-        {subscriptionInfo.isInitialized && (
+        {isInitialized && dashboardInfo && (
           <View style={[styles.documentLimits, { 
-            backgroundColor: themeColors.surfaceVariant,
-            opacity: subscriptionRefreshing ? 0.8 : 1 // Subtle indicator during background refresh
+            backgroundColor: themeColors.surfaceVariant
+            // Remove opacity change - keep it always stable
           }]}>
             <MaterialIcons name="insert-drive-file" size={16} color={themeColors.primary} />
             <Text style={[styles.documentLimitsText, { color: themeColors.text }]}>
-              {subscriptionInfo.remainingDocuments} / {subscriptionInfo.totalDocuments} {t('dashboard.documentsRemaining')}
+              {dashboardInfo.remainingDocuments} / {dashboardInfo.totalDocuments} {t('dashboard.documentsRemaining')}
             </Text>
-            {subscriptionInfo.plan === 'free' && (
+            {dashboardInfo.plan === 'free' && (
               <TouchableOpacity 
                 style={[styles.upgradeButton, { backgroundColor: themeColors.primary }]}
                 onPress={() => router.push('/(app)/subscription-plans')}
-                disabled={subscriptionRefreshing}
+                // Remove disabled state - keep button always functional
               >
                 <Text style={[styles.upgradeButtonText, { color: themeColors.white }]}>
                   {t('dashboard.upgrade')}
@@ -306,7 +261,10 @@ export default function Dashboard() {
           {/* History Button */}
           <TouchableOpacity 
             style={styles.navButton} 
-            onPress={() => router.push('/(app)/history')}
+            onPress={() => {
+              // Immediate navigation to prevent any flash
+              router.push('/(app)/history');
+            }}
           >
             <MaterialIcons name="history" size={28} color={themeColors.textSecondary} />
             <Text style={[styles.navButtonText, { color: themeColors.textSecondary }]}>
