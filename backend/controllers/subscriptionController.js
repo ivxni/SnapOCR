@@ -47,6 +47,35 @@ const subscribeToPremium = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Subscribe to any plan (premium, family, business)
+ * @route POST /api/subscription/subscribe
+ * @access Private
+ */
+const subscribeToPlan = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { planType, billingCycle } = req.body;
+  
+  if (!planType || !['premium', 'family', 'business'].includes(planType)) {
+    res.status(400);
+    throw new Error('Please provide a valid plan type (premium, family, or business)');
+  }
+  
+  if (planType === 'business' && billingCycle !== 'monthly') {
+    res.status(400);
+    throw new Error('Business plan only supports monthly billing');
+  }
+  
+  if (planType !== 'business' && (!billingCycle || !['monthly', 'yearly'].includes(billingCycle))) {
+    res.status(400);
+    throw new Error('Please provide a valid billing cycle (monthly or yearly)');
+  }
+  
+  const result = await subscriptionService.subscribeToPlan(userId, planType, billingCycle);
+  
+  res.status(200).json(result);
+});
+
+/**
  * Cancel subscription
  * @route POST /api/subscription/cancel
  * @access Private
@@ -158,6 +187,7 @@ module.exports = {
   getSubscriptionDetails,
   startFreeTrial,
   subscribeToPremium,
+  subscribeToPlan,
   cancelSubscription,
   reactivateSubscription,
   canProcessDocument,

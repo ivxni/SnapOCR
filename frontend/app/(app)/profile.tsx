@@ -43,7 +43,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, title, onPress, showBadge = f
 export default function Profile() {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
-  const { t } = useTranslation();
+  const { t, format } = useTranslation();
   const { themeMode, setThemeMode } = useDarkMode();
   const themeColors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +51,57 @@ export default function Profile() {
   
   // Use subscription context instead of local state
   const { subscriptionDetails, isRefreshing, isInitialized, refreshSubscription } = useSubscription();
+
+  // Helper function to get the correct plan name
+  const getPlanDisplayName = (planInfo: any) => {
+    if (!planInfo?.plan || !planInfo?.billingCycle) {
+      return t('subscription.free');
+    }
+
+    const plan = planInfo.plan;
+    const billingCycle = planInfo.billingCycle;
+    const isInTrial = planInfo.isInTrial;
+
+    let planKey = '';
+    if (plan === 'premium') {
+      planKey = billingCycle === 'monthly' ? 'subscription.premiumMonthly' : 'subscription.premiumYearly';
+    } else if (plan === 'family') {
+      planKey = billingCycle === 'monthly' ? 'subscription.familyMonthly' : 'subscription.familyYearly';
+    } else if (plan === 'business') {
+      planKey = 'subscription.businessMonthly'; // Business is always monthly
+    } else {
+      return t('subscription.free');
+    }
+
+    const baseName = t(planKey as any);
+    return isInTrial ? `${baseName} (${t('subscription.trial')})` : baseName;
+  };
+
+  const formatDocumentLimits = (usedDocuments: number, totalDocuments: number, plan: string) => {
+    // For business plans, show "Unlimited" instead of large numbers
+    if (plan === 'business') {
+      return t('subscription.unlimited');
+    }
+    
+    // For other plans, show the normal format
+    return `${usedDocuments} / ${totalDocuments}`;
+  };
+
+  const getPlanIcon = (plan: string, isInTrial: boolean) => {
+    if (isInTrial) {
+      return { name: 'schedule' as const, color: themeColors.warning };
+    }
+    
+    switch (plan) {
+      case 'premium':
+      case 'family':
+        return { name: 'star' as const, color: themeColors.primary };
+      case 'business':
+        return { name: 'business' as const, color: '#e53e3e' }; // Red for business
+      default:
+        return { name: 'account-circle' as const, color: themeColors.textSecondary };
+    }
+  };
 
   // Refresh data when profile comes into focus
   useFocusEffect(
@@ -87,12 +138,12 @@ export default function Profile() {
       await subscriptionService.startFreeTrial();
       await refreshSubscription(true); // Force refresh after action
       Alert.alert(
-        'Free Trial Started',
-        'You have successfully started your 7-day free trial of premium features!',
-        [{ text: 'OK' }]
+        t('subscription.freeTrialStarted'),
+        t('subscription.freeTrialStartedMessage'),
+        [{ text: t('common.ok') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to start free trial');
+              Alert.alert(t('common.error'), error.message || t('subscription.subscriptionFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -100,28 +151,28 @@ export default function Profile() {
 
   const handleSubscribe = (billingCycle: 'monthly' | 'yearly') => {
     Alert.alert(
-      'Confirm Subscription',
-      `Are you sure you want to subscribe to the ${billingCycle} premium plan?\n\n${
+      t('subscription.confirmSubscription'),
+      format(t('subscription.confirmSubscriptionMessage'), { plan: billingCycle }) + `\n\n${
         billingCycle === 'monthly' ? 
-        `$${subscriptionDetails?.pricing.monthly}/month` : 
-        `$${subscriptionDetails?.pricing.yearly}/year (save ${Math.round(100 - (subscriptionDetails?.pricing.yearly || 0) / 12 / (subscriptionDetails?.pricing.monthly || 1) * 100)}%)`
+        `€${subscriptionDetails?.pricing.premium.monthly}/${t('subscription.monthly')}` : 
+        `€${subscriptionDetails?.pricing.premium.yearly}/${t('subscription.yearly')} (${format(t('subscription.savePercent'), { percent: Math.round(100 - (subscriptionDetails?.pricing.premium.yearly || 0) / 12 / (subscriptionDetails?.pricing.premium.monthly || 1) * 100) })})`
       }`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Subscribe', 
+          text: t('subscription.subscribeButton'), 
           onPress: async () => {
             try {
               setIsLoading(true);
               await subscriptionService.subscribeToPremium(billingCycle);
               await refreshSubscription(true); // Force refresh after action
               Alert.alert(
-                'Subscription Successful',
-                `You have successfully subscribed to the ${billingCycle} premium plan!`,
-                [{ text: 'OK' }]
+                t('common.success'),
+                format(t('subscription.subscriptionSuccessful'), {}),
+                [{ text: t('common.ok') }]
               );
             } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to subscribe');
+                              Alert.alert(t('common.error'), error.message || t('subscription.subscriptionFailed'));
             } finally {
               setIsLoading(false);
             }
@@ -133,12 +184,12 @@ export default function Profile() {
 
   const handleCancelSubscription = () => {
     Alert.alert(
-      'Cancel Subscription',
-      'Are you sure you want to cancel your premium subscription?',
+      t('subscription.cancel'),
+      t('subscription.cancelSubscriptionConfirm'),
       [
-        { text: 'No', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Yes, Cancel', 
+          text: t('subscription.cancel'), 
           style: 'destructive',
           onPress: async () => {
             try {
@@ -146,12 +197,12 @@ export default function Profile() {
               await subscriptionService.cancelSubscription();
               await refreshSubscription(true); // Force refresh after action
               Alert.alert(
-                'Subscription Cancelled',
-                'Your premium subscription has been cancelled.',
-                [{ text: 'OK' }]
+                t('common.success'),
+                t('subscription.subscriptionCancelledMessage'),
+                [{ text: t('common.ok') }]
               );
             } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to cancel subscription');
+                              Alert.alert(t('common.error'), error.message || t('subscription.subscriptionFailed'));
             } finally {
               setIsLoading(false);
             }
@@ -163,24 +214,24 @@ export default function Profile() {
 
   const handleReactivateSubscription = () => {
     Alert.alert(
-      'Reactivate Subscription',
-      'Would you like to reactivate your subscription? Your billing will restart at the end of your current period.',
+      t('subscription.reactivate'),
+      t('subscription.reactivateSubscriptionConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: 'Reactivate', 
+          text: t('subscription.reactivate'), 
           onPress: async () => {
             try {
               setIsLoading(true);
               await subscriptionService.reactivateSubscription();
               await refreshSubscription(true); // Force refresh after action
               Alert.alert(
-                'Subscription Reactivated',
-                'Your subscription has been successfully reactivated.',
-                [{ text: 'OK' }]
+                t('subscription.subscriptionReactivated'),
+                t('subscription.subscriptionReactivatedMessage'),
+                [{ text: t('common.ok') }]
               );
             } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to reactivate subscription');
+                              Alert.alert(t('common.error'), error.message || t('subscription.subscriptionFailed'));
             } finally {
               setIsLoading(false);
             }
@@ -328,24 +379,23 @@ export default function Profile() {
               <View style={[
                 styles.subscriptionBadge, 
                 { 
-                  backgroundColor: subscriptionDetails?.plan === 'premium'
-                    ? themeColors.primary
-                    : subscriptionDetails?.isInTrial
-                      ? themeColors.warning || '#FF9500'
-                      : 'transparent',
+                  backgroundColor: subscriptionDetails?.plan === 'business'
+                    ? '#e53e3e'  // Red for business
+                    : subscriptionDetails?.plan === 'family'
+                      ? '#f56500'  // Orange for family
+                      : subscriptionDetails?.plan === 'premium'
+                        ? themeColors.primary
+                        : subscriptionDetails?.isInTrial
+                          ? themeColors.warning || '#FF9500'
+                          : 'transparent',
                   borderWidth: subscriptionDetails?.plan === 'free' && !subscriptionDetails?.isInTrial ? 1 : 0,
                   borderColor: subscriptionDetails?.plan === 'free' && !subscriptionDetails?.isInTrial ? themeColors.border : 'transparent',
                 }
               ]}>
                 <MaterialIcons 
-                  name={subscriptionDetails?.plan === 'premium' 
-                    ? "star" 
-                    : subscriptionDetails?.isInTrial 
-                      ? "access-time"
-                      : "account-circle"
-                  } 
+                  name={getPlanIcon(subscriptionDetails?.plan || 'free', subscriptionDetails?.isInTrial || false).name} 
                   size={12} 
-                  color={subscriptionDetails?.plan === 'premium' 
+                  color={['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '')
                     ? themeColors.white 
                     : subscriptionDetails?.isInTrial
                       ? themeColors.white
@@ -357,7 +407,7 @@ export default function Profile() {
                   style={[
                     styles.subscriptionText, 
                     { 
-                      color: subscriptionDetails?.plan === 'premium'
+                      color: ['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '')
                         ? themeColors.white
                         : subscriptionDetails?.isInTrial
                           ? themeColors.white
@@ -365,7 +415,7 @@ export default function Profile() {
                     }
                   ]}
                 >
-                  {subscriptionDetails?.isInTrial ? t('subscription.trial') : subscriptionDetails?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                  {getPlanDisplayName(subscriptionDetails)}
                 </Text>
               </View>
             </View>
@@ -392,18 +442,17 @@ export default function Profile() {
             <View style={styles.subscriptionDetail}>
               <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.plan')}:</Text>
               <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                {subscriptionDetails?.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
-                {subscriptionDetails?.isInTrial ? ` (${t('subscription.trial')})` : ''}
+                {getPlanDisplayName(subscriptionDetails)}
               </Text>
             </View>
             
-            {subscriptionDetails?.plan === 'premium' && (
+            {['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '') && (
               <>
                 <View style={styles.subscriptionDetail}>
                   <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.billing')}:</Text>
                   <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
                     {subscriptionDetails?.billingCycle === 'monthly' ? t('subscription.monthly') :
-                     subscriptionDetails?.billingCycle === 'yearly' ? t('subscription.yearly') : 'None'}
+                     subscriptionDetails?.billingCycle === 'yearly' ? t('subscription.yearly') : t('subscription.none')}
                   </Text>
                 </View>
                 
@@ -430,7 +479,11 @@ export default function Profile() {
             <View style={styles.subscriptionDetail}>
               <Text style={[styles.subscriptionLabel, { color: themeColors.textSecondary }]}>{t('subscription.documents')}:</Text>
               <Text style={[styles.subscriptionValue, { color: themeColors.text }]}>
-                {subscriptionDetails?.documentLimitUsed} / {subscriptionDetails?.documentLimitTotal}
+                {formatDocumentLimits(
+                  subscriptionDetails?.documentLimitUsed || 0,
+                  subscriptionDetails?.documentLimitTotal || 0,
+                  subscriptionDetails?.plan || 'free'
+                )}
               </Text>
             </View>
           </View>
@@ -505,7 +558,7 @@ export default function Profile() {
                         fontSize: 8,
                         fontWeight: 'bold',
                       }}>
-                        UPGRADE
+                        {t('subscription.upgradeLabel')}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -531,7 +584,7 @@ export default function Profile() {
                 </>
               )}
               
-                             {subscriptionDetails?.plan === 'premium' && subscriptionDetails?.isCanceledButActive && (
+                                           {['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '') && subscriptionDetails?.isCanceledButActive && (
                 <>
                   <TouchableOpacity 
                     style={[
@@ -558,7 +611,7 @@ export default function Profile() {
                 </>
               )}
               
-                             {subscriptionDetails?.plan === 'premium' && !subscriptionDetails?.isCanceledButActive && (
+              {['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '') && !subscriptionDetails?.isCanceledButActive && (
                 <>
                   <TouchableOpacity 
                     style={[
@@ -941,4 +994,4 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.6,
   },
-}); 
+});

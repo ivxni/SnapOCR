@@ -193,65 +193,64 @@ const startFreeTrial = async (): Promise<{message: string; subscription: any}> =
 };
 
 /**
- * Subscribe to premium plan using Apple IAP
+ * Subscribe to any plan (premium, family, business)
  */
-const subscribeToPremium = async (billingCycle: 'monthly' | 'yearly'): Promise<{message: string; subscription: any}> => {
-  // On web/development, use the old method
+const subscribeToPlan = async (planType: 'premium' | 'family' | 'business', billingCycle: 'monthly' | 'yearly'): Promise<{message: string; subscription: any}> => {
+  // On web/development, use API endpoint directly
   if (Platform.OS !== 'ios' && Platform.OS !== 'android' || Constants.expoConfig?.extra?.isExpoGo) {
     try {
-      const response = await api.post('/subscription/premium', { billingCycle });
+      const response = await api.post('/subscription/subscribe', {
+        planType,
+        billingCycle: planType === 'business' ? 'monthly' : billingCycle
+      });
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to subscribe to premium');
+      throw new Error(error.response?.data?.message || 'Failed to subscribe to plan');
     }
   }
 
-  // On mobile, use RevenueCat
+  // On mobile, use RevenueCat for payment processing
   try {
-    // Get all packages
-    const offerings = await Purchases.getOfferings();
-    
-    if (!offerings.current) {
-      throw new Error('No offerings available');
+    const packages = await getAvailablePackages();
+    const targetPackage = packages.find(pkg => 
+      (billingCycle === 'monthly' && pkg.packageType === 'MONTHLY') ||
+      (billingCycle === 'yearly' && pkg.packageType === 'YEARLY')
+    );
+
+    if (!targetPackage) {
+      throw new Error(`No ${billingCycle} package found`);
     }
 
-    // Find the appropriate package based on billing cycle
-    let packageToPurchase;
-    if (billingCycle === 'monthly') {
-      packageToPurchase = offerings.current.availablePackages.find(
-        (pkg: any) => pkg.identifier === 'monthly'
-      );
+    const purchaseResult = await Purchases.purchasePackage(targetPackage);
+    
+    if (purchaseResult?.customerInfo) {
+      // Verify the purchase with our backend
+      const response = await api.post('/subscription/verify-purchase', {
+        platform: Platform.OS,
+        productIdentifier: targetPackage.product.identifier,
+        planType,
+        billingCycle: planType === 'business' ? 'monthly' : billingCycle,
+        transactionId: purchaseResult.productIdentifier
+      });
+      
+      return response.data;
     } else {
-      packageToPurchase = offerings.current.availablePackages.find(
-        (pkg: any) => pkg.identifier === 'yearly'
-      );
+      throw new Error('Purchase failed');
     }
-
-    if (!packageToPurchase) {
-      throw new Error(`No ${billingCycle} subscription package found`);
-    }
-
-    // Make the purchase
-    const { customerInfo, productIdentifier } = await Purchases.purchasePackage(packageToPurchase);
-    
-    // Verify the purchase with our backend
-    const response = await api.post('/subscription/verify-purchase', {
-      platform: Platform.OS,
-      billingCycle,
-      productIdentifier,
-      transactionId: customerInfo.originalAppUserId, // This is not correct in a real implementation
-    });
-
-    return response.data;
   } catch (error: any) {
     if (error.userCancelled) {
       throw new Error('Purchase cancelled');
     }
-    
-    // Showing more detailed errors is helpful during development
-    console.error('Purchase error details:', error);
-    throw new Error(error.message || 'Failed to subscribe to premium');
+    throw new Error(error.message || 'Failed to subscribe to plan');
   }
+};
+
+/**
+ * Subscribe to premium plan using Apple IAP
+ */
+const subscribeToPremium = async (billingCycle: 'monthly' | 'yearly'): Promise<{message: string; subscription: any}> => {
+  // Use the new subscribeToPlan function
+  return subscribeToPlan('premium', billingCycle);
 };
 
 /**
@@ -321,27 +320,21 @@ const canProcessDocument = async (): Promise<{
  * with more verbose logging to help debug refresh issues
  */
 const getDashboardSubscriptionInfo = async (): Promise<{
-  plan: 'free' | 'premium';
+  plan: 'free' | 'premium' | 'family' | 'business';
+  billingCycle?: string;
   isInTrial: boolean;
   isCanceledButActive?: boolean;
   remainingDocuments: number;
   totalDocuments: number;
 }> => {
   try {
-    console.log('Fetching fresh subscription details for dashboard...');
     const response = await api.get('/subscription');
     
     const data = response.data;
-    console.log('Dashboard subscription update:', {
-      plan: data.plan,
-      isInTrial: data.isInTrial,
-      isCanceledButActive: data.isCanceledButActive,
-      remaining: data.documentLimitRemaining,
-      total: data.documentLimitTotal
-    });
     
     return {
       plan: data.plan,
+      billingCycle: data.billingCycle,
       isInTrial: data.isInTrial,
       isCanceledButActive: data.isCanceledButActive,
       remainingDocuments: data.documentLimitRemaining,
@@ -370,6 +363,7 @@ const subscriptionService = {
   getAvailablePackages,
   startFreeTrial,
   subscribeToPremium,
+  subscribeToPlan,
   cancelSubscription,
   canProcessDocument,
   getDashboardSubscriptionInfo,

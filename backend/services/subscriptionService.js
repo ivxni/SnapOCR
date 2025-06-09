@@ -4,8 +4,17 @@ const { APPLE_API_URL, GOOGLE_API_URL } = process.env;
 
 // Pricing constants
 const PRICING = {
-  MONTHLY: 9.99,
-  YEARLY: 99.99,
+  PREMIUM: {
+    MONTHLY: 4.99,
+    YEARLY: 39.99
+  },
+  FAMILY: {
+    MONTHLY: 19.99,
+    YEARLY: 199.00
+  },
+  BUSINESS: {
+    MONTHLY: 199.99
+  },
   TRIAL_DAYS: 7
 };
 
@@ -48,7 +57,8 @@ const startFreeTrial = async (userId) => {
   user.subscription.isInTrial = true;
   user.subscription.trialStartDate = now;
   user.subscription.trialEndDate = trialEndDate;
-  user.subscription.documentLimitTotal = 50; // Premium document limit
+  user.subscription.documentLimitTotal = 100; // Premium document limit during trial
+  user.subscription.deviceCount = 1;
   
   await user.save();
   
@@ -59,12 +69,23 @@ const startFreeTrial = async (userId) => {
 };
 
 /**
- * Subscribe user to a premium plan
+ * Subscribe user to a plan
  * @param {string} userId - User ID
- * @param {string} billingCycle - 'monthly' or 'yearly'
+ * @param {string} planType - 'premium', 'family', or 'business'
+ * @param {string} billingCycle - 'monthly' or 'yearly' (business only supports monthly)
  */
-const subscribeToPremium = async (userId, billingCycle) => {
-  if (billingCycle !== 'monthly' && billingCycle !== 'yearly') {
+const subscribeToPlan = async (userId, planType, billingCycle) => {
+  // Validate plan type
+  if (!['premium', 'family', 'business'].includes(planType)) {
+    throw new Error('Invalid plan type');
+  }
+  
+  // Validate billing cycle
+  if (planType === 'business' && billingCycle !== 'monthly') {
+    throw new Error('Business plan only supports monthly billing');
+  }
+  
+  if (planType !== 'business' && !['monthly', 'yearly'].includes(billingCycle)) {
     throw new Error('Invalid billing cycle');
   }
   
@@ -83,19 +104,40 @@ const subscribeToPremium = async (userId, billingCycle) => {
     nextBillingDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
   }
   
-  user.subscription.plan = 'premium';
+  // Update subscription based on plan type
+  user.subscription.plan = planType;
   user.subscription.billingCycle = billingCycle;
   user.subscription.isInTrial = false;
   user.subscription.lastBillingDate = now;
   user.subscription.nextBillingDate = nextBillingDate;
-  user.subscription.documentLimitTotal = 50; // Premium document limit
+  
+  // Set limits based on plan
+  if (planType === 'premium') {
+    user.subscription.documentLimitTotal = 100;
+    user.subscription.deviceCount = 1;
+  } else if (planType === 'family') {
+    user.subscription.documentLimitTotal = 150;
+    user.subscription.deviceCount = 4;
+  } else if (planType === 'business') {
+    user.subscription.documentLimitTotal = 999999; // Unlimited
+    user.subscription.deviceCount = 999999; // Unlimited
+  }
   
   await user.save();
   
   return {
-    message: `Successfully subscribed to premium (${billingCycle})`,
+    message: `Successfully subscribed to ${planType} (${billingCycle})`,
     subscription: user.subscription
   };
+};
+
+/**
+ * Subscribe user to a premium plan (backwards compatibility)
+ * @param {string} userId - User ID
+ * @param {string} billingCycle - 'monthly' or 'yearly'
+ */
+const subscribeToPremium = async (userId, billingCycle) => {
+  return await subscribeToPlan(userId, 'premium', billingCycle);
 };
 
 /**
@@ -312,8 +354,8 @@ const cancelSubscription = async (userId) => {
     throw new Error('User not found');
   }
   
-  if (user.subscription.plan !== 'premium') {
-    throw new Error('User is not on a premium plan');
+  if (!['premium', 'family', 'business'].includes(user.subscription.plan)) {
+    throw new Error('User is not on a paid plan');
   }
   
   // If user is in trial, end trial immediately but keep trialStartDate
@@ -350,8 +392,8 @@ const reactivateSubscription = async (userId) => {
     throw new Error('User not found');
   }
   
-  // Check if user has a premium plan that's been cancelled
-  const isCanceledButActive = user.subscription.plan === 'premium' && user.subscription.billingCycle === 'none';
+  // Check if user has a paid plan that's been cancelled
+  const isCanceledButActive = ['premium', 'family', 'business'].includes(user.subscription.plan) && user.subscription.billingCycle === 'none';
   
   if (!isCanceledButActive) {
     throw new Error('No cancelled subscription to reactivate');
@@ -396,23 +438,34 @@ const getSubscriptionDetails = async (userId) => {
   const remainingDocuments = user.subscription.documentLimitTotal - user.subscription.documentLimitUsed;
   
   // Check if subscription has been canceled but is still active
-  // This happens when billingCycle is 'none' but plan is still 'premium'
-  const isCanceledButActive = user.subscription.plan === 'premium' && user.subscription.billingCycle === 'none';
+  // This happens when billingCycle is 'none' but plan is still a paid plan
+  const isCanceledButActive = ['premium', 'family', 'business'].includes(user.subscription.plan) && user.subscription.billingCycle === 'none';
   
   return {
     plan: user.subscription.plan,
     billingCycle: user.subscription.billingCycle,
     isInTrial: user.subscription.isInTrial,
+    trialStartDate: user.subscription.trialStartDate,
     trialEndDate: user.subscription.trialEndDate,
     nextBillingDate: user.subscription.nextBillingDate,
     documentLimitTotal: user.subscription.documentLimitTotal,
     documentLimitUsed: user.subscription.documentLimitUsed,
     documentLimitRemaining: remainingDocuments,
     resetDate: user.subscription.documentLimitResetDate,
+    deviceCount: user.subscription.deviceCount,
     isCanceledButActive,
     pricing: {
-      monthly: PRICING.MONTHLY,
-      yearly: PRICING.YEARLY
+      premium: {
+        monthly: PRICING.PREMIUM.MONTHLY,
+        yearly: PRICING.PREMIUM.YEARLY
+      },
+      family: {
+        monthly: PRICING.FAMILY.MONTHLY,
+        yearly: PRICING.FAMILY.YEARLY
+      },
+      business: {
+        monthly: PRICING.BUSINESS.MONTHLY
+      }
     }
   };
 };
@@ -476,6 +529,7 @@ const incrementDocumentCount = async (userId) => {
 module.exports = {
   startFreeTrial,
   subscribeToPremium,
+  subscribeToPlan,
   cancelSubscription,
   reactivateSubscription,
   getSubscriptionDetails,

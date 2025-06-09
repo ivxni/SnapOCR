@@ -41,13 +41,17 @@ const userSchema = new mongoose.Schema(
     subscription: {
       plan: {
         type: String,
-        enum: ['free', 'premium'],
+        enum: ['free', 'premium', 'family', 'business'],
         default: 'free',
       },
       billingCycle: {
         type: String,
         enum: ['none', 'monthly', 'yearly'],
         default: 'none',
+      },
+      deviceCount: {
+        type: Number,
+        default: 1, // Number of devices allowed
       },
       trialStartDate: Date,
       trialEndDate: Date,
@@ -106,26 +110,65 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.updateDocumentLimit = function() {
   const now = new Date();
   
-  // For free users, 5 documents per week
+  // For free users, 3 documents per day (21 per week)
   if (this.subscription.plan === 'free') {
-    this.subscription.documentLimitTotal = 5;
+    this.subscription.documentLimitTotal = 21; // 3 per day * 7 days
+    this.subscription.deviceCount = 1;
     
-    // If reset date is not set or has passed
+    // Daily reset for free users
     if (!this.subscription.documentLimitResetDate || this.subscription.documentLimitResetDate < now) {
-      // Reset counter and set next reset date to 1 week from now
+      // Reset counter and set next reset date to tomorrow
       this.subscription.documentLimitUsed = 0;
-      this.subscription.documentLimitResetDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0); // Reset at midnight
+      this.subscription.documentLimitResetDate = tomorrow;
     }
   } 
-  // For premium users, 50 documents per month
+  // For premium users, 100 documents per month
   else if (this.subscription.plan === 'premium') {
-    this.subscription.documentLimitTotal = 50;
+    this.subscription.documentLimitTotal = 100;
+    this.subscription.deviceCount = 1;
     
-    // If reset date is not set or has passed
+    // Monthly reset for premium users
     if (!this.subscription.documentLimitResetDate || this.subscription.documentLimitResetDate < now) {
-      // Reset counter and set next reset date to next billing date
+      // Reset counter and set next reset date to next billing date or next month
       this.subscription.documentLimitUsed = 0;
-      this.subscription.documentLimitResetDate = this.subscription.nextBillingDate;
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1);
+      nextMonth.setHours(0, 0, 0, 0);
+      this.subscription.documentLimitResetDate = this.subscription.nextBillingDate || nextMonth;
+    }
+  }
+  // For family users, 150 documents per month, 4 devices
+  else if (this.subscription.plan === 'family') {
+    this.subscription.documentLimitTotal = 150;
+    this.subscription.deviceCount = 4;
+    
+    // Monthly reset for family users
+    if (!this.subscription.documentLimitResetDate || this.subscription.documentLimitResetDate < now) {
+      this.subscription.documentLimitUsed = 0;
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1);
+      nextMonth.setHours(0, 0, 0, 0);
+      this.subscription.documentLimitResetDate = this.subscription.nextBillingDate || nextMonth;
+    }
+  }
+  // For business users, unlimited documents and devices
+  else if (this.subscription.plan === 'business') {
+    this.subscription.documentLimitTotal = 999999; // Effectively unlimited
+    this.subscription.deviceCount = 999999; // Effectively unlimited
+    
+    // Monthly reset (just for consistency)
+    if (!this.subscription.documentLimitResetDate || this.subscription.documentLimitResetDate < now) {
+      this.subscription.documentLimitUsed = 0;
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1);
+      nextMonth.setHours(0, 0, 0, 0);
+      this.subscription.documentLimitResetDate = this.subscription.nextBillingDate || nextMonth;
     }
   }
   

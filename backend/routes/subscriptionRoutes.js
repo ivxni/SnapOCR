@@ -16,6 +16,9 @@ router.post('/trial', subscriptionController.startFreeTrial);
 // Subscribe to premium
 router.post('/premium', subscriptionController.subscribeToPremium);
 
+// Subscribe to any plan (premium, family, business)
+router.post('/subscribe', subscriptionController.subscribeToPlan);
+
 // Cancel subscription
 router.post('/cancel', subscriptionController.cancelSubscription);
 

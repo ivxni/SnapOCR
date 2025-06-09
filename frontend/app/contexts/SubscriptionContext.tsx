@@ -11,6 +11,7 @@ interface SubscriptionContextType {
   refreshSubscription: (force?: boolean) => Promise<void>;
   dashboardInfo: {
     plan: string;
+    billingCycle?: string;
     remainingDocuments: number;
     totalDocuments: number;
     isInTrial: boolean;
@@ -41,23 +42,35 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     billingCycle: 'none',
     nextBillingDate: undefined,
     isCanceledButActive: false,
-    documentLimitTotal: 10,
-    documentLimitRemaining: 10,
+    documentLimitTotal: 21, // 3 documents per day * 7 days
+    documentLimitRemaining: 21,
     documentLimitUsed: 0,
     resetDate: undefined,
+    deviceCount: 1,
     pricing: {
-      monthly: 9.99,
-      yearly: 99.99
+      premium: {
+        monthly: 4.99,
+        yearly: 39.99
+      },
+      family: {
+        monthly: 19.99,
+        yearly: 199.00
+      },
+      business: {
+        monthly: 199.99
+      }
     }
   });
   const [dashboardInfo, setDashboardInfo] = useState<{
     plan: string;
+    billingCycle?: string;
     remainingDocuments: number;
     totalDocuments: number;
     isInTrial: boolean;
     isCanceledButActive?: boolean;
   } | null>({
     plan: 'free', // Default to free to prevent UI flashing
+    billingCycle: undefined,
     remainingDocuments: 0,
     totalDocuments: 10,
     isInTrial: false,
@@ -96,9 +109,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         subscriptionService.getDashboardSubscriptionInfo()
       ]);
 
+
+
       setSubscriptionDetails(details);
       setDashboardInfo({
         plan: dashInfo.plan,
+        billingCycle: dashInfo.billingCycle,
         remainingDocuments: dashInfo.remainingDocuments,
         totalDocuments: dashInfo.totalDocuments,
         isInTrial: dashInfo.isInTrial,

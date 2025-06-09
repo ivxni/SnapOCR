@@ -5,7 +5,7 @@ export interface User {
   lastName?: string;
   profilePicture?: string;
   subscription?: {
-    plan: 'free' | 'premium';
+    plan: 'free' | 'premium' | 'family' | 'business';
     billingCycle: 'none' | 'monthly' | 'yearly';
     trialStartDate?: string;
     trialEndDate?: string;
@@ -15,6 +15,7 @@ export interface User {
     documentLimitTotal: number;
     documentLimitUsed: number;
     documentLimitResetDate?: string;
+    deviceCount?: number;
   };
   preferences?: {
     notifications: boolean;
@@ -57,7 +58,7 @@ export interface ProfileUpdateData {
 }
 
 export interface SubscriptionDetails {
-  plan: 'free' | 'premium';
+  plan: 'free' | 'premium' | 'family' | 'business';
   billingCycle: 'none' | 'monthly' | 'yearly';
   isInTrial: boolean;
   trialStartDate?: string;
@@ -67,10 +68,20 @@ export interface SubscriptionDetails {
   documentLimitUsed: number;
   documentLimitRemaining: number;
   resetDate?: string;
+  deviceCount?: number;
   isCanceledButActive?: boolean;
   pricing: {
-    monthly: number;
-    yearly: number;
+    premium: {
+      monthly: number;
+      yearly: number;
+    };
+    family: {
+      monthly: number;
+      yearly: number;
+    };
+    business: {
+      monthly: number;
+    };
   };
 }
 

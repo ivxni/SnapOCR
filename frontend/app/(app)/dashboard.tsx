@@ -23,6 +23,48 @@ export default function Dashboard() {
   // Use subscription context instead of local state
   const { dashboardInfo, isRefreshing, isInitialized, refreshSubscription } = useSubscription();
 
+
+
+  // Helper function to get the correct plan name
+  const getPlanDisplayName = (planInfo: any) => {
+    if (!planInfo?.plan) {
+      return t('subscription.free');
+    }
+
+    const plan = planInfo.plan;
+    const billingCycle = planInfo.billingCycle;
+    const isInTrial = planInfo.isInTrial;
+
+    // Handle free plan
+    if (plan === 'free') {
+      return t('subscription.free');
+    }
+
+    let planKey = '';
+    if (plan === 'premium') {
+      planKey = billingCycle === 'monthly' ? 'subscription.premiumMonthly' : 'subscription.premiumYearly';
+    } else if (plan === 'family') {
+      planKey = billingCycle === 'monthly' ? 'subscription.familyMonthly' : 'subscription.familyYearly';
+    } else if (plan === 'business') {
+      planKey = 'subscription.businessMonthly'; // Business is always monthly
+    } else {
+      return t('subscription.free');
+    }
+
+    const baseName = t(planKey as any);
+    return isInTrial ? `${baseName} (${t('subscription.trial')})` : baseName;
+  };
+
+  const formatDocumentLimits = (remainingDocuments: number, totalDocuments: number, plan: string) => {
+    // For business plans, show "Unlimited" instead of large numbers
+    if (plan === 'business') {
+      return t('subscription.unlimited');
+    }
+    
+    // For other plans, show the normal format
+    return `${remainingDocuments} / ${totalDocuments}`;
+  };
+
   // Refresh data when dashboard comes into focus (but avoid unnecessary document reloads)
   useFocusEffect(
     React.useCallback(() => {
@@ -205,9 +247,13 @@ export default function Dashboard() {
             <View style={[
               styles.subscriptionBadge, 
               { 
-                backgroundColor: dashboardInfo.plan === 'premium' 
-                  ? themeColors.primary 
-                  : themeColors.surfaceVariant
+                backgroundColor: dashboardInfo.plan === 'business'
+                  ? '#e53e3e'  // Red for business
+                  : dashboardInfo.plan === 'family'
+                    ? '#f56500'  // Orange for family
+                    : dashboardInfo.plan === 'premium'
+                      ? themeColors.primary 
+                      : themeColors.surfaceVariant
                 // Remove opacity change - keep it always visible and stable
               }
             ]}>
@@ -215,12 +261,12 @@ export default function Dashboard() {
               <Text style={[
                 styles.subscriptionText, 
                 { 
-                  color: dashboardInfo.plan === 'premium' 
+                  color: ['premium', 'family', 'business'].includes(dashboardInfo.plan) 
                     ? themeColors.white 
                     : themeColors.text
                 }
               ]}>
-                {dashboardInfo.isInTrial ? t('subscription.trial') : dashboardInfo.plan === 'premium' ? t('subscription.premium') : t('subscription.free')}
+                {getPlanDisplayName(dashboardInfo)}
               </Text>
             </View>
           )}
@@ -234,7 +280,11 @@ export default function Dashboard() {
           }]}>
             <MaterialIcons name="insert-drive-file" size={16} color={themeColors.primary} />
             <Text style={[styles.documentLimitsText, { color: themeColors.text }]}>
-              {dashboardInfo.remainingDocuments} / {dashboardInfo.totalDocuments} {t('dashboard.documentsRemaining')}
+              {formatDocumentLimits(
+                dashboardInfo.remainingDocuments, 
+                dashboardInfo.totalDocuments, 
+                dashboardInfo.plan
+              )} {t('dashboard.documentsRemaining')}
             </Text>
             {dashboardInfo.plan === 'free' && (
               <TouchableOpacity 
