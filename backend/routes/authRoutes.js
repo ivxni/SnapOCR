@@ -5,6 +5,7 @@ const {
   loginUser,
   getUserProfile,
   updateUserProfile,
+  appleSignIn,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { validate } = require('../middleware/validation');
@@ -13,6 +14,7 @@ const { validateRegister, validateLogin, validateProfileUpdate } = require('../u
 // Public routes
 router.post('/register', validate(validateRegister), registerUser);
 router.post('/login', validate(validateLogin), loginUser);
+router.post('/apple-signin', appleSignIn);
 
 // Protected routes
 router.route('/profile')

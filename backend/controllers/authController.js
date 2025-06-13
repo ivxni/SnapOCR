@@ -1,5 +1,88 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const appleSignin = require('apple-signin-auth');
+
+// @desc    Apple Sign-In
+// @route   POST /api/auth/apple-signin
+// @access  Public
+const appleSignIn = async (req, res, next) => {
+  try {
+    const { identityToken, authorizationCode, user, email, fullName } = req.body;
+
+    if (!identityToken) {
+      res.status(400);
+      const error = new Error('Identity token is required');
+      return next(error);
+    }
+
+    // Verify the identity token with Apple
+    // Note: In production, use process.env.APPLE_BUNDLE_ID
+    const bundleId = process.env.APPLE_BUNDLE_ID || 'com.snapocr.app';
+    
+    const appleResponse = await appleSignin.verifyIdToken(identityToken, {
+      audience: bundleId,
+      ignoreExpiration: false,
+    });
+
+    const appleUserId = appleResponse.sub;
+    const appleEmail = appleResponse.email || email;
+
+    // Check if user already exists with this Apple ID
+    let existingUser = await User.findOne({ appleId: appleUserId });
+
+    if (existingUser) {
+      // User exists, log them in
+      return res.json({
+        _id: existingUser._id,
+        email: existingUser.email,
+        firstName: existingUser.firstName,
+        lastName: existingUser.lastName,
+        authProvider: existingUser.authProvider,
+        token: generateToken(existingUser._id),
+      });
+    }
+
+    // Check if email is already used by another account
+    if (appleEmail) {
+      const emailUser = await User.findOne({ email: appleEmail });
+      if (emailUser && emailUser.authProvider !== 'apple') {
+        res.status(400);
+        const error = new Error('An account with this email already exists. Please use email login instead.');
+        return next(error);
+      }
+    }
+
+    // Create new user
+    const newUser = await User.create({
+      appleId: appleUserId,
+      email: appleEmail || `user_${appleUserId}@apple.private`, // Fallback for private emails
+      firstName: fullName?.givenName || 'User',
+      lastName: fullName?.familyName || '',
+      authProvider: 'apple',
+      isVerified: true, // Apple users are automatically verified
+    });
+
+    if (newUser) {
+      res.status(201).json({
+        _id: newUser._id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        authProvider: newUser.authProvider,
+        token: generateToken(newUser._id),
+      });
+    } else {
+      res.status(400);
+      const error = new Error('Failed to create user account');
+      next(error);
+    }
+  } catch (error) {
+    console.error('Apple Sign-In error:', error);
+    res.status(400);
+    const appError = new Error('Apple Sign-In verification failed: ' + error.message);
+    next(appError);
+  }
+};
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -132,4 +215,5 @@ module.exports = {
   loginUser,
   getUserProfile,
   updateUserProfile,
+  appleSignIn,
 }; 

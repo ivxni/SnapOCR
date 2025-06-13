@@ -12,6 +12,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   updateProfile: (userData: ProfileUpdateData) => Promise<User>;
+  signInWithApple: () => Promise<User>;
   token: string | null;
   initialized: boolean;
   updateUser: (user: User) => Promise<void>;
@@ -26,6 +27,7 @@ const defaultContext: AuthContextType = {
   login: async () => { throw new Error('Not implemented'); },
   logout: async () => { throw new Error('Not implemented'); },
   updateProfile: async () => { throw new Error('Not implemented'); },
+  signInWithApple: async () => { throw new Error('Not implemented'); },
   token: null,
   initialized: false,
   updateUser: async () => { throw new Error('Not implemented'); },
@@ -169,12 +171,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       
-      if (response.token) {
-        await saveToken(response.token as string);
-      }
+      await saveToken(response.token as string);
       return response;
     } catch (error: any) {
       setError(error.response?.data?.message || 'Login failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Apple Sign-In
+  const signInWithApple = async (): Promise<User> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.signInWithApple();
+      setUser(response);
+      
+      // Initialize purchases if on mobile
+      if ((Platform.OS === 'ios' || Platform.OS === 'android') && response._id) {
+        try {
+          await subscriptionService.initializePurchases(response._id);
+          console.log('RevenueCat initialized after Apple Sign-In');
+        } catch (error) {
+          console.error('Failed to initialize RevenueCat after Apple Sign-In:', error);
+        }
+      }
+      
+      await saveToken(response.token as string);
+      return response;
+    } catch (error: any) {
+      setError(error.message || 'Apple Sign-In failed');
       throw error;
     } finally {
       setLoading(false);
@@ -239,6 +267,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     initialized,
     updateUser,
+    signInWithApple,
   };
 
   return (

@@ -2,6 +2,52 @@ import api, { setAuthToken, clearAuthToken } from './api';
 import { ENDPOINTS } from '../constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, RegisterData, ProfileUpdateData } from '../types/auth.types';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Platform } from 'react-native';
+
+// Apple Sign-In
+export const signInWithApple = async (): Promise<User> => {
+  try {
+    if (Platform.OS !== 'ios') {
+      throw new Error('Apple Sign-In is only available on iOS');
+    }
+
+    // Check if Apple Sign-In is available
+    const isAvailable = await AppleAuthentication.isAvailableAsync();
+    if (!isAvailable) {
+      throw new Error('Apple Sign-In is not available on this device');
+    }
+
+    // Request Apple Sign-In
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    // Send credential to our backend
+    const response = await api.post(ENDPOINTS.APPLE_SIGNIN, {
+      identityToken: credential.identityToken,
+      authorizationCode: credential.authorizationCode,
+      user: credential.user,
+      email: credential.email,
+      fullName: credential.fullName,
+    });
+    
+    if (response.data.token) {
+      await setAuthToken(response.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data));
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    if (error.code === 'ERR_CANCELED') {
+      throw new Error('Apple Sign-In was cancelled');
+    }
+    throw error;
+  }
+};
 
 // Register a new user
 export const register = async (userData: RegisterData): Promise<User> => {
@@ -104,4 +150,5 @@ export default {
   getUserProfile,
   updateUserProfile,
   changePassword,
+  signInWithApple,
 }; 

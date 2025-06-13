@@ -4,8 +4,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AppLayout from '../components/layout/AppLayout';
-import Button from '../components/common/Button';
-import TextInput from '../components/common/TextInput';
+import AppleSignInButton from '../components/common/AppleSignInButton';
 import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -13,55 +12,14 @@ import useThemeColors from '../utils/useThemeColors';
 
 const { width, height } = Dimensions.get('window');
 
-// Typ für die Passwortvalidierung
-type ValidationState = {
-  minLength: boolean | null;
-  hasLetter: boolean | null;
-  hasNumber: boolean | null;
-};
-
 export default function SignUp() {
   const router = useRouter();
-  const { register, isAuthenticated } = useAuth();
+  const { signInWithApple, isAuthenticated } = useAuth();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
   
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Passwortvalidierung mit initialem neutralen Zustand
-  const [passwordValidation, setPasswordValidation] = useState<ValidationState>({
-    minLength: null,
-    hasLetter: null,
-    hasNumber: null,
-  });
-  
-  // Passwort in Echtzeit validieren
-  useEffect(() => {
-    if (password.length === 0) {
-      // Wenn noch kein Passwort eingegeben wurde, alle Validierungen auf null setzen
-      setPasswordValidation({
-        minLength: null,
-        hasLetter: null,
-        hasNumber: null,
-      });
-    } else {
-      // Sonst normale Validierung durchführen
-      setPasswordValidation({
-        minLength: password.length >= 6,
-        hasLetter: /[a-zA-Z]/.test(password),
-        hasNumber: /\d/.test(password),
-      });
-    }
-  }, [password]);
-  
-  // Prüfen, ob das Passwort gültig ist
-  const isPasswordValid = password.length > 0 && Object.values(passwordValidation).every(value => value === true);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -70,29 +28,19 @@ export default function SignUp() {
     }
   }, [isAuthenticated]);
 
-  const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password) {
-      setError('Please fill in all fields');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-    
-    if (!isPasswordValid) {
-      setError('Password does not meet requirements');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
+  const handleAppleSignUp = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      await register({ firstName, lastName, email, password });
+      await signInWithApple();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)/dashboard');
-    } catch (err) {
-      setError('Failed to create account');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch (err: any) {
+      if (err.message !== 'Apple Sign-In was cancelled') {
+        setError(err.message || 'Sign up failed');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     } finally {
       setLoading(false);
     }
@@ -128,118 +76,29 @@ export default function SignUp() {
           </View>
         </View>
         
-        <Text style={[styles.title, { color: themeColors.text }]}>Create Account</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Join SnapOCR to get started</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>Get Started</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Create your SnapOCR account</Text>
         
         <View style={styles.formContainer}>
-          <View style={styles.nameRow}>
-            <View style={styles.nameField}>
-              <TextInput
-                label="First Name"
-                value={firstName}
-                onChangeText={setFirstName}
-                floatingLabel={false}
-                style={[styles.input, { shadowColor: themeColors.primary }]}
-              />
-            </View>
-            
-            <View style={styles.nameField}>
-              <TextInput
-                label="Last Name"
-                value={lastName}
-                onChangeText={setLastName}
-                floatingLabel={false}
-                style={[styles.input, { shadowColor: themeColors.primary }]}
-              />
-            </View>
-          </View>
-          
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            floatingLabel={false}
-            style={[styles.input, { shadowColor: themeColors.primary }]}
-          />
-          
-          <View style={styles.passwordContainer}>
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              floatingLabel={false}
-              style={[styles.input, { shadowColor: themeColors.primary, marginBottom: 4 }]}
-              rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <MaterialIcons 
-                    name={showPassword ? "visibility-off" : "visibility"} 
-                    size={24} 
-                    color={themeColors.textSecondary} 
-                  />
-                </TouchableOpacity>
-              }
-            />
-            
-            {/* Passwortvalidierungshinweise */}
-            <View style={styles.passwordValidation}>
-              <View style={styles.validationRow}>
-                <MaterialIcons 
-                  name={passwordValidation.minLength === null ? "radio-button-unchecked" : (passwordValidation.minLength ? "check-circle" : "cancel")} 
-                  size={16} 
-                  color={passwordValidation.minLength === null ? themeColors.textSecondary : (passwordValidation.minLength ? themeColors.success : themeColors.error)} 
-                />
-                <Text style={[
-                  styles.validationText, 
-                  { color: passwordValidation.minLength === null ? themeColors.textSecondary : (passwordValidation.minLength ? themeColors.success : themeColors.error) }
-                ]}>
-                  At least 6 characters
-                </Text>
-              </View>
-              
-              <View style={styles.validationRow}>
-                <MaterialIcons 
-                  name={passwordValidation.hasLetter === null ? "radio-button-unchecked" : (passwordValidation.hasLetter ? "check-circle" : "cancel")} 
-                  size={16} 
-                  color={passwordValidation.hasLetter === null ? themeColors.textSecondary : (passwordValidation.hasLetter ? themeColors.success : themeColors.error)} 
-                />
-                <Text style={[
-                  styles.validationText, 
-                  { color: passwordValidation.hasLetter === null ? themeColors.textSecondary : (passwordValidation.hasLetter ? themeColors.success : themeColors.error) }
-                ]}>
-                  Contains at least one letter
-                </Text>
-              </View>
-              
-              <View style={styles.validationRow}>
-                <MaterialIcons 
-                  name={passwordValidation.hasNumber === null ? "radio-button-unchecked" : (passwordValidation.hasNumber ? "check-circle" : "cancel")} 
-                  size={16} 
-                  color={passwordValidation.hasNumber === null ? themeColors.textSecondary : (passwordValidation.hasNumber ? themeColors.success : themeColors.error)} 
-                />
-                <Text style={[
-                  styles.validationText, 
-                  { color: passwordValidation.hasNumber === null ? themeColors.textSecondary : (passwordValidation.hasNumber ? themeColors.success : themeColors.error) }
-                ]}>
-                  Contains at least one number
-                </Text>
-              </View>
-            </View>
-          </View>
-          
           {error && (
             <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
           )}
           
-          <Button 
-            onPress={handleSignUp} 
+          <AppleSignInButton 
+            onPress={handleAppleSignUp}
             loading={loading}
-            style={styles.button}
-          >
-            Sign Up
-          </Button>
+            style={styles.appleButton}
+            buttonType="signUp"
+          />
+          
+          {Platform.OS !== 'ios' && (
+            <View style={[styles.noticeContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+              <MaterialIcons name="info" size={20} color={themeColors.primary} />
+              <Text style={[styles.noticeText, { color: themeColors.textSecondary }]}>
+                Apple Sign-In is only available on iOS devices
+              </Text>
+            </View>
+          )}
           
           <Text style={[styles.termsText, { color: themeColors.textSecondary }]}>
             By creating an account, you agree to our{' '}
@@ -287,15 +146,15 @@ const styles = StyleSheet.create({
   },
   logoBackground: {
     borderRadius: 20,
-    padding: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 10,
+    padding: 0,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
   },
   logoImage: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 28,
@@ -312,48 +171,29 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Math.min(500, width * 0.9),
   },
-  nameRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  nameField: {
-    flex: 1,
-  },
-  input: {
-    marginBottom: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  passwordContainer: {
-    marginBottom: 8,
-  },
-  passwordValidation: {
-    marginTop: 4,
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  validationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  validationText: {
-    fontSize: 12,
-    marginLeft: 6,
-  },
   errorText: {
     marginTop: 8,
     marginBottom: 8,
     fontSize: 14,
     textAlign: 'center',
   },
-  button: {
+  appleButton: {
     marginTop: 12,
     marginBottom: 12,
     height: 50,
     borderRadius: 12,
+  },
+  noticeContainer: {
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  noticeText: {
+    fontSize: 12,
+    marginLeft: 8,
   },
   termsText: {
     fontSize: 13,

@@ -49,18 +49,10 @@ export default function Home() {
           
           <View style={styles.buttonContainer}>
             <Button 
-              onPress={() => router.push('/(auth)/signin')}
+              onPress={() => router.push('/(auth)/get-started')}
               style={styles.button}
             >
-              Sign In
-            </Button>
-            
-            <Button 
-              variant="outline"
-              onPress={() => router.push('/(auth)/signup')}
-              style={styles.button}
-            >
-              Create Account
+              Get Started
             </Button>
           </View>
         </View>
@@ -86,16 +78,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoBackground: {
-    borderRadius: 24,
-    padding: 8,
+    borderRadius: 22,
+    padding: 0,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
     elevation: 12,
   },
   logoImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
   },
   title: {
     fontSize: 48,

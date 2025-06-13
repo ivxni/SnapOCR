@@ -18,7 +18,21 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        // Password is only required if not an Apple user
+        return !this.appleId;
+      },
+    },
+    // Apple Sign-In fields
+    appleId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows multiple null values
+    },
+    authProvider: {
+      type: String,
+      enum: ['email', 'apple'],
+      default: 'email',
     },
     firstName: {
       type: String,
@@ -52,6 +66,16 @@ const userSchema = new mongoose.Schema(
       deviceCount: {
         type: Number,
         default: 1, // Number of devices allowed
+      },
+      // Family subscription fields
+      familyGroup: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FamilyGroup',
+        default: null,
+      },
+      isMainFamilyAccount: {
+        type: Boolean,
+        default: false, // True for the person who pays for family plan
       },
       trialStartDate: Date,
       trialEndDate: Date,
@@ -98,7 +122,8 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 // Middleware to hash password before saving
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  // Skip password hashing for Apple users or if password is not modified
+  if (!this.isModified('password') || this.authProvider === 'apple') {
     next();
   }
 

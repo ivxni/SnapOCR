@@ -5,7 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AppLayout from '../components/layout/AppLayout';
 import Button from '../components/common/Button';
-import TextInput from '../components/common/TextInput';
+import AppleSignInButton from '../components/common/AppleSignInButton';
 import { useAuth } from '../hooks/useAuth';
 import colors from '../constants/colors';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -15,12 +15,9 @@ const { width, height } = Dimensions.get('window');
 
 export default function SignIn() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { signInWithApple, isAuthenticated } = useAuth();
   const { isDarkMode } = useDarkMode();
   const themeColors = useThemeColors();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,23 +28,19 @@ export default function SignIn() {
     }
   }, [isAuthenticated]);
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
+  const handleAppleSignIn = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      await login(email, password);
+      await signInWithApple();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)/dashboard');
-    } catch (err) {
-      setError('Invalid email or password');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch (err: any) {
+      if (err.message !== 'Apple Sign-In was cancelled') {
+        setError(err.message || 'Sign in failed');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,66 +76,35 @@ export default function SignIn() {
           </View>
         </View>
         
-        <Text style={[styles.title, { color: themeColors.text }]}>Sign In</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Welcome back to SnapOCR</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Sign in to your SnapOCR account</Text>
         
         <View style={styles.formContainer}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            floatingLabel={false}
-            style={[styles.input, { shadowColor: themeColors.primary }]}
-          />
-          
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            floatingLabel={false}
-            style={[styles.input, { shadowColor: themeColors.primary }]}
-            rightIcon={
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <MaterialIcons 
-                  name={showPassword ? "visibility-off" : "visibility"} 
-                  size={24} 
-                  color={themeColors.textSecondary} 
-                />
-              </TouchableOpacity>
-            }
-          />
-          
-          <TouchableOpacity 
-            style={styles.forgotPassword}
-            onPress={() => {
-              // Handle forgot password
-            }}
-          >
-            <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>
-              Forgot Password?
-            </Text>
-          </TouchableOpacity>
-          
           {error && (
             <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
           )}
           
-          <Button 
-            onPress={handleSignIn} 
+          <AppleSignInButton 
+            onPress={handleAppleSignIn}
             loading={loading}
-            style={styles.button}
-          >
-            Sign In
-          </Button>
+            style={styles.appleButton}
+            buttonType="signIn"
+          />
+          
+          {Platform.OS !== 'ios' && (
+            <View style={[styles.noticeContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+              <MaterialIcons name="info" size={20} color={themeColors.primary} />
+              <Text style={[styles.noticeText, { color: themeColors.textSecondary }]}>
+                Apple Sign-In is only available on iOS devices
+              </Text>
+            </View>
+          )}
         </View>
         
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account?</Text>
+          <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>New to SnapOCR?</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Sign Up</Text>
+            <Text style={[styles.footerLink, { color: themeColors.primary }]}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -177,16 +139,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoBackground: {
-    borderRadius: 12,
-    padding: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 10,
+    borderRadius: 20,
+    padding: 0,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
   },
   logoImage: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 28,
@@ -203,32 +165,27 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Math.min(500, width * 0.9),
   },
-  input: {
-    marginBottom: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
   errorText: {
     marginTop: 8,
     marginBottom: 8,
     fontSize: 14,
     textAlign: 'center',
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  button: {
+  appleButton: {
     marginTop: 12,
     height: 50,
     borderRadius: 12,
+  },
+  noticeContainer: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  noticeText: {
+    fontSize: 14,
   },
   footer: {
     flexDirection: 'row',

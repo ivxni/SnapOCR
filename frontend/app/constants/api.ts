@@ -3,6 +3,7 @@ export const API_URL: string = 'https://9d3a-2003-c9-770e-9521-3d84-4d91-36e4-ac
 export interface ApiEndpoints {
   REGISTER: string;
   LOGIN: string;
+  APPLE_SIGNIN: string;
   PROFILE: string;
   CHANGE_PASSWORD: string;
   DOCUMENTS: string;
@@ -15,6 +16,7 @@ export const ENDPOINTS: ApiEndpoints = {
   // Auth endpoints
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
+  APPLE_SIGNIN: '/auth/apple-signin',
   PROFILE: '/auth/profile',
   CHANGE_PASSWORD: '/auth/profile',
   

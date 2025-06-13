@@ -26,6 +26,8 @@ export default function SubscriptionPlans() {
   const [subscribing, setSubscribing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isYearly, setIsYearly] = useState(true); // Default to yearly for better savings
+  const [showBusinessPlans, setShowBusinessPlans] = useState(false); // Toggle for business plans
 
   useEffect(() => {
     const initializeData = async () => {
@@ -45,6 +47,91 @@ export default function SubscriptionPlans() {
 
     initializeData();
   }, [user]);
+
+  // Toggle between Monthly and Yearly for Personal/Family plans
+  const BillingToggle = () => (
+    <View style={[styles.toggleContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+      <TouchableOpacity
+        style={[
+          styles.toggleButton,
+          !isYearly && { backgroundColor: themeColors.primary }
+        ]}
+        onPress={() => setIsYearly(false)}
+      >
+        <Text style={[
+          styles.toggleText,
+          { color: !isYearly ? themeColors.white : themeColors.textSecondary }
+        ]}>
+          {t('subscription.monthly')}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.toggleButton,
+          isYearly && { backgroundColor: themeColors.primary }
+        ]}
+        onPress={() => setIsYearly(true)}
+      >
+        <Text style={[
+          styles.toggleText,
+          { color: isYearly ? themeColors.white : themeColors.textSecondary }
+        ]}>
+          {t('subscription.yearly')}
+        </Text>
+        {isYearly && (
+          <View style={[styles.savingsBadge, { backgroundColor: themeColors.success }]}>
+            <Text style={[styles.savingsText, { color: themeColors.white }]}>
+              -33%
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Toggle between Personal/Family and Business plans
+  const PlanTypeToggle = () => (
+    <View style={[styles.planTypeToggleContainer, { backgroundColor: themeColors.surfaceVariant }]}>
+      <TouchableOpacity
+        style={[
+          styles.planTypeToggleButton,
+          !showBusinessPlans && { backgroundColor: themeColors.primary }
+        ]}
+        onPress={() => setShowBusinessPlans(false)}
+      >
+        <MaterialIcons 
+          name="person" 
+          size={16} 
+          color={!showBusinessPlans ? themeColors.white : themeColors.textSecondary} 
+        />
+        <Text style={[
+          styles.planTypeToggleText,
+          { color: !showBusinessPlans ? themeColors.white : themeColors.textSecondary }
+        ]}>
+          Personal
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.planTypeToggleButton,
+          showBusinessPlans && { backgroundColor: themeColors.error }
+        ]}
+        onPress={() => setShowBusinessPlans(true)}
+      >
+        <MaterialIcons 
+          name="business" 
+          size={16} 
+          color={showBusinessPlans ? themeColors.white : themeColors.textSecondary} 
+        />
+        <Text style={[
+          styles.planTypeToggleText,
+          { color: showBusinessPlans ? themeColors.white : themeColors.textSecondary }
+        ]}>
+          Business
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   const handleSubscribe = async (planType: 'monthly' | 'yearly' | 'family-monthly' | 'family-yearly' | 'business') => {
     try {
@@ -173,19 +260,24 @@ export default function SubscriptionPlans() {
     }
   };
 
-  const renderFeatureItem = (text: string, included: boolean, accentColor: string = themeColors.primary) => (
-    <View style={styles.featureItem}>
+  const renderFeatureItem = (text: string, included: boolean, accentColor: string = themeColors.primary, isCompact: boolean = false) => (
+    <View style={isCompact ? styles.compactFeatureItem : styles.featureItem}>
       <View style={[
-        styles.featureIconContainer,
+        isCompact ? styles.compactFeatureIconContainer : styles.featureIconContainer,
         { backgroundColor: included ? accentColor + '20' : themeColors.error + '20' }
       ]}>
         <MaterialIcons 
           name={included ? "check" : "close"} 
-          size={16} 
+          size={isCompact ? 12 : 16} 
           color={included ? accentColor : themeColors.error} 
         />
       </View>
-      <Text style={[styles.featureText, { color: themeColors.text }]}>{text}</Text>
+      <Text style={[
+        isCompact ? styles.compactFeatureText : styles.featureText, 
+        { color: themeColors.text }
+      ]}>
+        {text}
+      </Text>
     </View>
   );
 
@@ -202,7 +294,8 @@ export default function SubscriptionPlans() {
     isCurrentPlan = false,
     gradientColors = [themeColors.surface, themeColors.surface],
     borderColor = themeColors.border,
-    accentColor = themeColors.primary
+    accentColor = themeColors.primary,
+    isCompact = false
   }: {
     title: string;
     price: string | number;
@@ -217,17 +310,21 @@ export default function SubscriptionPlans() {
     gradientColors?: [string, string];
     borderColor?: string;
     accentColor?: string;
+    isCompact?: boolean;
   }) => (
-    <View style={[styles.planCardContainer, { borderColor }]}>
+    <View style={[
+      isCompact ? styles.compactPlanCardContainer : styles.planCardContainer, 
+      { borderColor }
+    ]}>
       <LinearGradient
         colors={gradientColors}
-        style={styles.planCard}
+        style={isCompact ? styles.compactPlanCard : styles.planCard}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
         {isRecommended && (
           <View style={[styles.recommendedBadge, { backgroundColor: themeColors.primary }]}>
-            <MaterialIcons name="star" size={16} color={themeColors.white} />
+            <MaterialIcons name="star" size={12} color={themeColors.white} />
             <Text style={[styles.recommendedText, { color: themeColors.white }]}>
               {t('subscription.recommended')}
             </Text>
@@ -236,37 +333,51 @@ export default function SubscriptionPlans() {
         
         {isCurrentPlan && (
           <View style={[styles.currentPlanBadge, { backgroundColor: themeColors.success }]}>
-            <MaterialIcons name="check-circle" size={14} color={themeColors.white} />
+            <MaterialIcons name="check-circle" size={12} color={themeColors.white} />
             <Text style={[styles.currentPlanText, { color: themeColors.white }]}>
               {t('subscription.current')}
             </Text>
           </View>
         )}
 
-        <View style={styles.planHeader}>
-          <Text style={[styles.planTitle, { color: themeColors.text }]}>{title}</Text>
+        <View style={isCompact ? styles.compactPlanHeader : styles.planHeader}>
+          <Text style={[
+            isCompact ? styles.compactPlanTitle : styles.planTitle, 
+            { color: themeColors.text }
+          ]}>
+            {title}
+          </Text>
           <View style={styles.priceContainer}>
-            <Text style={[styles.planPrice, { color: accentColor }]}>
-              <Text style={styles.currencySymbol}>€</Text>
+            <Text style={[
+              isCompact ? styles.compactPlanPrice : styles.planPrice, 
+              { color: accentColor }
+            ]}>
+              <Text style={isCompact ? styles.compactCurrencySymbol : styles.currencySymbol}>€</Text>
               <Text>{price}</Text>
             </Text>
             {period && (
-              <Text style={[styles.pricePeriod, { color: themeColors.textSecondary }]}>
+              <Text style={[
+                isCompact ? styles.compactPricePeriod : styles.pricePeriod, 
+                { color: themeColors.textSecondary }
+              ]}>
                 <Text>/{period}</Text>
               </Text>
             )}
           </View>
           {description && (
-            <Text style={[styles.planDescription, { color: themeColors.textSecondary }]}>
+            <Text style={[
+              isCompact ? styles.compactPlanDescription : styles.planDescription, 
+              { color: themeColors.textSecondary }
+            ]}>
               {description}
             </Text>
           )}
         </View>
 
-        <View style={styles.featureList}>
-          {features.map((feature, index) => (
+        <View style={isCompact ? styles.compactFeatureList : styles.featureList}>
+          {features.slice(0, isCompact ? 3 : features.length).map((feature, index) => (
             <View key={index}>
-              {renderFeatureItem(feature.text, feature.included, accentColor)}
+              {renderFeatureItem(feature.text, feature.included, accentColor, isCompact)}
             </View>
           ))}
         </View>
@@ -274,7 +385,7 @@ export default function SubscriptionPlans() {
         {onPress && buttonText && (
           <TouchableOpacity 
             style={[
-              styles.planButton,
+              isCompact ? styles.compactPlanButton : styles.planButton,
               { backgroundColor: isRecommended 
                   ? accentColor 
                   : accentColor !== themeColors.primary 
@@ -297,7 +408,7 @@ export default function SubscriptionPlans() {
               />
             ) : (
               <Text style={[
-                styles.planButtonText, 
+                isCompact ? styles.compactPlanButtonText : styles.planButtonText, 
                 { color: isRecommended 
                     ? themeColors.white 
                     : accentColor !== themeColors.primary 
@@ -337,9 +448,6 @@ export default function SubscriptionPlans() {
     const premiumSavingsPercent = Math.round(100 - (pricing.premium.yearly / 12 / pricing.premium.monthly * 100));
     const familySavingsPercent = Math.round(100 - (pricing.family.yearly / 12 / pricing.family.monthly * 100));
 
-    // Always show all plans, but indicate current plan
-    const showCurrentPlanInfo = subscriptionDetails.plan === 'premium' && !subscriptionDetails.isInTrial && !subscriptionDetails.isCanceledButActive;
-    
     // Cancelled subscription
     if (subscriptionDetails.isCanceledButActive) {
       return (
@@ -366,10 +474,10 @@ export default function SubscriptionPlans() {
 
           <PlanCard
             title={`${t('subscription.premium')} (${t('subscription.subscriptionEnding')})`}
-                            price={t('subscription.active')}
+            price={t('subscription.active')}
             description={`${t('subscription.nextBilling')}: ${subscriptionDetails.nextBillingDate 
               ? new Date(subscriptionDetails.nextBillingDate).toLocaleDateString() 
-                              : t('subscription.unknown')}`}
+              : t('subscription.unknown')}`}
             features={[
               { text: t('subscription.feature.documents'), included: true },
               { text: t('subscription.feature.priority'), included: true }
@@ -391,161 +499,150 @@ export default function SubscriptionPlans() {
         <View style={styles.headerSection}>
           <LinearGradient
             colors={[themeColors.primary + '15', themeColors.primaryLight + '05']}
-            style={styles.headerGradient}
+            style={styles.compactHeaderGradient}
           >
-            <MaterialIcons name="rocket-launch" size={48} color={themeColors.primary} />
-            <Text style={[styles.pageTitle, { color: themeColors.text }]}>
-              {t('subscription.title')}
-            </Text>
-            <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+            <MaterialIcons name="rocket-launch" size={32} color={themeColors.primary} />
+            <Text style={[styles.compactPageTitle, { color: themeColors.text }]}>
               {t('subscription.chooseYourPlan')}
             </Text>
           </LinearGradient>
+          
+          {/* Plan Type Toggle */}
+          <PlanTypeToggle />
+          
+          {/* Billing Toggle - Only for Personal/Family plans */}
+          {!showBusinessPlans && <BillingToggle />}
         </View>
 
-        {/* 1. FREE TRIAL - 7 DAYS PREMIUM */}
-        {!subscriptionDetails?.trialStartDate && !subscriptionDetails?.trialEndDate && (
-          <PlanCard
-            title={t('subscription.freeTrial')}
-            price="0"
-            period={t('subscription.trialPeriod')}
-            description={t('subscription.testPremiumFeatures')}
-            features={[
-              { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
-              { text: t('subscription.oneDevice'), included: true },
-              { text: t('subscription.feature.priority'), included: true },
-              { text: t('subscription.feature.cancel'), included: true }
-            ]}
-            onPress={handleStartTrial}
-            loading={subscribing}
-            buttonText={t('subscription.startFreeTrial7Days')}
-            isRecommended={true}
-            borderColor={themeColors.success}
-            gradientColors={[themeColors.success + '15', themeColors.surface]}
-          />
+        {!showBusinessPlans ? (
+          <>
+            {/* FREE TRIAL - Only show if available */}
+            {!subscriptionDetails?.trialStartDate && !subscriptionDetails?.trialEndDate && (
+              <PlanCard
+                title={t('subscription.freeTrial')}
+                price="0"
+                period={t('subscription.trialPeriod')}
+                description={t('subscription.testPremiumFeatures')}
+                features={[
+                  { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
+                  { text: t('subscription.feature.priority'), included: true },
+                  { text: t('subscription.feature.cancel'), included: true }
+                ]}
+                onPress={handleStartTrial}
+                loading={subscribing}
+                buttonText={t('subscription.startFreeTrial7Days')}
+                isRecommended={true}
+                borderColor={themeColors.success}
+                gradientColors={[themeColors.success + '15', themeColors.surface]}
+                isCompact={true}
+              />
+            )}
+
+            {/* FREE PLAN */}
+            <PlanCard
+              title={t('subscription.freeUser')}
+              price="0"
+              period={t('subscription.freeForever')}
+              description={t('subscription.casualUse')}
+              features={[
+                { text: `3 ${t('subscription.documentsPerDay')}`, included: true },
+                { text: t('subscription.feature.standard'), included: true },
+                { text: t('subscription.feature.premium'), included: false }
+              ]}
+              onPress={handleStayFree}
+              buttonText={t('subscription.stayFree')}
+              borderColor={themeColors.border}
+              gradientColors={[themeColors.surfaceVariant, themeColors.surface]}
+              isCompact={true}
+            />
+
+            {/* PREMIUM PLAN */}
+            <PlanCard
+              title={t('subscription.premiumUser')}
+              price={isYearly ? pricing.premium.yearly : pricing.premium.monthly}
+              period={isYearly ? t('subscription.yearly') : t('subscription.monthly')}
+              description={isYearly 
+                ? `${format(t('subscription.savePercent'), { percent: premiumSavingsPercent })}! ${format(t('subscription.onlyEuroPerMonth'), { price: '3.33' })}` 
+                : t('subscription.regularUse')
+              }
+              features={[
+                { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
+                { text: t('subscription.feature.priority'), included: true },
+                { text: t('subscription.feature.cancel'), included: true }
+              ]}
+              onPress={() => handleSubscribe(isYearly ? 'yearly' : 'monthly')}
+              loading={subscribing}
+              buttonText={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === (isYearly ? 'yearly' : 'monthly') 
+                ? t('subscription.currentPlan') 
+                : `€${isYearly ? pricing.premium.yearly : pricing.premium.monthly} ${isYearly ? t('subscription.perYear') : t('subscription.perMonth')}`
+              }
+              isCurrentPlan={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === (isYearly ? 'yearly' : 'monthly')}
+              isRecommended={isYearly && subscriptionDetails.plan !== 'premium'}
+              borderColor={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === (isYearly ? 'yearly' : 'monthly') 
+                ? themeColors.success 
+                : themeColors.primary
+              }
+              gradientColors={[themeColors.primary + '10', themeColors.surface]}
+              isCompact={true}
+            />
+
+            {/* FAMILY PLAN */}
+            <PlanCard
+              title={t('subscription.premiumFamily')}
+              price={isYearly ? pricing.family.yearly : pricing.family.monthly}
+              period={isYearly ? t('subscription.yearly') : t('subscription.monthly')}
+              description={isYearly 
+                ? `${format(t('subscription.savePercent'), { percent: familySavingsPercent })}! ${format(t('subscription.onlyEuroPerMonth'), { price: '16.58' })}` 
+                : t('subscription.idealForFamilies')
+              }
+              features={[
+                { text: t('subscription.fourDevices'), included: true },
+                { text: `150 ${t('subscription.documentsPerMonth')}`, included: true },
+                { text: t('subscription.familyDashboard'), included: true }
+              ]}
+              onPress={() => handleSubscribe(isYearly ? 'family-yearly' : 'family-monthly')}
+              loading={subscribing}
+              buttonText={`€${isYearly ? pricing.family.yearly : pricing.family.monthly} ${isYearly ? t('subscription.perYear') : t('subscription.perMonth')}`}
+              borderColor={themeColors.warning}
+              gradientColors={[themeColors.warning + '10', themeColors.surface]}
+              accentColor={themeColors.warning}
+              isCompact={true}
+            />
+          </>
+        ) : (
+          <>
+            {/* BUSINESS PLAN */}
+            <PlanCard
+              title={t('subscription.businessUser')}
+              price={pricing.business.monthly}
+              period={t('subscription.monthly')}
+              description={t('subscription.unlimitedUsage')}
+              features={[
+                { text: t('subscription.unlimitedDevices'), included: true },
+                { text: t('subscription.unlimitedDocuments'), included: true },
+                { text: t('subscription.prioritySupport'), included: true },
+                { text: t('subscription.teamManagement'), included: true },
+                { text: t('subscription.apiAccess'), included: true }
+              ]}
+              onPress={() => handleSubscribe('business')}
+              loading={subscribing}
+              buttonText={`€${pricing.business.monthly} ${t('subscription.perMonth')}`}
+              borderColor={themeColors.error}
+              gradientColors={[themeColors.error + '15', themeColors.surface]}
+              accentColor={themeColors.error}
+              isRecommended={true}
+            />
+
+            {/* Business Info Section */}
+            <View style={[styles.businessInfoSection, { backgroundColor: themeColors.surfaceVariant }]}>
+              <MaterialIcons name="info" size={24} color={themeColors.primary} />
+              <Text style={[styles.businessInfoText, { color: themeColors.textSecondary }]}>
+                Business plans include advanced features like team management, API access, and priority support. 
+                Contact us for enterprise solutions and volume discounts.
+              </Text>
+            </View>
+          </>
         )}
-
-        {/* 2. FREE USER */}
-        <PlanCard
-          title={t('subscription.freeUser')}
-          price="0"
-          period={t('subscription.freeForever')}
-          description={t('subscription.casualUse')}
-          features={[
-            { text: t('subscription.oneDevice'), included: true },
-            { text: `3 ${t('subscription.documentsPerDay')}`, included: true },
-            { text: t('subscription.feature.standard'), included: true },
-            { text: t('subscription.feature.premium'), included: false }
-          ]}
-          onPress={handleStayFree}
-          buttonText={t('subscription.stayFree')}
-          borderColor={themeColors.border}
-          gradientColors={[themeColors.surfaceVariant, themeColors.surface]}
-        />
-
-        {/* 3. PREMIUM USER - Monthly */}
-        <PlanCard
-          title={t('subscription.premiumUser')}
-          price="4.99"
-          period={t('subscription.monthly')}
-          description={t('subscription.regularUse')}
-          features={[
-            { text: t('subscription.oneDevice'), included: true },
-            { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
-            { text: t('subscription.feature.priority'), included: true },
-            { text: t('subscription.feature.cancel'), included: true }
-          ]}
-          onPress={() => handleSubscribe('monthly')}
-          loading={subscribing}
-          buttonText={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'monthly' ? t('subscription.currentPlan') : `€4.99 ${t('subscription.perMonth')}`}
-          isCurrentPlan={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'monthly'}
-          borderColor={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'monthly' ? themeColors.success : themeColors.primary}
-          gradientColors={[themeColors.primary + '10', themeColors.surface]}
-        />
-
-        {/* 4. PREMIUM USER - Yearly */}
-        <PlanCard
-          title={t('subscription.premiumUser')}
-          price="39.99"
-          period={t('subscription.yearly')}
-          description={`${format(t('subscription.savePercent'), { percent: premiumSavingsPercent })}! ${format(t('subscription.onlyEuroPerMonth'), { price: '3.33' })}`}
-          features={[
-            { text: t('subscription.oneDevice'), included: true },
-            { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
-            { text: t('subscription.feature.priority'), included: true },
-            { text: t('subscription.monthsInclusive'), included: true }
-          ]}
-          onPress={() => handleSubscribe('yearly')}
-          loading={subscribing}
-          buttonText={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'yearly' ? t('subscription.currentPlan') : `€39.99 ${t('subscription.perYear')}`}
-          isCurrentPlan={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'yearly'}
-          isRecommended={!showCurrentPlanInfo}
-          borderColor={subscriptionDetails.plan === 'premium' && subscriptionDetails.billingCycle === 'yearly' ? themeColors.success : themeColors.primary}
-          gradientColors={[themeColors.primary + '15', themeColors.surface]}
-        />
-
-        {/* 5. PREMIUM FAMILY - Monthly */}
-        <PlanCard
-          title={t('subscription.premiumFamily')}
-          price="19.99"
-          period={t('subscription.monthly')}
-          description={t('subscription.idealForFamilies')}
-          features={[
-            { text: t('subscription.fourDevices'), included: true },
-            { text: `150 ${t('subscription.documentsPerMonth')}`, included: true },
-            { text: t('subscription.feature.priority'), included: true },
-            { text: t('subscription.familyDashboard'), included: true }
-          ]}
-          onPress={() => handleSubscribe('family-monthly')}
-          loading={subscribing}
-          buttonText={`€19.99 ${t('subscription.perMonth')}`}
-          borderColor={themeColors.warning}
-          gradientColors={[themeColors.warning + '10', themeColors.surface]}
-          accentColor={themeColors.warning}
-        />
-
-        {/* 6. PREMIUM FAMILY - Yearly */}
-        <PlanCard
-          title={t('subscription.premiumFamily')}
-          price="199.00"
-          period={t('subscription.yearly')}
-          description={`${format(t('subscription.savePercent'), { percent: familySavingsPercent })}! ${format(t('subscription.onlyEuroPerMonth'), { price: '16.58' })}`}
-          features={[
-            { text: t('subscription.fourDevices'), included: true },
-            { text: `150 ${t('subscription.documentsPerMonth')}`, included: true },
-            { text: t('subscription.feature.priority'), included: true },
-            { text: t('subscription.familyDashboard'), included: true },
-            { text: t('subscription.monthsInclusive'), included: true }
-          ]}
-          onPress={() => handleSubscribe('family-yearly')}
-          loading={subscribing}
-          buttonText={`€199 ${t('subscription.perYear')}`}
-          isRecommended={true}
-          borderColor={themeColors.warning}
-          gradientColors={[themeColors.warning + '15', themeColors.surface]}
-          accentColor={themeColors.warning}
-        />
-
-        {/* 7. BUSINESS USER */}
-        <PlanCard
-          title={t('subscription.businessUser')}
-          price="199.99"
-          period={t('subscription.monthly')}
-          description={t('subscription.unlimitedUsage')}
-          features={[
-            { text: t('subscription.unlimitedDevices'), included: true },
-            { text: t('subscription.unlimitedDocuments'), included: true },
-            { text: t('subscription.prioritySupport'), included: true },
-            { text: t('subscription.teamManagement'), included: true },
-            { text: t('subscription.apiAccess'), included: true }
-          ]}
-          onPress={() => handleSubscribe('business')}
-          loading={subscribing}
-          buttonText={`€199.99 ${t('subscription.perMonth')}`}
-          borderColor={themeColors.error}
-          gradientColors={[themeColors.error + '15', themeColors.surface]}
-          accentColor={themeColors.error}
-        />
       </View>
     );
   };
@@ -827,5 +924,153 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+    borderRadius: 16,
+    marginTop: 16,
+    alignSelf: 'center',
+  },
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginHorizontal: 2,
+    position: 'relative',
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  savingsBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  savingsText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  compactPlanCardContainer: {
+    marginBottom: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  compactPlanCard: {
+    padding: 24,
+    position: 'relative',
+  },
+  compactPlanHeader: {
+    marginBottom: 20,
+    marginTop: 16,
+    paddingRight: 120, // Space for badges
+  },
+  compactPlanTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+    lineHeight: 26,
+  },
+  compactPlanPrice: {
+    fontSize: 36,
+    fontWeight: '800',
+  },
+  compactCurrencySymbol: {
+    fontSize: 24,
+  },
+  compactPricePeriod: {
+    fontSize: 18,
+    marginLeft: 4,
+  },
+  compactPlanDescription: {
+    fontSize: 15,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  compactFeatureList: {
+    marginBottom: 24,
+  },
+  compactFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  compactFeatureIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  compactFeatureText: {
+    fontSize: 15,
+    fontWeight: '500',
+    flex: 1,
+  },
+  compactPlanButton: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  compactPlanButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  compactHeaderGradient: {
+    alignItems: 'center',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  compactPageTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  planTypeToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+    borderRadius: 16,
+    marginTop: 16,
+    alignSelf: 'center',
+  },
+  planTypeToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginHorizontal: 2,
+    position: 'relative',
+  },
+  planTypeToggleText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  businessInfoSection: {
+    padding: 20,
+    borderRadius: 20,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  businessInfoText: {
+    fontSize: 15,
+    lineHeight: 20,
+    marginTop: 12,
   },
 }); 
