@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Dimensions, StatusBar, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -75,12 +75,16 @@ export default function SignIn() {
             backgroundColor: themeColors.primary,
             shadowColor: themeColors.primary
           }]}>
-            <Text style={[styles.logoText, { color: themeColors.white }]}>L</Text>
+            <Image 
+              source={require('../assets/img/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
         </View>
         
         <Text style={[styles.title, { color: themeColors.text }]}>Sign In</Text>
-        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Welcome back to LynxAI</Text>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Welcome back to SnapOCR</Text>
         
         <View style={styles.formContainer}>
           <TextInput
@@ -173,19 +177,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoBackground: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 12,
+    padding: 6,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowRadius: 15,
+    elevation: 10,
   },
-  logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
+  logoImage: {
+    width: 100,
+    height: 100,
   },
   title: {
     fontSize: 28,

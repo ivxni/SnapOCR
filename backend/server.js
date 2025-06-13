@@ -27,7 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.get('/', (req, res) => {
-  res.send('LynxAI API is running...');
+  res.send('SnapOCR API is running...');
 });
 
 app.use('/api/auth', authRoutes);

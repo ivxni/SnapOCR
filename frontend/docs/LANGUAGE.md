@@ -1,6 +1,6 @@
 # Language Configuration System
 
-This document outlines the language configuration system implemented in the LynxAI app. The system allows users to select their preferred language and provides a framework for translating the app's UI elements.
+This document outlines the language configuration system implemented in the SnapOCR app. The system allows users to select their preferred language and provides a framework for translating the app's UI elements.
 
 ## Overview
 

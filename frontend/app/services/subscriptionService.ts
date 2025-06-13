@@ -58,8 +58,8 @@ const revenueCatConfig = Constants.expoConfig?.extra?.revenueCat || {
 
 // Product identifiers for Apple IAP
 const IAP_IDENTIFIERS = {
-  MONTHLY: 'com.lynxai.app.premium.monthly',
-  YEARLY: 'com.lynxai.app.premium.yearly',
+  MONTHLY: 'com.snapocr.app.premium.monthly',
+  YEARLY: 'com.snapocr.app.premium.yearly',
 };
 
 // Set up axios instance
@@ -131,7 +131,7 @@ const getAvailablePackages = async (): Promise<PurchasesPackage[]> => {
         offeringIdentifier: 'default',
         packageType: 'MONTHLY',
         product: {
-          identifier: 'com.lynxai.app.premium.monthly',
+          identifier: 'com.snapocr.app.premium.monthly',
           description: 'Premium monthly subscription',
           title: 'Premium Monthly',
           price: 9.99,
@@ -143,7 +143,7 @@ const getAvailablePackages = async (): Promise<PurchasesPackage[]> => {
         offeringIdentifier: 'default',
         packageType: 'YEARLY',
         product: {
-          identifier: 'com.lynxai.app.premium.yearly',
+          identifier: 'com.snapocr.app.premium.yearly',
           description: 'Premium yearly subscription (save 17%)',
           title: 'Premium Yearly',
           price: 99.99,

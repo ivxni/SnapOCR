@@ -20,14 +20,14 @@ const PRICING = {
 
 // Apple product IDs for validation
 const APPLE_PRODUCT_IDS = {
-  MONTHLY: 'com.lynxai.app.premium.monthly',
-  YEARLY: 'com.lynxai.app.premium.yearly',
+  MONTHLY: 'com.snapocr.app.premium.monthly',
+  YEARLY: 'com.snapocr.app.premium.yearly',
 };
 
 // Google product IDs for validation
 const GOOGLE_PRODUCT_IDS = {
-  MONTHLY: 'com.lynxai.app.premium.monthly',
-  YEARLY: 'com.lynxai.app.premium.yearly',
+  MONTHLY: 'com.snapocr.app.premium.monthly',
+  YEARLY: 'com.snapocr.app.premium.yearly',
 };
 
 /**

@@ -215,7 +215,7 @@ async function createExactPDF(imageBuffer, outputPath, fileName, ocrResponse) {
       },
       info: {
         Title: fileName,
-        Author: 'LynxAI OCR',
+        Author: 'SnapOCR OCR',
         Subject: 'OCR Document',
         Keywords: 'OCR, PDF, Document'
       }

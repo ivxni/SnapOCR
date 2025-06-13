@@ -1,6 +1,6 @@
-# LynxAI Backend
+# SnapOCR Backend
 
-This is the backend for the LynxAI OCR application. It provides API endpoints for user authentication, document upload, and OCR processing.
+This is the backend for the SnapOCR OCR application. It provides API endpoints for user authentication, document upload, and OCR processing.
 
 ## Technologies Used
 
@@ -34,7 +34,7 @@ npm install
 
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/lynxai
+MONGODB_URI=mongodb://localhost:27017/SnapOCR
 JWT_SECRET=your_jwt_secret_key_here
 MISTRAL_API_KEY=your_mistral_api_key_here
 NODE_ENV=development

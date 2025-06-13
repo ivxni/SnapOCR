@@ -7,10 +7,10 @@ Um Apple In-App-Käufe für Deine Abonnements zu implementieren, folge diesen Sc
 2. Erstelle Deine App (falls noch nicht geschehen)
 3. Wähle "Funktionen" → "In-App-Käufe" → "+" → "Abonnement"
 4. Erstelle zwei Abonnement-Gruppen:
-   - LynxAI Premium Abonnements
+   - SnapOCR Premium Abonnements
 5. Füge Produkte hinzu:
-   - LynxAI Premium Monatlich ($9.99)
-   - LynxAI Premium Jährlich ($99.99)
+   - SnapOCR Premium Monatlich ($9.99)
+   - SnapOCR Premium Jährlich ($99.99)
 6. Für jedes Produkt:
    - Füge Screenshots/Beschreibungen hinzu
    - Wähle Preispunkte für internationale Märkte

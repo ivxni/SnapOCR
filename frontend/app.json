@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LynxAI",
-    "slug": "lynxai",
+    "name": "SnapOCR",
+    "slug": "snapocr",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,7 +10,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lynxai.app",
+      "bundleIdentifier": "com.snapocr.app",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan documents for OCR processing.",
@@ -18,7 +18,7 @@
       }
     },
     "android": {
-      "package": "com.lynxai.app",
+      "package": "com.snapocr.app",
       "versionCode": 1,
       "permissions": [
         "CAMERA",
@@ -29,7 +29,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "lynxai",
+    "scheme": "snapocr",
     "plugins": [
       [
         "expo-image-picker",

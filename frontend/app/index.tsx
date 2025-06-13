@@ -30,11 +30,15 @@ export default function Home() {
               backgroundColor: themeColors.primary,
               shadowColor: themeColors.primary
             }]}>
-              <Text style={[styles.logoText, { color: themeColors.white }]}>L</Text>
+              <Image 
+                source={require('./assets/img/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
           </View>
           
-          <Text style={[styles.title, { color: themeColors.text }]}>LynxAI</Text>
+          <Text style={[styles.title, { color: themeColors.text }]}>SnapOCR</Text>
           <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>OCR Document Processing</Text>
           
           <View style={styles.description}>
@@ -82,19 +86,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoBackground: {
-    width: 100,
-    height: 100,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
   },
-  logoText: {
-    fontSize: 60,
-    fontWeight: 'bold',
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 48,
