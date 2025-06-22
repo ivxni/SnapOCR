@@ -1,28 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const connectDB = require('./config/database');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
+const authRoutes = require('./routes/authRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const path = require('path');
-const fs = require('fs');
 
-// Umgebungsvariablen laden
+// Load environment variables
 dotenv.config();
 
-// Konfiguration importieren
-const config = require('./src/config/environment');
-const connectDB = require('./src/config/database');
-
-// Routen importieren
-const authRoutes = require('./src/routes/authRoutes');
-const documentRoutes = require('./src/routes/documentRoutes');
-
-// Middleware importieren
-const errorHandler = require('./src/middleware/errorHandler');
-
-// Express-App initialisieren
+// Create Express app
 const app = express();
 
-// Datenbank verbinden
+// Connect to MongoDB
 connectDB();
 
 // Middleware
@@ -30,37 +22,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Uploads-Verzeichnis erstellen, falls es nicht existiert
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Statische Dateien
+// Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routen
+// Routes
+app.get('/', (req, res) => {
+  res.send('SnapOCR API is running...');
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
-// Gesundheitscheck-Route
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Server läuft' });
-});
-
-// 404-Handler für nicht gefundene Routen
-app.use((req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route nicht gefunden'
-  });
-});
-
-// Fehlerbehandlung
+// Error handling middleware
+app.use(notFound);
 app.use(errorHandler);
 
-// Server starten
-const PORT = config.PORT;
+// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server läuft im ${config.NODE_ENV}-Modus auf Port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
