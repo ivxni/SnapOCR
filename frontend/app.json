@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -47,12 +48,12 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-apple-authentication"
     ],
     "extra": {
-      "isExpoGo": true,
       "revenueCat": {
-        "iosApiKey": "appl_YOUR_REVENUECAT_IOS_API_KEY",
+        "iosApiKey": "appl_UPsMcxwapvADbJSxEwqzUGPUhqX",
         "androidApiKey": "goog_YOUR_REVENUECAT_ANDROID_API_KEY"
       }
     }

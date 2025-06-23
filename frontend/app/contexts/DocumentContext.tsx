@@ -1,12 +1,12 @@
 import React, { createContext, useState, ReactNode } from 'react';
 import documentService from '../services/documentService';
-import { Document, ProcessingJob, DocumentState, UploadFile } from '../types/document.types';
+import { Document, ProcessingJob, DocumentState, UploadFile, ProcessingType } from '../types/document.types';
 
 // Create context with default values
 interface DocumentContextType extends DocumentState {
   fetchDocuments: () => Promise<Document[]>;
   fetchDocumentById: (id: string) => Promise<Document>;
-  uploadDocument: (file: UploadFile) => Promise<{document: Document, processingJob: ProcessingJob}>;
+  uploadDocument: (file: UploadFile, processingType?: ProcessingType) => Promise<{document: Document, processingJob: ProcessingJob}>;
   updateDocumentStatus: (id: string, status: 'processing' | 'completed' | 'failed') => Promise<Document>;
   deleteDocument: (id: string) => Promise<void>;
   getProcessingJobStatus: (id: string) => Promise<ProcessingJob>;
@@ -72,11 +72,11 @@ export const DocumentProvider: React.FC<DocumentProviderProps> = ({ children }) 
   };
 
   // Upload document
-  const uploadDocument = async (file: UploadFile): Promise<{document: Document, processingJob: ProcessingJob}> => {
+  const uploadDocument = async (file: UploadFile, processingType: ProcessingType = 'ocr'): Promise<{document: Document, processingJob: ProcessingJob}> => {
     setLoading(true);
     setError(null);
     try {
-      const data = await documentService.uploadDocument(file);
+      const data = await documentService.uploadDocument(file, processingType);
       // Add the new document to the documents list
       setDocuments((prevDocuments) => [data.document, ...prevDocuments]);
       return data;

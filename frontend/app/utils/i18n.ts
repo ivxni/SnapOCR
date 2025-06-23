@@ -47,6 +47,14 @@ export type TranslationKey =
   | 'upload.confirm'
   | 'upload.selectImageDescription'
   | 'upload.takePhotoDescription'
+  | 'upload.selectProcessingType'
+  | 'upload.freeOptions'
+  | 'upload.freeOptionsDescription'
+  | 'upload.premiumOptions'
+  | 'upload.premiumOptionsDescription'
+  | 'upload.upgradeForPremiumFeatures'
+  | 'upload.selectProcessingForGallery'
+  | 'upload.selectProcessingForCamera'
   
   // History
   | 'history.title'
@@ -219,6 +227,8 @@ export type TranslationKey =
   | 'subscription.active'
   | 'subscription.unknown'
   | 'subscription.none'
+  | 'subscription.premiumRequired'
+  | 'subscription.upgradeForFeature'
   
   // Language
   | 'language.title'
@@ -276,6 +286,14 @@ const en: TranslationDictionary = {
   'upload.confirm': 'Confirm',
   'upload.selectImageDescription': 'Choose an image from your gallery',
   'upload.takePhotoDescription': 'Take a new photo with your camera',
+  'upload.selectProcessingType': 'Select Processing Type',
+  'upload.freeOptions': 'Free Options',
+  'upload.freeOptionsDescription': 'Available with your free account',
+  'upload.premiumOptions': 'Premium Options',
+  'upload.premiumOptionsDescription': 'Advanced features for premium users',
+  'upload.upgradeForPremiumFeatures': 'Upgrade to access premium processing features',
+  'upload.selectProcessingForGallery': 'Select Processing for Gallery',
+  'upload.selectProcessingForCamera': 'Select Processing for Camera',
   
   // History
   'history.title': 'Document History',
@@ -448,6 +466,8 @@ const en: TranslationDictionary = {
   'subscription.active': 'Active',
   'subscription.unknown': 'Unknown',
   'subscription.none': 'None',
+  'subscription.premiumRequired': 'Premium Required',
+  'subscription.upgradeForFeature': 'This feature requires a premium subscription. Would you like to upgrade?',
   
   // Language
   'language.title': 'Language',
@@ -502,6 +522,14 @@ const de: TranslationDictionary = {
   'upload.confirm': 'Bestätigen',
   'upload.selectImageDescription': 'Wählen Sie ein Bild aus Ihrer Galerie',
   'upload.takePhotoDescription': 'Nehmen Sie ein neues Foto mit Ihrer Kamera auf',
+  'upload.selectProcessingType': 'Verarbeitungstyp auswählen',
+  'upload.freeOptions': 'Kostenlose Optionen',
+  'upload.freeOptionsDescription': 'Verfügbar mit Ihrem kostenlosen Konto',
+  'upload.premiumOptions': 'Premium-Optionen',
+  'upload.premiumOptionsDescription': 'Erweiterte Funktionen für Premium-Nutzer',
+  'upload.upgradeForPremiumFeatures': 'Upgraden Sie für Zugang zu Premium-Verarbeitungsfunktionen',
+  'upload.selectProcessingForGallery': 'Verarbeitung für Galerie auswählen',
+  'upload.selectProcessingForCamera': 'Verarbeitung für Kamera auswählen',
   
   // History
   'history.title': 'Dokumentenverlauf',
@@ -672,6 +700,8 @@ const de: TranslationDictionary = {
   'subscription.active': 'Aktiv',
   'subscription.unknown': 'Unbekannt',
   'subscription.none': 'Keine',
+  'subscription.premiumRequired': 'Premium erforderlich',
+  'subscription.upgradeForFeature': 'Diese Funktion erfordert ein Premium-Abonnement. Möchten Sie upgraden?',
   
   // Language
   'language.title': 'Sprache',
@@ -726,6 +756,14 @@ const es: TranslationDictionary = {
   'upload.confirm': 'Confirmar',
   'upload.selectImageDescription': 'Elige una imagen de tu galería',
   'upload.takePhotoDescription': 'Toma una nueva foto con tu cámara',
+  'upload.selectProcessingType': 'Seleccionar tipo de procesamiento',
+  'upload.freeOptions': 'Opciones gratuitas',
+  'upload.freeOptionsDescription': 'Disponible con tu cuenta gratuita',
+  'upload.premiumOptions': 'Opciones premium',
+  'upload.premiumOptionsDescription': 'Funciones avanzadas para usuarios premium',
+  'upload.upgradeForPremiumFeatures': 'Actualiza para acceder a funciones de procesamiento premium',
+  'upload.selectProcessingForGallery': 'Seleccionar procesamiento para galería',
+  'upload.selectProcessingForCamera': 'Seleccionar procesamiento para cámara',
   
   // History
   'history.title': 'Historial de documentos',
@@ -896,6 +934,8 @@ const es: TranslationDictionary = {
   'subscription.active': 'Activo',
   'subscription.unknown': 'Desconocido',
   'subscription.none': 'Ninguno',
+  'subscription.premiumRequired': 'Premium requerido',
+  'subscription.upgradeForFeature': 'Esta función requiere una suscripción premium. ¿Te gustaría actualizar?',
   
   // Language
   'language.title': 'Idioma',
@@ -1174,6 +1214,14 @@ const tr: TranslationDictionary = {
   'upload.confirm': 'Onayla',
   'upload.selectImageDescription': 'Galerinizden bir resim seçin',
   'upload.takePhotoDescription': 'Kameranızla yeni bir fotoğraf çekin',
+  'upload.selectProcessingType': 'İşlem Tipi Seç',
+  'upload.freeOptions': 'Ücretsiz Seçenekler',
+  'upload.freeOptionsDescription': 'Ücretsiz hesap için mevcut seçenekler',
+  'upload.premiumOptions': 'Premium Seçenekler',
+  'upload.premiumOptionsDescription': 'Premium kullanıcılar için gelişmiş özellikler',
+  'upload.upgradeForPremiumFeatures': 'Premium özellikleri kullanmak için ücretli hizmete yükselt',
+  'upload.selectProcessingForGallery': 'Galeri için işlem tipi seç',
+  'upload.selectProcessingForCamera': 'Kamera için işlem tipi seç',
   
   // History
   'history.title': 'Belge Geçmişi',

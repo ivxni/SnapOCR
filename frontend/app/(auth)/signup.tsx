@@ -39,7 +39,7 @@ export default function SignUp() {
     } catch (err: any) {
       if (err.message !== 'Apple Sign-In was cancelled') {
         setError(err.message || 'Sign up failed');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } finally {
       setLoading(false);

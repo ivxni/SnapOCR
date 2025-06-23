@@ -3,7 +3,7 @@ const ProcessingJob = require('../models/ProcessingJob');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
-const ocrService = require('../services/ocrService');
+const processingService = require('../services/processingService');
 const subscriptionService = require('../services/subscriptionService');
 
 // @desc    Upload a document
@@ -13,6 +13,21 @@ const uploadDocument = async (req, res) => {
   if (!req.file) {
     res.status(400);
     throw new Error('No file uploaded');
+  }
+
+  // Get processing type from request
+  const processingType = req.body.processingType || 'ocr';
+  
+  // Validate processing type
+  const validProcessingTypes = [
+    'ocr', 'pdf_convert', 'document_scan', 'multi_page_pdf',
+    'image_enhance', 'qr_barcode_scan', 'table_extract',
+    'handwriting_ocr', 'ocr_translate', 'document_classify'
+  ];
+  
+  if (!validProcessingTypes.includes(processingType)) {
+    res.status(400);
+    throw new Error(`Invalid processing type: ${processingType}`);
   }
 
   // Check if user has reached document limit
@@ -28,14 +43,29 @@ const uploadDocument = async (req, res) => {
     throw new Error(error.message || 'Unable to process document due to subscription limits.');
   }
 
-  // Log environment check for debugging
-  console.log('Environment check:');
-  console.log('- NODE_ENV:', process.env.NODE_ENV);
-  console.log('- Mistral API Key configured:', process.env.MISTRAL_API_KEY ? 'Yes' : 'No');
+  // Check if processing type is allowed for user's subscription
+  const userPlan = subscriptionCheck.plan;
+  const premiumOnlyTypes = [
+    'document_scan', 'multi_page_pdf', 'image_enhance', 
+    'qr_barcode_scan', 'table_extract', 'handwriting_ocr', 
+    'ocr_translate', 'document_classify'
+  ];
   
-  if (!process.env.MISTRAL_API_KEY) {
-    console.error('MISTRAL_API_KEY is not configured in environment variables!');
+  if (premiumOnlyTypes.includes(processingType) && userPlan === 'free') {
+    res.status(403);
+    throw new Error(`Processing type '${processingType}' requires a premium subscription.`);
   }
+
+  console.log(`Creating document with processing type: ${processingType}`);
+
+  // Get processing options from request body
+  const processingOptions = {};
+  if (req.body.language) processingOptions.language = req.body.language;
+  if (req.body.targetLanguage) processingOptions.targetLanguage = req.body.targetLanguage;
+  if (req.body.sourceLanguage) processingOptions.sourceLanguage = req.body.sourceLanguage;
+  if (req.body.pageSize) processingOptions.pageSize = req.body.pageSize;
+  if (req.body.orientation) processingOptions.orientation = req.body.orientation;
+  if (req.body.quality) processingOptions.quality = req.body.quality;
 
   // Create document record
   const document = await Document.create({
@@ -44,17 +74,20 @@ const uploadDocument = async (req, res) => {
     originalFileType: req.file.mimetype,
     originalFileSize: req.file.size,
     originalFileUrl: `/uploads/${req.user._id}/${req.file.filename}`,
-    status: 'processing',
+    processingType: processingType,
+    processingOptions: processingOptions,
+    status: 'pending',
   });
 
   // Create processing job
   const processingJob = await ProcessingJob.create({
     documentId: document._id,
     userId: req.user._id,
-    status: 'queued',
+    processingType: processingType,
+    status: 'pending',
   });
 
-  console.log(`Created document ${document._id} and processing job ${processingJob._id}`);
+  console.log(`Created document ${document._id} and processing job ${processingJob._id} for ${processingType}`);
 
   // Increment document usage count
   try {
@@ -64,14 +97,13 @@ const uploadDocument = async (req, res) => {
     // We'll continue with the process even if count increment fails
   }
 
-  // Start OCR processing in the background
-  // In a production app, this would be handled by a queue system like Bull
+  // Start processing in the background using the new processing service
   setTimeout(async () => {
     try {
-      console.log(`Starting OCR processing for document ${document._id}`);
-      await ocrService.processImage(document._id, req.user._id);
+      console.log(`Starting ${processingType} processing for document ${document._id}`);
+      await processingService.processDocument(document._id, req.user._id, processingType, processingOptions);
     } catch (error) {
-      console.error('Background OCR processing error:', error);
+      console.error(`Background ${processingType} processing error:`, error);
     }
   }, 0);
 
@@ -79,10 +111,12 @@ const uploadDocument = async (req, res) => {
     document: {
       _id: document._id,
       originalFileName: document.originalFileName,
+      processingType: document.processingType,
       status: document.status,
     },
     processingJob: {
       _id: processingJob._id,
+      processingType: processingJob.processingType,
       status: processingJob.status,
     },
   });

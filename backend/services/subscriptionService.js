@@ -222,7 +222,7 @@ const verifyPurchase = async (userId, platform, productIdentifier, billingCycle,
   user.subscription.isInTrial = false;
   user.subscription.lastBillingDate = now;
   user.subscription.nextBillingDate = nextBillingDate;
-  user.subscription.documentLimitTotal = 50; // Premium document limit
+  user.subscription.documentLimitTotal = 100; // Premium document limit
   
   // Store platform-specific purchase info for later reference
   if (!user.subscription.platformData) {
@@ -315,7 +315,7 @@ const restorePurchases = async (userId, platform, purchases) => {
     user.subscription.isInTrial = false;
     user.subscription.lastBillingDate = now;
     user.subscription.nextBillingDate = expiryDate;
-    user.subscription.documentLimitTotal = 50; // Premium document limit
+    user.subscription.documentLimitTotal = 100; // Premium document limit
     
     // Store platform details
     if (!user.subscription.platformData) {

@@ -4,13 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import colors from '../constants/colors';
 import { useDocuments } from '../hooks/useDocuments';
 import { useTranslation } from '../utils/i18n';
-import { UploadFile } from '../types/document.types';
+import { UploadFile, ProcessingType } from '../types/document.types';
 import useThemeColors from '../utils/useThemeColors';
+import ProcessingOptionsModal from '../components/common/ProcessingOptionsModal';
 
 export default function Upload() {
   const router = useRouter();
@@ -31,6 +33,9 @@ export default function Upload() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [imageLayout, setImageLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [showProcessingOptions, setShowProcessingOptions] = useState(false);
+  const [selectedProcessingType, setSelectedProcessingType] = useState<ProcessingType>('ocr');
+  const [pendingImageAction, setPendingImageAction] = useState<'gallery' | 'camera' | null>(null);
   const cropImageContainerRef = useRef<View>(null);
 
   // Set up polling for document status
@@ -137,36 +142,65 @@ export default function Upload() {
   };
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    const result = await ImagePicker.launchImageLibraryAsync({
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      setCropMode(true);
-    }
+    console.log('pickImage called - setting pendingImageAction to gallery');
+    // Show processing options first, then pick image
+    setPendingImageAction('gallery');
+    setShowProcessingOptions(true);
   };
 
   const takePhoto = async () => {
-    // Request camera permissions
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    console.log('takePhoto called - setting pendingImageAction to camera');
+    // Show processing options first, then take photo
+    setPendingImageAction('camera');
+    setShowProcessingOptions(true);
+  };
+
+  const handleProcessingOptionSelect = async (processingType: ProcessingType) => {
+    console.log('Processing option selected:', processingType);
+    console.log('Pending image action:', pendingImageAction);
     
-    if (status !== 'granted') {
-      Alert.alert(
-        t('upload.permissionRequired'),
-        t('upload.cameraPermission')
-      );
-      return;
-    }
+    setSelectedProcessingType(processingType);
+    
+    // Store the action before clearing
+    const actionToExecute = pendingImageAction;
+    
+    // Clear the pending action and close modal
+    setPendingImageAction(null);
+    setShowProcessingOptions(false);
+    
+    // Execute the action immediately without timeout
+    if (actionToExecute === 'gallery') {
+      console.log('Opening gallery immediately');
+      // No permissions request is necessary for launching the image library
+      const result = await ImagePicker.launchImageLibraryAsync({
+        quality: 1,
+      });
 
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 1,
-    });
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+        setCropMode(true);
+      }
+    } else if (actionToExecute === 'camera') {
+      console.log('Opening camera immediately');
+      // Request camera permissions
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          t('upload.permissionRequired'),
+          t('upload.cameraPermission')
+        );
+        return;
+      }
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      setCropMode(true);
+      const result = await ImagePicker.launchCameraAsync({
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+        setCropMode(true);
+      }
     }
   };
 
@@ -272,8 +306,8 @@ export default function Upload() {
         type: 'image/jpeg', // Adjust based on your image type
       };
 
-      // Upload the document
-      const result = await uploadDocument(uploadFile);
+      // Upload the document with selected processing type
+      const result = await uploadDocument(uploadFile, selectedProcessingType);
       console.log('Upload result:', result);
       
       // Set document ID for polling
@@ -289,6 +323,17 @@ export default function Upload() {
       );
       setUploading(false);
     }
+  };
+
+  const showProcessingOptionsModal = () => {
+    if (!croppedImage && !image) {
+      Alert.alert(
+        t('upload.error'),
+        'Please select or take a photo first'
+      );
+      return;
+    }
+    setShowProcessingOptions(true);
   };
 
   const renderCropMode = () => {
@@ -416,12 +461,13 @@ export default function Upload() {
                 {t('common.cancel')}
               </Text>
             </TouchableOpacity>
+            
             <TouchableOpacity 
-              style={[styles.actionButton, styles.uploadButton, { backgroundColor: themeColors.surfaceVariant }]}
+              style={[styles.actionButton, styles.uploadButton, { backgroundColor: themeColors.primary }]}
               onPress={handleUpload}
             >
-              <MaterialIcons name="check" size={24} color={themeColors.success} />
-              <Text style={[styles.actionButtonText, styles.uploadButtonText, { color: themeColors.success }]}>
+              <MaterialIcons name="check" size={24} color={themeColors.white} />
+              <Text style={[styles.actionButtonText, styles.uploadButtonText, { color: themeColors.white }]}>
                 {t('upload.confirm')}
               </Text>
             </TouchableOpacity>
@@ -473,6 +519,11 @@ export default function Upload() {
     );
   };
 
+  const executeImageAction = async () => {
+    // This function is now deprecated, keeping for backwards compatibility
+    console.log('executeImageAction called - this should not happen anymore');
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.header}>
@@ -488,6 +539,16 @@ export default function Upload() {
       </View>
 
       {renderContent()}
+
+      <ProcessingOptionsModal
+        visible={showProcessingOptions}
+        onClose={() => {
+          setShowProcessingOptions(false);
+          setPendingImageAction(null);
+        }}
+        onSelectOption={handleProcessingOptionSelect}
+        pendingAction={pendingImageAction}
+      />
     </SafeAreaView>
   );
 }
@@ -551,16 +612,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    gap: 12,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 8,
   },
   actionButtonText: {
     fontSize: 16,

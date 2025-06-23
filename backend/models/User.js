@@ -87,7 +87,7 @@ const userSchema = new mongoose.Schema(
       nextBillingDate: Date,
       documentLimitTotal: {
         type: Number,
-        default: 5, // Default for free users
+        default: 3, // Default 3 documents per day for free users
       },
       documentLimitUsed: {
         type: Number,
@@ -135,9 +135,9 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.updateDocumentLimit = function() {
   const now = new Date();
   
-  // For free users, 3 documents per day (21 per week)
+  // For free users, 3 documents per day
   if (this.subscription.plan === 'free') {
-    this.subscription.documentLimitTotal = 21; // 3 per day * 7 days
+    this.subscription.documentLimitTotal = 3; // 3 documents per day
     this.subscription.deviceCount = 1;
     
     // Daily reset for free users

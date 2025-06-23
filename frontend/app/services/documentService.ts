@@ -1,6 +1,6 @@
 import api from './api';
 import { ENDPOINTS } from '../constants/api';
-import { Document, ProcessingJob, UploadFile } from '../types/document.types';
+import { Document, ProcessingJob, UploadFile, ProcessingType } from '../types/document.types';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -25,7 +25,7 @@ export const getDocumentById = async (id: string): Promise<Document> => {
 };
 
 // Upload document
-export const uploadDocument = async (file: UploadFile): Promise<{document: Document, processingJob: ProcessingJob}> => {
+export const uploadDocument = async (file: UploadFile, processingType: ProcessingType = 'ocr'): Promise<{document: Document, processingJob: ProcessingJob}> => {
   try {
     const formData = new FormData();
     formData.append('file', {
@@ -33,6 +33,9 @@ export const uploadDocument = async (file: UploadFile): Promise<{document: Docum
       name: file.name || 'document.jpg',
       type: file.type || 'image/jpeg',
     } as any);
+    
+    // Add processing type to form data
+    formData.append('processingType', processingType);
     
     const response = await api.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
       headers: {
@@ -80,18 +83,18 @@ export const getProcessingJobStatus = async (id: string): Promise<ProcessingJob>
 export const getPdfFileUrl = async (id: string): Promise<string> => {
   try {
     const document = await getDocumentById(id);
-    if (!document.pdfFileUrl) {
+    if (!document.downloadUrl) {
       throw new Error('PDF file not found');
     }
     
-    // Korrektur des Pfads: Der pdfFileUrl beginnt bereits mit /uploads,
+    // Korrektur des Pfads: Der downloadUrl beginnt bereits mit /uploads,
     // aber die baseURL enthält bereits /api
     // Daher müssen wir den URL-Teil korrekt erstellen:
-    // Die baseURL enthält bereits "/api", und der pdfFileUrl beginnt mit "/uploads"
+    // Die baseURL enthält bereits "/api", und der downloadUrl beginnt mit "/uploads"
     // Erstellung des vollständigen URL ohne Dopplung des "/api"-Pfads
     const baseUrl = api.defaults.baseURL || '';
     const baseUrlWithoutApi = baseUrl.replace(/\/api$/, '');
-    const pdfUrl = `${baseUrlWithoutApi}${document.pdfFileUrl}`;
+    const pdfUrl = `${baseUrlWithoutApi}${document.downloadUrl}`;
     
     console.log('PDF URL:', pdfUrl);
     
@@ -128,17 +131,17 @@ export const downloadAndSavePdf = async (id: string): Promise<string> => {
   try {
     // Hole Dokument-Details, um den Dateinamen zu erhalten
     const document = await getDocumentById(id);
-    if (!document.pdfFileUrl) {
+    if (!document.downloadUrl) {
       throw new Error('PDF file not found');
     }
     
     // Erstelle die URL zur PDF-Datei
     const baseUrl = api.defaults.baseURL || '';
     const baseUrlWithoutApi = baseUrl.replace(/\/api$/, '');
-    const pdfUrl = `${baseUrlWithoutApi}${document.pdfFileUrl}`;
+    const pdfUrl = `${baseUrlWithoutApi}${document.downloadUrl}`;
     
     // Bestimme den Dateinamen aus der URL oder verwende den Originalnamen
-    const fileName = document.pdfFileName || document.originalFileName.replace(/\.[^\.]+$/, '.pdf');
+    const fileName = document.filename || document.originalFilename.replace(/\.[^\.]+$/, '.pdf');
     
     // Lokaler Pfad, wohin die Datei gespeichert werden soll
     const localFilePath = `${FileSystem.cacheDirectory}${fileName}`;

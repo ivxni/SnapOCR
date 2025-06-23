@@ -42,8 +42,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     billingCycle: 'none',
     nextBillingDate: undefined,
     isCanceledButActive: false,
-    documentLimitTotal: 21, // 3 documents per day * 7 days
-    documentLimitRemaining: 21,
+    documentLimitTotal: 3, // 3 documents per day for free users
+    documentLimitRemaining: 3,
     documentLimitUsed: 0,
     resetDate: undefined,
     deviceCount: 1,
@@ -71,8 +71,8 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   } | null>({
     plan: 'free', // Default to free to prevent UI flashing
     billingCycle: undefined,
-    remainingDocuments: 0,
-    totalDocuments: 10,
+    remainingDocuments: 3,
+    totalDocuments: 3, // 3 documents per day for free users
     isInTrial: false,
     isCanceledButActive: false,
   });

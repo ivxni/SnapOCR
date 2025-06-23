@@ -682,6 +682,220 @@ function processPageOptimized(pdfDoc, page) {
   }
 }
 
+/**
+ * Standard OCR processing (refactored from existing processImage function)
+ * @param {string} documentId - The ID of the document to process
+ * @param {string} userId - The ID of the user who owns the document
+ * @param {Object} options - Processing options
+ * @returns {Promise<Object>} - The processing result
+ */
+const processOCR = async (documentId, userId, options = {}) => {
+  console.log('OCR processOCR started:', { documentId, userId });
+  
+  try {
+    // Get the document from the database
+    const document = await Document.findById(documentId);
+    if (!document) {
+      throw new Error('Document not found');
+    }
+
+    // Get the processing job from the database
+    const processingJob = await ProcessingJob.findOne({ documentId });
+    if (processingJob) {
+      processingJob.progress = 30;
+      processingJob.currentStep = 'ocr_processing';
+      await processingJob.save();
+    }
+
+    // Get the file path
+    const filePath = path.join(__dirname, '..', document.originalFileUrl);
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File not found');
+    }
+
+    // Read the file as base64
+    const fileBuffer = fs.readFileSync(filePath);
+    const base64Image = fileBuffer.toString('base64');
+    const fileType = document.originalFileType || 'image/jpeg';
+
+    // Update progress
+    if (processingJob) {
+      processingJob.progress = 50;
+      await processingJob.save();
+    }
+
+    // Initialize Mistral client
+    const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+    // Call Mistral OCR API
+    const ocrResponse = await client.ocr.process({
+      model: 'mistral-ocr-latest',
+      document: {
+        type: 'image_url',
+        imageUrl: `data:${fileType};base64,${base64Image}`
+      },
+      include_image_base64: true,
+      include_layout_info: true,
+      purpose: 'transcription',
+      ocr_options: {
+        detect_text: true,
+        detect_formulas: true,
+        detect_icons: true,
+        detect_tables: true,
+        language: options.language || 'auto',
+        quality: 'high'
+      }
+    });
+
+    // Update progress
+    if (processingJob) {
+      processingJob.progress = 80;
+      await processingJob.save();
+    }
+
+    // Extract content from OCR response
+    const pages = ocrResponse.pages || [];
+    const markdownContent = pages.map(page => page.markdown || '').join('\n\n');
+    const postProcessedMarkdown = postProcessOcrText(markdownContent);
+
+    // Create PDF if requested
+    let pdfUrl = null;
+    if (options.ocrOutputFormat === 'pdf' || !options.ocrOutputFormat) {
+      const userDir = path.join(__dirname, '..', 'uploads', userId.toString());
+      if (!fs.existsSync(userDir)) {
+        fs.mkdirSync(userDir, { recursive: true });
+      }
+
+      const pdfFileName = `${document.originalFileName.split('.')[0]}.pdf`;
+      const pdfFilePath = path.join(userDir, pdfFileName);
+
+      await createExactPDF(fileBuffer, pdfFilePath, document.originalFileName, ocrResponse);
+      pdfUrl = `/uploads/${userId}/${pdfFileName}`;
+    }
+
+    return {
+      extractedText: postProcessedMarkdown,
+      ocrConfidence: 85, // Estimated confidence
+      pdfUrl,
+      pageCount: pages.length || 1
+    };
+
+  } catch (error) {
+    console.error('OCR processing error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Handwriting OCR processing with specialized settings
+ * @param {string} documentId - The ID of the document to process
+ * @param {string} userId - The ID of the user who owns the document
+ * @param {Object} options - Processing options
+ * @returns {Promise<Object>} - The processing result
+ */
+const processHandwriting = async (documentId, userId, options = {}) => {
+  console.log('Handwriting OCR started:', { documentId, userId });
+  
+  try {
+    // Get the document from the database
+    const document = await Document.findById(documentId);
+    if (!document) {
+      throw new Error('Document not found');
+    }
+
+    // Get the processing job from the database
+    const processingJob = await ProcessingJob.findOne({ documentId });
+    if (processingJob) {
+      processingJob.progress = 30;
+      processingJob.currentStep = 'handwriting_ocr';
+      await processingJob.save();
+    }
+
+    // Get the file path
+    const filePath = path.join(__dirname, '..', document.originalFileUrl);
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File not found');
+    }
+
+    // Read the file as base64
+    const fileBuffer = fs.readFileSync(filePath);
+    const base64Image = fileBuffer.toString('base64');
+    const fileType = document.originalFileType || 'image/jpeg';
+
+    // Update progress
+    if (processingJob) {
+      processingJob.progress = 50;
+      await processingJob.save();
+    }
+
+    // Initialize Mistral client
+    const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+    // Call Mistral OCR API with handwriting-optimized settings
+    const ocrResponse = await client.ocr.process({
+      model: 'mistral-ocr-latest',
+      document: {
+        type: 'image_url',
+        imageUrl: `data:${fileType};base64,${base64Image}`
+      },
+      include_layout_info: true,
+      purpose: 'handwriting', // Specialized for handwriting
+      ocr_options: {
+        detect_text: true,
+        detect_handwriting: true, // Focus on handwriting
+        language: options.language || 'auto',
+        quality: 'high'
+      }
+    });
+
+    // Update progress
+    if (processingJob) {
+      processingJob.progress = 80;
+      await processingJob.save();
+    }
+
+    // Extract content from OCR response
+    const pages = ocrResponse.pages || [];
+    const markdownContent = pages.map(page => page.markdown || '').join('\n\n');
+    const postProcessedMarkdown = postProcessHandwritingText(markdownContent);
+
+    return {
+      extractedText: postProcessedMarkdown,
+      ocrConfidence: 75, // Lower confidence for handwriting
+      pageCount: pages.length || 1
+    };
+
+  } catch (error) {
+    console.error('Handwriting OCR error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Post-processes handwriting OCR text to fix common issues
+ * @param {string} text - The OCR text to process
+ * @returns {string} - The processed text
+ */
+function postProcessHandwritingText(text) {
+  if (!text) return text;
+  
+  let processed = text;
+  
+  // Common handwriting OCR corrections
+  processed = processed.replace(/\br\b/g, 'r'); // Fix isolated 'r' characters
+  processed = processed.replace(/\bn\b/g, 'n'); // Fix isolated 'n' characters
+  processed = processed.replace(/(\w)1(\w)/g, '$1l$2'); // Replace '1' with 'l' between letters
+  processed = processed.replace(/(\w)0(\w)/g, '$1o$2'); // Replace '0' with 'o' between letters
+  
+  // Fix common letter confusions in handwriting
+  processed = processed.replace(/rn/g, 'm'); // 'rn' often misread as 'm'
+  processed = processed.replace(/cl/g, 'd'); // 'cl' often misread as 'd'
+  
+  return processed;
+}
+
 module.exports = {
   processImage,
+  processOCR,
+  processHandwriting,
 }; 

@@ -15,9 +15,51 @@ const appleSignIn = async (req, res, next) => {
       return next(error);
     }
 
-    // Verify the identity token with Apple
-    // Note: In production, use process.env.APPLE_BUNDLE_ID
+    // For development/testing: Skip Apple verification if in development mode
+    if (process.env.NODE_ENV === 'development' && process.env.SKIP_APPLE_VERIFICATION === 'true') {
+      console.log('Development mode: Skipping Apple token verification');
+      
+      // Use a mock Apple user ID for development
+      const appleUserId = user || `dev_user_${Date.now()}`;
+      const appleEmail = email || `dev_user_${Date.now()}@apple.private`;
+      
+      // Check if user already exists with this Apple ID
+      let existingUser = await User.findOne({ appleId: appleUserId });
+
+      if (existingUser) {
+        return res.json({
+          _id: existingUser._id,
+          email: existingUser.email,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          authProvider: existingUser.authProvider,
+          token: generateToken(existingUser._id),
+        });
+      }
+
+      // Create new user for development
+      const newUser = await User.create({
+        appleId: appleUserId,
+        email: appleEmail,
+        firstName: fullName?.givenName || 'Dev',
+        lastName: fullName?.familyName || 'User',
+        authProvider: 'apple',
+        isVerified: true,
+      });
+
+      return res.status(201).json({
+        _id: newUser._id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        authProvider: newUser.authProvider,
+        token: generateToken(newUser._id),
+      });
+    }
+
+    // Production: Verify the identity token with Apple
     const bundleId = process.env.APPLE_BUNDLE_ID || 'com.snapocr.app';
+    console.log(`Verifying Apple token with bundle ID: ${bundleId}`);
     
     const appleResponse = await appleSignin.verifyIdToken(identityToken, {
       audience: bundleId,
@@ -78,8 +120,19 @@ const appleSignIn = async (req, res, next) => {
     }
   } catch (error) {
     console.error('Apple Sign-In error:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Apple Sign-In verification failed';
+    if (error.message.includes('jwt audience invalid')) {
+      errorMessage = 'App configuration error. Please contact support.';
+    } else if (error.message.includes('invalid token')) {
+      errorMessage = 'Invalid Apple Sign-In token. Please try again.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     res.status(400);
-    const appError = new Error('Apple Sign-In verification failed: ' + error.message);
+    const appError = new Error(errorMessage);
     next(appError);
   }
 };
