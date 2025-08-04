@@ -24,7 +24,6 @@ interface ProcessingOptionsModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectOption: (processingType: ProcessingType) => void;
-  pendingAction?: 'gallery' | 'camera' | null;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -32,14 +31,13 @@ const { width: screenWidth } = Dimensions.get('window');
 export default function ProcessingOptionsModal({
   visible,
   onClose,
-  onSelectOption,
-  pendingAction
+  onSelectOption
 }: ProcessingOptionsModalProps) {
   const { t } = useTranslation();
   const { dashboardInfo } = useSubscription();
   const themeColors = useThemeColors();
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<ProcessingType | null>(null);
+  // Removed selectedOption state to avoid race conditions
 
   const isUserPremium = dashboardInfo?.plan !== 'free';
 
@@ -66,7 +64,6 @@ export default function ProcessingOptionsModal({
       return;
     }
 
-    setSelectedOption(option.id);
     onSelectOption(option.id);
   };
 
@@ -158,29 +155,12 @@ export default function ProcessingOptionsModal({
             <MaterialIcons name="close" size={24} color={themeColors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: themeColors.text }]}>
-            {pendingAction === 'gallery' 
-              ? t('upload.selectProcessingForGallery')
-              : pendingAction === 'camera'
-              ? t('upload.selectProcessingForCamera')
-              : t('upload.selectProcessingType')
-            }
+            {t('upload.selectProcessingType')}
           </Text>
           <View style={styles.placeholder} />
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Workflow Description */}
-          {pendingAction && (
-            <View style={[styles.workflowInfo, { backgroundColor: themeColors.surfaceVariant }]}>
-              <MaterialIcons name="info" size={20} color={themeColors.primary} />
-              <Text style={[styles.workflowText, { color: themeColors.text }]}>
-                {pendingAction === 'gallery' 
-                  ? 'After selecting a processing type, you will choose an image from your gallery'
-                  : 'After selecting a processing type, you will take a photo with your camera'
-                }
-              </Text>
-            </View>
-          )}
 
           {/* Free Options Section */}
           <View style={styles.section}>

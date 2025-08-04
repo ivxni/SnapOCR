@@ -577,14 +577,33 @@ export default function Profile() {
                     disabled={isLoading}
                   >
                     <MaterialIcons name="payments" size={20} color={themeColors.white} />
-                                          <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
-                        {t('subscription.premium')}
-                      </Text>
+                    <Text style={[styles.subscriptionButtonText, { color: themeColors.white }]}>
+                      {t('subscription.premium')}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[
+                      styles.subscriptionButton, 
+                      { 
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        borderColor: themeColors.error
+                      },
+                      isLoading && styles.disabledButton
+                    ]}
+                    onPress={handleCancelSubscription}
+                    disabled={isLoading}
+                  >
+                    <MaterialIcons name="cancel" size={20} color={themeColors.error} />
+                    <Text style={[styles.subscriptionButtonText, { color: themeColors.error }]}>
+                      {t('subscription.cancel')} {t('subscription.trial')}
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
               
-                                           {['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '') && subscriptionDetails?.isCanceledButActive && (
+              {['premium', 'family', 'business'].includes(subscriptionDetails?.plan || '') && !subscriptionDetails?.isInTrial && subscriptionDetails?.isCanceledButActive && (
                 <>
                   <TouchableOpacity 
                     style={[

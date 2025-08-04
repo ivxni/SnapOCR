@@ -118,6 +118,10 @@ export type TranslationKey =
   | 'profile.hasLetter'
   | 'profile.hasNumber'
   | 'profile.passwordsMatch'
+  | 'profile.nameFieldsRequired'
+  | 'profile.enterFirstName'
+  | 'profile.enterLastName'
+  | 'profile.emailCannotBeChanged'
   
   // Subscription
   | 'subscription.title'
@@ -357,6 +361,10 @@ const en: TranslationDictionary = {
   'profile.hasLetter': 'Contains at least one letter',
   'profile.hasNumber': 'Contains at least one number',
   'profile.passwordsMatch': 'Passwords match',
+  'profile.nameFieldsRequired': 'Please fill in first name and last name',
+  'profile.enterFirstName': 'Enter your first name',
+  'profile.enterLastName': 'Enter your last name',
+  'profile.emailCannotBeChanged': 'Email address cannot be changed',
   
   // Subscription
   'subscription.title': 'Subscription',
@@ -593,6 +601,10 @@ const de: TranslationDictionary = {
   'profile.hasLetter': 'Enthält mindestens einen Buchstaben',
   'profile.hasNumber': 'Enthält mindestens eine Zahl',
   'profile.passwordsMatch': 'Passwörter stimmen überein',
+  'profile.nameFieldsRequired': 'Bitte Vor- und Nachname ausfüllen',
+  'profile.enterFirstName': 'Vorname eingeben',
+  'profile.enterLastName': 'Nachname eingeben',
+  'profile.emailCannotBeChanged': 'E-Mail-Adresse kann nicht geändert werden',
   'subscription.title': 'Abonnement',
   'subscription.plan': 'Plan',
   'subscription.billing': 'Abrechnung',
@@ -827,6 +839,10 @@ const es: TranslationDictionary = {
   'profile.hasLetter': 'Contiene al menos una letra',
   'profile.hasNumber': 'Contiene al menos un número',
   'profile.passwordsMatch': 'Las contraseñas coinciden',
+  'profile.nameFieldsRequired': 'Por favor completa el nombre y apellido',
+  'profile.enterFirstName': 'Ingresa tu nombre',
+  'profile.enterLastName': 'Ingresa tu apellido',
+  'profile.emailCannotBeChanged': 'La dirección de correo no se puede cambiar',
   'subscription.title': 'Suscripción',
   'subscription.plan': 'Plan',
   'subscription.billing': 'Facturación',

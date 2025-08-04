@@ -1,19 +1,48 @@
 export interface Document {
   _id: string;
-  filename: string;
-  originalFilename: string;
-  fileSize: number;
-  mimeType: string;
-  extractedText?: string;
-  processingStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  // Original file info
+  originalFileName: string;
+  originalFileType: string;
+  originalFileSize: number;
+  originalFileUrl: string;
+  
+  // Backward compatibility
+  filename?: string;
+  originalFilename?: string;
+  fileSize?: number;
+  mimeType?: string;
+  
+  // Processing info
   processingType: ProcessingType;
   processingOptions?: ProcessingOptions;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  processingStatus?: 'pending' | 'processing' | 'completed' | 'failed'; // Backward compatibility
+  
+  // Output files
+  pdfFileName?: string;
+  pdfFileSize?: number;
+  pdfFileUrl?: string;
+  downloadUrl?: string; // Virtual field from backend
+  
+  // OCR results
+  ocrText?: string;
+  ocrConfidence?: number;
+  extractedText?: string; // Backward compatibility
+  
+  // Timestamps
   createdAt: string;
   updatedAt: string;
-  downloadUrl?: string;
+  processingStartedAt?: string;
+  processingCompletedAt?: string;
+  
+  // Error handling
+  errorMessage?: string;
+  
+  // Other fields
   previewUrl?: string;
   metadata?: {
     pages?: number;
+    pageCount?: number;
     language?: string;
     confidence?: number;
     processingTime?: number;

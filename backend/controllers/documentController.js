@@ -31,8 +31,9 @@ const uploadDocument = async (req, res) => {
   }
 
   // Check if user has reached document limit
+  let subscriptionCheck;
   try {
-    const subscriptionCheck = await subscriptionService.canProcessDocument(req.user._id);
+    subscriptionCheck = await subscriptionService.canProcessDocument(req.user._id);
     
     if (!subscriptionCheck.canProcess) {
       res.status(403);

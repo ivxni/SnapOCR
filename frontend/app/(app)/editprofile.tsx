@@ -19,13 +19,13 @@ export default function EditProfile() {
   
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
-  const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    if (!firstName || !lastName || !email) {
-      setError(t('profile.allFieldsRequired'));
+    // Only validate first name and last name - email is not editable
+    if (!firstName || !lastName) {
+      setError(t('profile.nameFieldsRequired'));
       return;
     }
 
@@ -33,7 +33,8 @@ export default function EditProfile() {
     setError(null);
 
     try {
-      await updateProfile({ firstName, lastName, email });
+      // Only send firstName and lastName - don't include email
+      await updateProfile({ firstName, lastName });
       Alert.alert(
         t('common.success'),
         t('profile.profileUpdated'),
@@ -86,14 +87,32 @@ export default function EditProfile() {
               style={[styles.input, { shadowColor: themeColors.primary }]}
             />
             
-            <TextInput
-              label={t('profile.email')}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={[styles.input, { shadowColor: themeColors.primary }]}
-            />
+            {/* Email field - read-only */}
+            <View style={styles.readOnlyContainer}>
+              <Text style={[styles.readOnlyLabel, { color: themeColors.textSecondary }]}>
+                {t('profile.email')}
+              </Text>
+              <View style={[
+                styles.readOnlyField, 
+                { 
+                  backgroundColor: themeColors.surfaceVariant,
+                  borderColor: themeColors.border
+                }
+              ]}>
+                <Text style={[styles.readOnlyText, { color: themeColors.textSecondary }]}>
+                  {user?.email}
+                </Text>
+                <MaterialIcons 
+                  name="lock" 
+                  size={16} 
+                  color={themeColors.textSecondary} 
+                  style={styles.lockIcon}
+                />
+              </View>
+              <Text style={[styles.readOnlyNote, { color: themeColors.textSecondary }]}>
+                {t('profile.emailCannotBeChanged')}
+              </Text>
+            </View>
             
             {error && (
               <Text style={[styles.errorText, { color: themeColors.error }]}>{error}</Text>
@@ -154,6 +173,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  readOnlyContainer: {
+    marginBottom: 16,
+  },
+  readOnlyLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  readOnlyField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  readOnlyText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  lockIcon: {
+    marginLeft: 8,
+  },
+  readOnlyNote: {
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   errorText: {
     marginBottom: 16,

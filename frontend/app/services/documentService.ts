@@ -83,20 +83,31 @@ export const getProcessingJobStatus = async (id: string): Promise<ProcessingJob>
 export const getPdfFileUrl = async (id: string): Promise<string> => {
   try {
     const document = await getDocumentById(id);
-    if (!document.downloadUrl) {
+    
+    // Check for both downloadUrl (virtual field) and pdfFileUrl (actual field)
+    const pdfPath = document.downloadUrl || document.pdfFileUrl;
+    
+    if (!pdfPath) {
+      console.error('Document PDF fields:', {
+        downloadUrl: document.downloadUrl,
+        pdfFileUrl: document.pdfFileUrl,
+        status: document.status,
+        pdfFileName: document.pdfFileName
+      });
       throw new Error('PDF file not found');
     }
     
-    // Korrektur des Pfads: Der downloadUrl beginnt bereits mit /uploads,
+    // Korrektur des Pfads: Der pdfPath beginnt bereits mit /uploads,
     // aber die baseURL enthält bereits /api
     // Daher müssen wir den URL-Teil korrekt erstellen:
-    // Die baseURL enthält bereits "/api", und der downloadUrl beginnt mit "/uploads"
+    // Die baseURL enthält bereits "/api", und der pdfPath beginnt mit "/uploads"
     // Erstellung des vollständigen URL ohne Dopplung des "/api"-Pfads
     const baseUrl = api.defaults.baseURL || '';
     const baseUrlWithoutApi = baseUrl.replace(/\/api$/, '');
-    const pdfUrl = `${baseUrlWithoutApi}${document.downloadUrl}`;
+    const pdfUrl = `${baseUrlWithoutApi}${pdfPath}`;
     
     console.log('PDF URL:', pdfUrl);
+    console.log('Document status:', document.status);
     
     return pdfUrl;
   } catch (error) {
@@ -131,17 +142,22 @@ export const downloadAndSavePdf = async (id: string): Promise<string> => {
   try {
     // Hole Dokument-Details, um den Dateinamen zu erhalten
     const document = await getDocumentById(id);
-    if (!document.downloadUrl) {
+    
+    // Check for both downloadUrl (virtual field) and pdfFileUrl (actual field)
+    const pdfPath = document.downloadUrl || document.pdfFileUrl;
+    
+    if (!pdfPath) {
       throw new Error('PDF file not found');
     }
     
     // Erstelle die URL zur PDF-Datei
     const baseUrl = api.defaults.baseURL || '';
     const baseUrlWithoutApi = baseUrl.replace(/\/api$/, '');
-    const pdfUrl = `${baseUrlWithoutApi}${document.downloadUrl}`;
+    const pdfUrl = `${baseUrlWithoutApi}${pdfPath}`;
     
     // Bestimme den Dateinamen aus der URL oder verwende den Originalnamen
-    const fileName = document.filename || document.originalFilename.replace(/\.[^\.]+$/, '.pdf');
+    const fileName = document.pdfFileName || document.filename || 
+                    (document.originalFilename || document.originalFileName || 'document').replace(/\.[^\.]+$/, '.pdf');
     
     // Lokaler Pfad, wohin die Datei gespeichert werden soll
     const localFilePath = `${FileSystem.cacheDirectory}${fileName}`;

@@ -34,8 +34,7 @@ export default function Upload() {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [imageLayout, setImageLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [showProcessingOptions, setShowProcessingOptions] = useState(false);
-  const [selectedProcessingType, setSelectedProcessingType] = useState<ProcessingType>('ocr');
-  const [pendingImageAction, setPendingImageAction] = useState<'gallery' | 'camera' | null>(null);
+  const [selectedProcessingType, setSelectedProcessingType] = useState<ProcessingType | undefined>(undefined);
   const cropImageContainerRef = useRef<View>(null);
 
   // Set up polling for document status
@@ -142,66 +141,54 @@ export default function Upload() {
   };
 
   const pickImage = async () => {
-    console.log('pickImage called - setting pendingImageAction to gallery');
-    // Show processing options first, then pick image
-    setPendingImageAction('gallery');
-    setShowProcessingOptions(true);
+    console.log('pickImage called');
+    // No permissions request is necessary for launching the image library
+    const result = await ImagePicker.launchImageLibraryAsync({
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+      setCropMode(true);
+    }
   };
 
   const takePhoto = async () => {
-    console.log('takePhoto called - setting pendingImageAction to camera');
-    // Show processing options first, then take photo
-    setPendingImageAction('camera');
-    setShowProcessingOptions(true);
+    console.log('takePhoto called');
+    // Request camera permissions
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        t('upload.permissionRequired'),
+        t('upload.cameraPermission')
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+      setCropMode(true);
+    }
   };
 
   const handleProcessingOptionSelect = async (processingType: ProcessingType) => {
     console.log('Processing option selected:', processingType);
-    console.log('Pending image action:', pendingImageAction);
     
-    setSelectedProcessingType(processingType);
-    
-    // Store the action before clearing
-    const actionToExecute = pendingImageAction;
-    
-    // Clear the pending action and close modal
-    setPendingImageAction(null);
+    // Close modal immediately
     setShowProcessingOptions(false);
     
-    // Execute the action immediately without timeout
-    if (actionToExecute === 'gallery') {
-      console.log('Opening gallery immediately');
-      // No permissions request is necessary for launching the image library
-      const result = await ImagePicker.launchImageLibraryAsync({
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-        setCropMode(true);
-      }
-    } else if (actionToExecute === 'camera') {
-      console.log('Opening camera immediately');
-      // Request camera permissions
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert(
-          t('upload.permissionRequired'),
-          t('upload.cameraPermission')
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-        setCropMode(true);
-      }
-    }
+    // Set processing type and start upload
+    setSelectedProcessingType(processingType);
+    
+         // Use setTimeout to ensure modal closes smoothly
+     setTimeout(() => {
+       performUpload(processingType);
+     }, 50);
   };
 
   const cropImage = async () => {
@@ -287,7 +274,7 @@ export default function Upload() {
     setContainerSize({ width, height });
   };
 
-  const handleUpload = async () => {
+  const performUpload = async (processingType: ProcessingType) => {
     if (!croppedImage && !image) return;
     
     const imageToUpload = croppedImage || image;
@@ -306,8 +293,9 @@ export default function Upload() {
         type: 'image/jpeg', // Adjust based on your image type
       };
 
-      // Upload the document with selected processing type
-      const result = await uploadDocument(uploadFile, selectedProcessingType);
+      // Upload the document with specified processing type
+      console.log('Uploading with processing type:', processingType);
+      const result = await uploadDocument(uploadFile, processingType);
       console.log('Upload result:', result);
       
       // Set document ID for polling
@@ -323,6 +311,23 @@ export default function Upload() {
       );
       setUploading(false);
     }
+  };
+
+  const handleUpload = async () => {
+    if (!croppedImage && !image) return;
+    
+    const imageToUpload = croppedImage || image;
+    if (!imageToUpload) return;
+
+    // Ensure processing type is selected
+    if (!selectedProcessingType) {
+      console.log('No processing type selected, showing modal');
+      setShowProcessingOptions(true);
+      return;
+    }
+
+    // Use the performUpload function with the selected type
+    await performUpload(selectedProcessingType);
   };
 
   const showProcessingOptionsModal = () => {
@@ -464,7 +469,7 @@ export default function Upload() {
             
             <TouchableOpacity 
               style={[styles.actionButton, styles.uploadButton, { backgroundColor: themeColors.primary }]}
-              onPress={handleUpload}
+              onPress={() => setShowProcessingOptions(true)}
             >
               <MaterialIcons name="check" size={24} color={themeColors.white} />
               <Text style={[styles.actionButtonText, styles.uploadButtonText, { color: themeColors.white }]}>
@@ -544,10 +549,8 @@ export default function Upload() {
         visible={showProcessingOptions}
         onClose={() => {
           setShowProcessingOptions(false);
-          setPendingImageAction(null);
         }}
         onSelectOption={handleProcessingOptionSelect}
-        pendingAction={pendingImageAction}
       />
     </SafeAreaView>
   );

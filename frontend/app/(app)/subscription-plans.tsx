@@ -448,6 +448,113 @@ export default function SubscriptionPlans() {
     const premiumSavingsPercent = Math.round(100 - (pricing.premium.yearly / 12 / pricing.premium.monthly * 100));
     const familySavingsPercent = Math.round(100 - (pricing.family.yearly / 12 / pricing.family.monthly * 100));
     
+    // Trial user view
+    if (subscriptionDetails.isInTrial) {
+      return (
+        <View style={styles.contentContainer}>
+          <View style={styles.headerSection}>
+            <LinearGradient
+              colors={[themeColors.warning + '20', themeColors.warning + '05']}
+              style={styles.headerGradient}
+            >
+              <MaterialIcons name="star" size={48} color={themeColors.warning} />
+              <Text style={[styles.pageTitle, { color: themeColors.text }]}>
+                {t('subscription.trial')} {t('subscription.active')}
+              </Text>
+              <Text style={[styles.pageSubtitle, { color: themeColors.textSecondary }]}>
+                <Text>{t('subscription.trialEnds')}: </Text>
+                <Text style={{ color: themeColors.warning, fontWeight: '600' }}>
+                  {subscriptionDetails.trialEndDate 
+                    ? new Date(subscriptionDetails.trialEndDate).toLocaleDateString() 
+                    : t('subscription.unknown')}
+                </Text>
+              </Text>
+            </LinearGradient>
+          </View>
+
+          {/* Current Trial Status */}
+          <View style={[styles.trialStatusCard, { backgroundColor: themeColors.surfaceVariant }]}>
+            <View style={styles.trialStatusHeader}>
+              <MaterialIcons name="info" size={24} color={themeColors.primary} />
+              <Text style={[styles.trialStatusTitle, { color: themeColors.text }]}>
+                Your trial includes:
+              </Text>
+            </View>
+            <View style={styles.trialFeatureList}>
+              {renderFeatureItem(`100 ${t('subscription.documentsPerMonth')}`, true, themeColors.warning)}
+              {renderFeatureItem(t('subscription.feature.priority'), true, themeColors.warning)}
+              {renderFeatureItem(t('subscription.feature.premium'), true, themeColors.warning)}
+            </View>
+          </View>
+
+          {/* Billing Toggle */}
+          <BillingToggle />
+
+          {/* PREMIUM PLAN - Upgrade from Trial */}
+          <PlanCard
+            title={t('subscription.premiumUser')}
+            price={isYearly ? pricing.premium.yearly : pricing.premium.monthly}
+            period={isYearly ? t('subscription.yearly') : t('subscription.monthly')}
+            description={isYearly 
+              ? `${format(t('subscription.savePercent'), { percent: premiumSavingsPercent })}` 
+              : t('subscription.regularUse')
+            }
+            features={[
+              { text: `100 ${t('subscription.documentsPerMonth')}`, included: true },
+              { text: t('subscription.feature.priority'), included: true },
+              { text: t('subscription.feature.cancel'), included: true }
+            ]}
+            onPress={() => handleSubscribe(isYearly ? 'yearly' : 'monthly')}
+            loading={subscribing}
+            buttonText={`€${isYearly ? pricing.premium.yearly : pricing.premium.monthly}/${isYearly ? t('subscription.yearly') : t('subscription.monthly')}`}
+            isRecommended={true}
+            borderColor={themeColors.primary}
+            gradientColors={[themeColors.primary + '10', themeColors.surface]}
+          />
+
+          {/* Cancel Trial Option */}
+          <TouchableOpacity 
+            style={[styles.cancelTrialButton, { borderColor: themeColors.error }]}
+            onPress={() => {
+              Alert.alert(
+                t('subscription.cancel') + ' ' + t('subscription.trial'),
+                t('subscription.cancelSubscriptionConfirm'),
+                [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  { 
+                    text: t('subscription.cancel'), 
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        setSubscribing(true);
+                        await subscriptionService.cancelSubscription();
+                        await refreshSubscription(true);
+                        Alert.alert(
+                          t('common.success'),
+                          t('subscription.subscriptionCancelledMessage'),
+                          [{ text: t('common.ok'), onPress: () => router.replace('/(app)/dashboard') }]
+                        );
+                      } catch (error: any) {
+                        Alert.alert(t('common.error'), error.message || t('profile.updateFailed'));
+                      } finally {
+                        setSubscribing(false);
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
+            disabled={subscribing}
+          >
+            <MaterialIcons name="cancel" size={20} color={themeColors.error} />
+            <Text style={[styles.cancelTrialText, { color: themeColors.error }]}>
+              {t('subscription.cancel')} {t('subscription.trial')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     // Cancelled subscription
     if (subscriptionDetails.isCanceledButActive) {
       return (
@@ -1072,5 +1179,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     marginTop: 12,
+  },
+  trialStatusCard: {
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  trialStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  trialStatusTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  trialFeatureList: {
+    marginBottom: 20,
+  },
+  cancelTrialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+  },
+  cancelTrialText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 }); 

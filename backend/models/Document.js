@@ -206,6 +206,15 @@ const documentSchema = new mongoose.Schema(
   }
 );
 
+// Virtual field for downloadUrl (maps to pdfFileUrl for backward compatibility)
+documentSchema.virtual('downloadUrl').get(function() {
+  return this.pdfFileUrl;
+});
+
+// Ensure virtual fields are serialized
+documentSchema.set('toJSON', { virtuals: true });
+documentSchema.set('toObject', { virtuals: true });
+
 // Create indexes for better query performance
 documentSchema.index({ userId: 1, createdAt: -1 });
 documentSchema.index({ userId: 1, isArchived: 1 });
